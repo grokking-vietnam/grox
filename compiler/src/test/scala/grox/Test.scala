@@ -10,4 +10,3 @@ class Test extends CatsEffectSuite {
     )
   }
 }
-
