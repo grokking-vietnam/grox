@@ -1,7 +1,6 @@
 package grox
 
-import cats.effect.IOApp
-import cats.effect.IO
+import cats.effect.{IO, IOApp}
 
 object Main extends IOApp.Simple {
   def run: IO[Unit] = IO.println("Hello grox")
