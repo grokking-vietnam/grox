@@ -55,4 +55,4 @@ jobs:
         run: sbt ++${{ matrix.scala }} test
 
       - name: Check Formatting
-        run: sbt ++${{ matrix.scala }} scalafmtCheckAll
+        run: sbt ++${{ matrix.scala }} check
