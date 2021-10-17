@@ -2,54 +2,63 @@ package grox
 
 case class Location(val line: Int)
 
+trait HasLexeme:
+  val lexeme: String
+
 // todo use opaque type for lexeme
-enum Token(val lexeme: String):
-
-  // Single character token
-  case LeftParen extends Token("(")
-  case RightParen extends Token(")")
-  case LeftBrace extends Token("{")
-  case RightBrace extends Token("}")
-  case Comma extends Token(",")
-  case Dot extends Token(".")
-  case Minus extends Token("-")
-  case Plus extends Token("+")
-  case Semicolon extends Token(";")
-  case Slash extends Token("/")
-  case Star extends Token("*")
-
-  // One or two character token
-
-  case Bang extends Token("!")
-  case BangEqual extends Token("!=")
-  case Equal extends Token("=")
-  case EqualEqual extends Token("==")
-  case Greater extends Token(">")
-  case GreaterEqual extends Token(">=")
-  case Less extends Token("<")
-  case LessEqual extends Token("<=")
+enum Literal(val lexeme: String) extends HasLexeme:
 
   // Literals
-  case Identifier(override val lexeme: String) extends Token(lexeme)
-  case Str(override val lexeme: String) extends Token(lexeme)
-  case Number(override val lexeme: String) extends Token(lexeme)
+  case Identifier(override val lexeme: String) extends Literal(lexeme)
+  case Str(override val lexeme: String) extends Literal(lexeme)
+  case Number(override val lexeme: String) extends Literal(lexeme)
 
-  // Keywords
-  case And extends Token("and")
-  case Class extends Token("class")
-  case Else extends Token("else")
-  case False extends Token("false")
-  case For extends Token("for")
-  case Fun extends Token("fun")
-  case If extends Token("if")
-  case Nil extends Token("nil")
-  case Or extends Token("or")
-  case Print extends Token("print")
-  case Return extends Token("return")
-  case Super extends Token("super")
-  case This extends Token("this")
-  case True extends Token("true")
-  case Var extends Token("var")
-  case While extends Token("while")
+enum Operator(val lexeme: String) extends HasLexeme:
 
-  case EOF extends Token("")
+  // Single character token
+  case LeftParen extends Operator("(")
+  case RightParen extends Operator(")")
+  case LeftBrace extends Operator("{")
+  case RightBrace extends Operator("}")
+  case Comma extends Operator(",")
+  case Dot extends Operator(".")
+  case Minus extends Operator("-")
+  case Plus extends Operator("+")
+  case Semicolon extends Operator(";")
+  case Slash extends Operator("/")
+  case Star extends Operator("*")
+
+  // One or two character token
+  case Bang extends Operator("!")
+  case BangEqual extends Operator("!=")
+  case Equal extends Operator("=")
+  case EqualEqual extends Operator("==")
+  case Greater extends Operator(">")
+  case GreaterEqual extends Operator(">=")
+  case Less extends Operator("<")
+  case LessEqual extends Operator("<=")
+
+enum Keyword(val lexeme: String) extends HasLexeme:
+  case And extends Keyword("and")
+  case Class extends Keyword("class")
+  case Else extends Keyword("else")
+  case False extends Keyword("false")
+  case For extends Keyword("for")
+  case Fun extends Keyword("fun")
+  case If extends Keyword("if")
+  case Nil extends Keyword("nil")
+  case Or extends Keyword("or")
+  case Print extends Keyword("print")
+  case Return extends Keyword("return")
+  case Super extends Keyword("super")
+  case This extends Keyword("this")
+  case True extends Keyword("true")
+  case Var extends Keyword("var")
+  case While extends Keyword("while")
+
+enum Comment(val lexeme: String) extends HasLexeme:
+  // Comments
+  case SingleLine(override val lexeme: String) extends Comment(lexeme)
+  case MultipleLines(override val lexeme: String) extends Comment(lexeme)
+
+type Token = Keyword | Literal | Comment | Operator
