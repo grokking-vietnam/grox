@@ -279,5 +279,35 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
     assertEquals(Parser.parse(str), Right(expected))
   }
 
+  test("strings.lox") {
+    val str = """""
+"string"
+      """
+    val expected: List[Token] = List(
+      Literal.Str(""),
+      Literal.Str("string"),
+    )
+    assertEquals(Parser.parse(str), Right(expected))
+  }
+
+  test("spaces.lox") {
+    val str = """
+    space    tabs				newlines
+
+
+
+
+end
+
+"""
+    val expected: List[Token] = List(
+      Literal.Identifier("space"),
+      Literal.Identifier("tabs"),
+      Literal.Identifier("newlines"),
+      Literal.Identifier("end"),
+    )
+    assertEquals(Parser.parse(str), Right(expected))
+  }
+
 }
 

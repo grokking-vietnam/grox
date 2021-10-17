@@ -61,7 +61,7 @@ object Parser {
   val allParsers = keywords ++ List(leftParen, rightParen, leftBrace, rightBrace, comma, dot, minus, plus, semicolon, slash, star, bangEqualOrBang, equalEqualOrEqual, greaterEqualOrGreater, lessEqualOrLess, singleLineCommentOrSlash, identifier, str, number)// ++ keywords
   val token: P[Token] = P.oneOf(allParsers.map(_ <* whitespaces))
 
-  val parse = token.rep.map(_.toList).parseAll
+  val parse = (maybeSpace *> token.rep.map(_.toList)).parseAll
 
   private def operatorP(token: Token) = P.string(token.lexeme).as(token)
   private def keywordP(keyword: Keyword) = keySpace(keyword.lexeme).as(keyword)
