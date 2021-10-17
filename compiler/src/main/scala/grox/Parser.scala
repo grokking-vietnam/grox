@@ -1,7 +1,7 @@
 package grox
 
-import cats.parse.{Parser0 => P0, Parser => P, Rfc5234 => R, Numbers => N}
 import cats.data.NonEmptyList
+import cats.parse.{Numbers => N, Parser => P, Parser0 => P0, Rfc5234 => R}
 
 object Parser {
 
@@ -43,11 +43,16 @@ object Parser {
   val keyword = P.oneOf(keywords)
 
   // todo support multiple lines comment
-  val singleLineComment = P.string("//") *> P.until0(P.string("\n")).map(c => Comment.SingleLine(s"//$c"))
-    val singleLineCommentOrSlash = singleLineComment | slash
+  val singleLineComment =
+    P.string("//") *> P.until0(P.string("\n")).map(c => Comment.SingleLine(s"//$c"))
+  val singleLineCommentOrSlash = singleLineComment | slash
 
   val alphaNumeric = R.alpha | N.digit | P.char('_').as('_')
-  val identifier = ((R.alpha | P.char('_')) ~ alphaNumeric.rep0).map(p => p._1 :: p._2).string.map(Literal.Identifier(_))
+
+  val identifier = ((R.alpha | P.char('_')) ~ alphaNumeric.rep0)
+    .map(p => p._1 :: p._2)
+    .string
+    .map(Literal.Identifier(_))
 
   //val identifierOrKeyword: P[Token] = keyword | identifier
 
@@ -58,7 +63,28 @@ object Parser {
   val number = (N.digits ~ fracOrNone).map(p => p._1 + p._2).map(Literal.Number(_))
   //val numberOrDot = number | dot
 
-  val allParsers = keywords ++ List(leftParen, rightParen, leftBrace, rightBrace, comma, dot, minus, plus, semicolon, slash, star, bangEqualOrBang, equalEqualOrEqual, greaterEqualOrGreater, lessEqualOrLess, singleLineCommentOrSlash, identifier, str, number)// ++ keywords
+  val allParsers =
+    keywords ++ List(
+      leftParen,
+      rightParen,
+      leftBrace,
+      rightBrace,
+      comma,
+      dot,
+      minus,
+      plus,
+      semicolon,
+      slash,
+      star,
+      bangEqualOrBang,
+      equalEqualOrEqual,
+      greaterEqualOrGreater,
+      lessEqualOrLess,
+      singleLineCommentOrSlash,
+      identifier,
+      str,
+      number,
+    ) // ++ keywords
   val token: P[Token] = P.oneOf(allParsers.map(_ <* whitespaces))
 
   val parse = (maybeSpace *> token.rep.map(_.toList)).parseAll
@@ -67,11 +93,9 @@ object Parser {
   private def keywordP(keyword: Keyword) = keySpace(keyword.lexeme).as(keyword)
 
   // parse a keyword and some space or backtrack
-  private def keySpace(str: String): P[Unit] =
-    (P.string(str) ~ (whitespace | P.end)).void.backtrack
+  private def keySpace(str: String): P[Unit] = (P.string(str) ~ (whitespace | P.end)).void.backtrack
   //val spaces: P[Unit] = P.charsWhile(isSpace(_)).void
 
-  private def isSpace(c: Char): Boolean =
-    (c == ' ') || (c == '\t') || (c == '\r') || (c == '\n')
+  private def isSpace(c: Char): Boolean = (c == ' ') || (c == '\t') || (c == '\r') || (c == '\n')
 
 }
