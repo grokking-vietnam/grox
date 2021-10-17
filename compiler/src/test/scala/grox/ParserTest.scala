@@ -159,16 +159,16 @@ class ParserTest extends CatsEffectSuite {
   }
 
   //test("keywordOrIdentifier") {
-    //val identifier = "orchi_1231"
-    //assertEquals(
-      //Parser.keywordOrIdentifier.parseAll(identifier),
-      //Right(Literal.Identifier(identifier)),
-    //)
+  //val identifier = "orchi_1231"
+  //assertEquals(
+  //Parser.keywordOrIdentifier.parseAll(identifier),
+  //Right(Literal.Identifier(identifier)),
+  //)
   //}
 
   //test("keywordOrIdentifier or") {
-    //val identifier = "or"
-    //assertEquals(Parser.keywordOrIdentifier.parseAll(identifier), Right(Keyword.Or))
+  //val identifier = "or"
+  //assertEquals(Parser.keywordOrIdentifier.parseAll(identifier), Right(Keyword.Or))
   //}
 
   test("str") {
@@ -186,7 +186,7 @@ class ParserTest extends CatsEffectSuite {
     assertEquals(Parser.number.parseAll(str), Right(Literal.Number(str)))
   }
 
-  test("number fails") {
+  test("number and dot") {
     val str = "1234."
     assertEquals(Parser.number.parseAll(str).isLeft, true)
   }
@@ -234,6 +234,47 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
       Keyword.True,
       Keyword.Var,
       Keyword.While,
+    )
+    assertEquals(Parser.parse(str), Right(expected))
+  }
+
+  test("numbers.lox") {
+    val str = """123
+    123.456
+      .456
+      123."""
+    val expected: List[Token] = List(
+      Literal.Number("123"),
+      Literal.Number("123.456"),
+      Operator.Dot,
+      Literal.Number("456"),
+      Literal.Number("123"),
+      Operator.Dot,
+    )
+    assertEquals(Parser.parse(str), Right(expected))
+  }
+
+  test("punctuators.lox") {
+    val str = """(){};,+-*!===<=>=!=<>/."""
+    val expected: List[Token] = List(
+      Operator.LeftParen,
+      Operator.RightParen,
+      Operator.LeftBrace,
+      Operator.RightBrace,
+      Operator.Semicolon,
+      Operator.Comma,
+      Operator.Plus,
+      Operator.Minus,
+      Operator.Star,
+      Operator.BangEqual,
+      Operator.EqualEqual,
+      Operator.LessEqual,
+      Operator.GreaterEqual,
+      Operator.BangEqual,
+      Operator.Less,
+      Operator.Greater,
+      Operator.Slash,
+      Operator.Dot,
     )
     assertEquals(Parser.parse(str), Right(expected))
   }

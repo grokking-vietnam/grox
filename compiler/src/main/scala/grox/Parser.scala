@@ -20,6 +20,7 @@ object Parser {
   val plus = operatorP(Operator.Plus)
   val semicolon = operatorP(Operator.Semicolon)
   val slash = operatorP(Operator.Slash)
+  val star = operatorP(Operator.Star)
 
   val bang = operatorP(Operator.Bang)
   val bangEqual = operatorP(Operator.BangEqual)
@@ -52,11 +53,12 @@ object Parser {
 
   val str = (R.dquote *> P.until0(R.dquote) <* R.dquote).map(Literal.Str(_))
 
-  val frac = (P.char('.') *> N.digit.rep).map('.' :: _)
+  val frac = (P.char('.') *> N.digit.rep).map('.' :: _).backtrack
   val fracOrNone = frac.rep0(0, 1).map(_.flatMap(_.toList)).string
   val number = (N.digits ~ fracOrNone).map(p => p._1 + p._2).map(Literal.Number(_))
+  //val numberOrDot = number | dot
 
-  val allParsers = keywords ++ List(leftParen, rightParen, leftBrace, rightBrace, comma, dot, minus, plus, semicolon, slash, bangEqualOrBang, equalEqualOrEqual, greaterEqualOrGreater, lessEqualOrLess, singleLineCommentOrSlash, identifier, str, number)// ++ keywords
+  val allParsers = keywords ++ List(leftParen, rightParen, leftBrace, rightBrace, comma, dot, minus, plus, semicolon, slash, star, bangEqualOrBang, equalEqualOrEqual, greaterEqualOrGreater, lessEqualOrLess, singleLineCommentOrSlash, identifier, str, number)// ++ keywords
   val token: P[Token] = P.oneOf(allParsers.map(_ <* whitespaces))
 
   val parse = token.rep.map(_.toList).parseAll
