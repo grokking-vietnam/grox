@@ -4,6 +4,18 @@ import munit.CatsEffectSuite
 
 class ParserTest extends CatsEffectSuite {
 
+  test("whitespaces empty") {
+    assertEquals(Parser.whitespaces.parseAll(""), Right(()))
+  }
+
+  test("whitespaces") {
+    assertEquals(Parser.whitespaces.parseAll(" \t"), Right(()))
+  }
+
+  test("whitespaces") {
+    assertEquals(Parser.whitespaces.parseAll("  "), Right(()))
+  }
+
   test("leftParen") {
     assertEquals(Parser.leftParen.parseAll("("), Right(Operator.LeftParen))
   }
@@ -132,7 +144,7 @@ class ParserTest extends CatsEffectSuite {
 
   test("keywords") {
     Keyword.values.foreach { keyword =>
-      assertEquals(Parser.keyword.parseAll(keyword.lexeme ++ " "), Right(keyword))
+      assertEquals(Parser.keyword.parseAll(keyword.lexeme), Right(keyword))
     }
   }
 
@@ -145,6 +157,19 @@ class ParserTest extends CatsEffectSuite {
     val identifier = "_"
     assertEquals(Parser.identifier.parseAll(identifier), Right(Literal.Identifier(identifier)))
   }
+
+  //test("keywordOrIdentifier") {
+    //val identifier = "orchi_1231"
+    //assertEquals(
+      //Parser.keywordOrIdentifier.parseAll(identifier),
+      //Right(Literal.Identifier(identifier)),
+    //)
+  //}
+
+  //test("keywordOrIdentifier or") {
+    //val identifier = "or"
+    //assertEquals(Parser.keywordOrIdentifier.parseAll(identifier), Right(Keyword.Or))
+  //}
 
   test("str") {
     val str = """"orchi_1231""""
@@ -166,16 +191,6 @@ class ParserTest extends CatsEffectSuite {
     assertEquals(Parser.number.parseAll(str).isLeft, true)
   }
 
-  test("identifiers.lox only") {
-    val str = "andy formless "
-    val expected: List[Token] = List(
-      Literal.Identifier("andy"),
-      Literal.Identifier("formless"),
-    )
-    val is: cats.parse.Parser[List[Token]] = (Parser.identifier <* Parser.whitespaces).rep.map(_.toList)
-    assertEquals(is.parseAll(str), Right(expected))
-  }
-
   test("identifiers.lox simpler") {
     val str = "andy formless"
     val expected: List[Token] = List(
@@ -195,21 +210,33 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
       Literal.Identifier("_"),
       Literal.Identifier("_123"),
       Literal.Identifier("_abc"),
-      Literal.Identifier("abc123"),
+      Literal.Identifier("ab123"),
       Literal.Identifier("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"),
     )
     assertEquals(Parser.parse(str), Right(expected))
   }
 
-  //test("identifierOrKeyword") {
-  //val identifier = "orchi_1231"
-  //assertEquals(Parser.identifierOrKeyword.parseAll(identifier), Right(Literal.Identifier(identifier)))
-  //}
-
-  //test("identifierOrKeyword or") {
-  //val identifier = "or "
-  //assertEquals(Parser.identifierOrKeyword.parseAll(identifier), Right(Keyword.Or))
-  //}
+  test("keywords.lox") {
+    val str = """and class else false for fun if nil or return super this true var while"""
+    val expected: List[Token] = List(
+      Keyword.And,
+      Keyword.Class,
+      Keyword.Else,
+      Keyword.False,
+      Keyword.For,
+      Keyword.Fun,
+      Keyword.If,
+      Keyword.Nil,
+      Keyword.Or,
+      Keyword.Return,
+      Keyword.Super,
+      Keyword.This,
+      Keyword.True,
+      Keyword.Var,
+      Keyword.While,
+    )
+    assertEquals(Parser.parse(str), Right(expected))
+  }
 
 }
 

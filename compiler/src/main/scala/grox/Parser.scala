@@ -1,12 +1,14 @@
 package grox
 
-import cats.parse.{Parser0, Parser => P, Rfc5234 => R, Numbers => N}
+import cats.parse.{Parser0 => P0, Parser => P, Rfc5234 => R, Numbers => N}
 import cats.data.NonEmptyList
 
 object Parser {
 
   val whitespace: P[Unit] = P.anyChar.filter(isSpace).void
-  val whitespaces: Parser0[Unit] = whitespace.rep0.void
+  //val spaces: P[Unit] = P.charsWhile(isSpace _).void
+  val whitespaces: P0[Unit] = P.until0(P.anyChar.filter(!isSpace(_))).void
+  val maybeSpace: P0[Unit] = whitespaces.?.void
 
   val leftParen = operatorP(Operator.LeftParen)
   val rightParen = operatorP(Operator.RightParen)
@@ -54,7 +56,7 @@ object Parser {
   val fracOrNone = frac.rep0(0, 1).map(_.flatMap(_.toList)).string
   val number = (N.digits ~ fracOrNone).map(p => p._1 + p._2).map(Literal.Number(_))
 
-  val allParsers = List(leftParen, rightParen, leftBrace, rightBrace, comma, dot, minus, plus, semicolon, slash, bangEqualOrBang, equalEqualOrEqual, greaterEqualOrGreater, lessEqualOrLess, singleLineCommentOrSlash, identifier, str, number) ++ keywords
+  val allParsers = keywords ++ List(leftParen, rightParen, leftBrace, rightBrace, comma, dot, minus, plus, semicolon, slash, bangEqualOrBang, equalEqualOrEqual, greaterEqualOrGreater, lessEqualOrLess, singleLineCommentOrSlash, identifier, str, number)// ++ keywords
   val token: P[Token] = P.oneOf(allParsers.map(_ <* whitespaces))
 
   val parse = token.rep.map(_.toList).parseAll
@@ -64,7 +66,7 @@ object Parser {
 
   // parse a keyword and some space or backtrack
   private def keySpace(str: String): P[Unit] =
-    (P.string(str) ~ whitespace).void.backtrack
+    (P.string(str) ~ (whitespace | P.end)).void.backtrack
   //val spaces: P[Unit] = P.charsWhile(isSpace(_)).void
 
   private def isSpace(c: Char): Boolean =
