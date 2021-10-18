@@ -21,7 +21,6 @@ object Parser {
   val keywords = Keyword.values.map(k => keySpace(k.lexeme).as(k)).toList
   val keyword = P.oneOf(keywords)
 
-  // todo support multiple lines comment
   val singleLineComment =
     P.string("//") *> P.until0(P.string("\n")).map(c => Comment.SingleLine(s"//$c"))
   val blockComment =
@@ -93,4 +92,3 @@ object Parser {
 
   extension (o: Operator) def parse = P.string(o.lexeme).as(o)
 }
-
