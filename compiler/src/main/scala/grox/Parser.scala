@@ -5,8 +5,8 @@ import cats.parse.{LocationMap, Numbers => N, Parser => P, Parser0 => P0, Rfc523
 
 object Parser {
 
-  val whitespace: P[Unit] = P.anyChar.filter(isSpace).void
-  val whitespaces: P0[Unit] = P.until0(P.anyChar.filter(!isSpace(_))).void
+  val whitespace: P[Unit] = P.charIn(' ', '\t', '\n', '\r').void
+  val whitespaces: P0[Unit] = P.until0(P.not(whitespace)).void
   val maybeSpace: P0[Unit] = whitespaces.?.void
 
   val bangEqualOrBang = Operator.BangEqual.parse | Operator.Bang.parse
@@ -88,7 +88,6 @@ object Parser {
 
   // parse a keyword and some space or backtrack
   private def keySpace(str: String): P[Unit] = (P.string(str) ~ (whitespace | P.end)).void.backtrack
-  private def isSpace(c: Char): Boolean = (c == ' ') || (c == '\t') || (c == '\r') || (c == '\n')
 
   extension (o: Operator) def parse = P.string(o.lexeme).as(o)
 }
