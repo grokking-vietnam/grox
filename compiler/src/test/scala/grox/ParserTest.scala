@@ -224,4 +224,79 @@ end
     assertEquals(Parser.parse(str), Right(expected))
   }
 
+  test("multiline.lox") {
+    val str = """
+var a = "1
+2
+3";
+print a;
+// expect: 1
+// expect: 2
+// expect: 3
+    """
+    val expected: List[Token] = List(
+      Keyword.Var,
+      Literal.Identifier("a"),
+      Operator.Equal,
+      Literal.Str("""1
+2
+3"""),
+      Operator.Semicolon,
+      Keyword.Print,
+      Literal.Identifier("a"),
+      Operator.Semicolon,
+      Comment.SingleLine("// expect: 1"),
+      Comment.SingleLine("// expect: 2"),
+      Comment.SingleLine("// expect: 3"),
+    )
+    assertEquals(Parser.parse(str), Right(expected))
+  }
+
+  test("return_in_nested_function.lox") {
+    val str = """
+class Foo {
+  init() {
+    fun init() {
+      return "bar";
+    }
+    print init(); // expect: bar
+  }
+}
+
+print Foo(); // expect: Foo instance"""
+    val expected: List[Token] = List(
+      Keyword.Class,
+      Literal.Identifier("Foo"),
+      Operator.LeftBrace,
+      Literal.Identifier("init"),
+      Operator.LeftParen,
+      Operator.RightParen,
+      Operator.LeftBrace,
+      Keyword.Fun,
+      Literal.Identifier("init"),
+      Operator.LeftParen,
+      Operator.RightParen,
+      Operator.LeftBrace,
+      Keyword.Return,
+      Literal.Str("bar"),
+      Operator.Semicolon,
+      Operator.RightBrace,
+      Keyword.Print,
+      Literal.Identifier("init"),
+      Operator.LeftParen,
+      Operator.RightParen,
+      Operator.Semicolon,
+      Comment.SingleLine("// expect: bar"),
+      Operator.RightBrace,
+      Operator.RightBrace,
+      Keyword.Print,
+      Literal.Identifier("Foo"),
+      Operator.LeftParen,
+      Operator.RightParen,
+      Operator.Semicolon,
+      Comment.SingleLine("// expect: Foo instance"),
+    )
+    assertEquals(Parser.parse(str), Right(expected))
+  }
+
 }
