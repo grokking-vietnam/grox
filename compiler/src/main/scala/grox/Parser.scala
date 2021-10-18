@@ -1,7 +1,7 @@
 package grox
 
 import cats.data.NonEmptyList
-import cats.parse.{Numbers => N, Parser => P, Parser0 => P0, Rfc5234 => R}
+import cats.parse.{LocationMap, Numbers => N, Parser => P, Parser0 => P0, Rfc5234 => R}
 
 object Parser {
 
@@ -63,7 +63,26 @@ object Parser {
 
   val token: P[Token] = P.oneOf(allParsers.map(_ <* whitespaces))
 
-  val parse = (maybeSpace *> token.rep.map(_.toList)).parseAll
+  enum Error {
+    case PartialParse[A](got: A, position: Int, locations: LocationMap) extends Error
+    case ParseFailure(position: Int, locations: LocationMap) extends Error
+  }
+
+  val parser = maybeSpace *> token.rep.map(_.toList)
+
+  def parse(str: String): Either[Error, List[Token]] = {
+    val lm = LocationMap(str)
+    parser.parse(str) match {
+      case Right(("", ls)) =>
+        Right(ls)
+      case Right((rest, ls)) =>
+        val idx = str.indexOf(rest)
+        Left(Error.PartialParse(ls, idx, lm))
+      case Left(err) =>
+        val idx = err.failedAtOffset
+        Left(Error.ParseFailure(idx, lm))
+    }
+  }
 
   // parse a keyword and some space or backtrack
   private def keySpace(str: String): P[Unit] = (P.string(str) ~ (whitespace | P.end)).void.backtrack
