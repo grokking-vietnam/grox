@@ -6,46 +6,25 @@ import cats.parse.{Numbers => N, Parser => P, Parser0 => P0, Rfc5234 => R}
 object Parser {
 
   val whitespace: P[Unit] = P.anyChar.filter(isSpace).void
-  //val spaces: P[Unit] = P.charsWhile(isSpace _).void
   val whitespaces: P0[Unit] = P.until0(P.anyChar.filter(!isSpace(_))).void
   val maybeSpace: P0[Unit] = whitespaces.?.void
 
-  val leftParen = operatorP(Operator.LeftParen)
-  val rightParen = operatorP(Operator.RightParen)
-  val leftBrace = operatorP(Operator.LeftBrace)
-  val rightBrace = operatorP(Operator.RightBrace)
-  val comma = operatorP(Operator.Comma)
-  val dot = operatorP(Operator.Dot)
-  val minus = operatorP(Operator.Minus)
-  val plus = operatorP(Operator.Plus)
-  val semicolon = operatorP(Operator.Semicolon)
-  val slash = operatorP(Operator.Slash)
-  val star = operatorP(Operator.Star)
+  val bangEqualOrBang = Operator.BangEqual.parse | Operator.Bang.parse
 
-  val bang = operatorP(Operator.Bang)
-  val bangEqual = operatorP(Operator.BangEqual)
-  val bangEqualOrBang = bangEqual | bang
+  val equalEqualOrEqual = Operator.EqualEqual.parse | Operator.Equal.parse
 
-  val equal = operatorP(Operator.Equal)
-  val equalEqual = operatorP(Operator.EqualEqual)
-  val equalEqualOrEqual = equalEqual | equal
+  val greaterEqualOrGreater = Operator.GreaterEqual.parse | Operator.Greater.parse
 
-  val greater = operatorP(Operator.Greater)
-  val greaterEqual = operatorP(Operator.GreaterEqual)
-  val greaterEqualOrGreater = greaterEqual | greater
-
-  val less = operatorP(Operator.Less)
-  val lessEqual = operatorP(Operator.LessEqual)
-  val lessEqualOrLess = lessEqual | less
+  val lessEqualOrLess = Operator.LessEqual.parse | Operator.Less.parse
 
   // keywords
-  val keywords = Keyword.values.map(keywordP).toList
+  val keywords = Keyword.values.map(k => keySpace(k.lexeme).as(k)).toList
   val keyword = P.oneOf(keywords)
 
   // todo support multiple lines comment
   val singleLineComment =
     P.string("//") *> P.until0(P.string("\n")).map(c => Comment.SingleLine(s"//$c"))
-  val singleLineCommentOrSlash = singleLineComment | slash
+  val singleLineCommentOrSlash = singleLineComment | Operator.Slash.parse
 
   val alphaNumeric = R.alpha | N.digit | P.char('_').as('_')
 
@@ -54,28 +33,24 @@ object Parser {
     .string
     .map(Literal.Identifier(_))
 
-  //val identifierOrKeyword: P[Token] = keyword | identifier
-
   val str = (R.dquote *> P.until0(R.dquote) <* R.dquote).map(Literal.Str(_))
 
   val frac = (P.char('.') *> N.digit.rep).map('.' :: _).backtrack
   val fracOrNone = frac.rep0(0, 1).map(_.flatMap(_.toList)).string
   val number = (N.digits ~ fracOrNone).map(p => p._1 + p._2).map(Literal.Number(_))
-  //val numberOrDot = number | dot
 
   val allParsers =
     keywords ++ List(
-      leftParen,
-      rightParen,
-      leftBrace,
-      rightBrace,
-      comma,
-      dot,
-      minus,
-      plus,
-      semicolon,
-      slash,
-      star,
+      Operator.LeftParen.parse,
+      Operator.RightParen.parse,
+      Operator.LeftBrace.parse,
+      Operator.RightBrace.parse,
+      Operator.Comma.parse,
+      Operator.Dot.parse,
+      Operator.Minus.parse,
+      Operator.Plus.parse,
+      Operator.Semicolon.parse,
+      Operator.Star.parse,
       bangEqualOrBang,
       equalEqualOrEqual,
       greaterEqualOrGreater,
@@ -84,18 +59,15 @@ object Parser {
       identifier,
       str,
       number,
-    ) // ++ keywords
+    )
+
   val token: P[Token] = P.oneOf(allParsers.map(_ <* whitespaces))
 
   val parse = (maybeSpace *> token.rep.map(_.toList)).parseAll
 
-  private def operatorP(token: Token) = P.string(token.lexeme).as(token)
-  private def keywordP(keyword: Keyword) = keySpace(keyword.lexeme).as(keyword)
-
   // parse a keyword and some space or backtrack
   private def keySpace(str: String): P[Unit] = (P.string(str) ~ (whitespace | P.end)).void.backtrack
-  //val spaces: P[Unit] = P.charsWhile(isSpace(_)).void
-
   private def isSpace(c: Char): Boolean = (c == ' ') || (c == '\t') || (c == '\r') || (c == '\n')
 
+  extension (o: Operator) def parse = P.string(o.lexeme).as(o)
 }

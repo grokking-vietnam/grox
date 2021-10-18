@@ -2,18 +2,18 @@ package grox
 
 case class Location(val line: Int)
 
-trait HasLexeme:
+// todo use opaque type for lexeme
+sealed trait Token:
   val lexeme: String
 
-// todo use opaque type for lexeme
-enum Literal(val lexeme: String) extends HasLexeme:
+enum Literal(val lexeme: String) extends Token:
 
   // Literals
   case Identifier(override val lexeme: String) extends Literal(lexeme)
   case Str(override val lexeme: String) extends Literal(lexeme)
   case Number(override val lexeme: String) extends Literal(lexeme)
 
-enum Operator(val lexeme: String) extends HasLexeme:
+enum Operator(val lexeme: String) extends Token:
 
   // Single character token
   case LeftParen extends Operator("(")
@@ -38,7 +38,7 @@ enum Operator(val lexeme: String) extends HasLexeme:
   case Less extends Operator("<")
   case LessEqual extends Operator("<=")
 
-enum Keyword(val lexeme: String) extends HasLexeme:
+enum Keyword(val lexeme: String) extends Token:
   case And extends Keyword("and")
   case Class extends Keyword("class")
   case Else extends Keyword("else")
@@ -56,9 +56,6 @@ enum Keyword(val lexeme: String) extends HasLexeme:
   case Var extends Keyword("var")
   case While extends Keyword("while")
 
-enum Comment(val lexeme: String) extends HasLexeme:
-  // Comments
+enum Comment(val lexeme: String) extends Token:
   case SingleLine(override val lexeme: String) extends Comment(lexeme)
   case MultipleLines(override val lexeme: String) extends Comment(lexeme)
-
-type Token = Keyword | Literal | Comment | Operator

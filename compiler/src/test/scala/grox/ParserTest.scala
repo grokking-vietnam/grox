@@ -16,78 +16,6 @@ class ParserTest extends CatsEffectSuite {
     assertEquals(Parser.whitespaces.parseAll("  "), Right(()))
   }
 
-  test("leftParen") {
-    assertEquals(Parser.leftParen.parseAll("("), Right(Operator.LeftParen))
-  }
-
-  test("rightParen") {
-    assertEquals(Parser.rightParen.parseAll(")"), Right(Operator.RightParen))
-  }
-
-  test("leftBrace") {
-    assertEquals(Parser.leftBrace.parseAll("{"), Right(Operator.LeftBrace))
-  }
-
-  test("rightBrace") {
-    assertEquals(Parser.rightBrace.parseAll("}"), Right(Operator.RightBrace))
-  }
-
-  test("comma") {
-    assertEquals(Parser.comma.parseAll(","), Right(Operator.Comma))
-  }
-
-  test("dot") {
-    assertEquals(Parser.dot.parseAll("."), Right(Operator.Dot))
-  }
-
-  test("minus") {
-    assertEquals(Parser.minus.parseAll("-"), Right(Operator.Minus))
-  }
-
-  test("plus") {
-    assertEquals(Parser.plus.parseAll("+"), Right(Operator.Plus))
-  }
-
-  test("semicolon") {
-    assertEquals(Parser.semicolon.parseAll(";"), Right(Operator.Semicolon))
-  }
-
-  test("slash") {
-    assertEquals(Parser.slash.parseAll("/"), Right(Operator.Slash))
-  }
-
-  test("bang") {
-    assertEquals(Parser.bang.parseAll("!"), Right(Operator.Bang))
-  }
-
-  test("bangEqual") {
-    assertEquals(Parser.bangEqual.parseAll("!="), Right(Operator.BangEqual))
-  }
-
-  test("equal") {
-    assertEquals(Parser.equal.parseAll("="), Right(Operator.Equal))
-  }
-
-  test("equalEqual") {
-    assertEquals(Parser.equalEqual.parseAll("=="), Right(Operator.EqualEqual))
-  }
-
-  test("greater") {
-    assertEquals(Parser.greater.parseAll(">"), Right(Operator.Greater))
-  }
-
-  test("greaterEqual") {
-    assertEquals(Parser.greaterEqual.parseAll(">="), Right(Operator.GreaterEqual))
-  }
-
-  test("less") {
-    assertEquals(Parser.less.parseAll("<"), Right(Operator.Less))
-  }
-
-  test("lessEqual") {
-    assertEquals(Parser.lessEqual.parseAll("<="), Right(Operator.LessEqual))
-  }
-
   test("equalOrEqualEqual ==") {
     assertEquals(Parser.equalEqualOrEqual.parseAll("="), Right(Operator.Equal))
   }
@@ -157,19 +85,6 @@ class ParserTest extends CatsEffectSuite {
     val identifier = "_"
     assertEquals(Parser.identifier.parseAll(identifier), Right(Literal.Identifier(identifier)))
   }
-
-  //test("keywordOrIdentifier") {
-  //val identifier = "orchi_1231"
-  //assertEquals(
-  //Parser.keywordOrIdentifier.parseAll(identifier),
-  //Right(Literal.Identifier(identifier)),
-  //)
-  //}
-
-  //test("keywordOrIdentifier or") {
-  //val identifier = "or"
-  //assertEquals(Parser.keywordOrIdentifier.parseAll(identifier), Right(Keyword.Or))
-  //}
 
   test("str") {
     val str = """"orchi_1231""""
