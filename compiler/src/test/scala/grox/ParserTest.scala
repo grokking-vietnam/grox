@@ -53,19 +53,29 @@ class ParserTest extends CatsEffectSuite {
     assertEquals(Parser.singleLineComment.parseAll(comment), Right((Comment.SingleLine(comment))))
   }
 
+  test("empty block comment") {
+    val comment = "/**/"
+    assertEquals(Parser.blockComment.parseAll(comment), Right((Comment.Block(comment))))
+  }
+
+  test("block comment") {
+    val comment = "/* this is a block comment */"
+    assertEquals(Parser.blockComment.parseAll(comment), Right((Comment.Block(comment))))
+  }
+
   test("single line comment empty") {
     val comment = "//"
     assertEquals(Parser.singleLineComment.parseAll(comment), Right((Comment.SingleLine(comment))))
   }
 
   test("singleLineComment orElse Slash /") {
-    assertEquals(Parser.singleLineCommentOrSlash.parseAll("/"), Right((Operator.Slash)))
+    assertEquals(Parser.commentOrSlash.parseAll("/"), Right((Operator.Slash)))
   }
 
   test("singleLineComment orElse Slash //") {
     val comment = "// this is a comment"
     assertEquals(
-      Parser.singleLineCommentOrSlash.parseAll(comment),
+      Parser.commentOrSlash.parseAll(comment),
       Right((Comment.SingleLine(comment))),
     )
   }
