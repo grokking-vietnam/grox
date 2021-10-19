@@ -1,0 +1,55 @@
+package grox
+
+import scala.deriving.Mirror
+
+import cats.*
+import cats.implicits.*
+
+import munit.ScalaCheckSuite
+import org.scalacheck.{Arbitrary, Gen, Prop}
+
+class ParserQuickCheck extends ScalaCheckSuite {
+
+  property("parse succesfully") {
+    Prop.forAll(loxGen) { ts =>
+      val lox = ts.foldMap(identity)
+      Parser.parse(lox).isRight == true
+    }
+  }
+
+  property("parsed tokens should have the same size as input") {
+    Prop.forAll(loxGen) { ts =>
+      val lox = ts.foldMap(identity)
+      val resultSize = Parser.parse(lox).map(_.size)
+      resultSize == Right(ts.size)
+    }
+  }
+  def nelString(g: Gen[Char]) = Gen.nonEmptyListOf[Char](g).map(_.mkString)
+  val identifierGen = nelString(Gen.alphaChar).map(Literal.Identifier(_))
+  val numberGen = nelString(Gen.numChar).map(Literal.Number(_))
+  val strGen = nelString(Gen.alphaChar).map(s => Literal.Str(s"\"$s\""))
+
+  val literalGen = Gen.oneOf(identifierGen, numberGen, strGen)
+
+  val operatorGen = Gen.oneOf(Operator.values)
+
+  val keywordGen = Gen.oneOf(Keyword.values)
+
+  val singleLineCommentGen = Gen.alphaNumStr.map(s => Comment.SingleLine(s"//$s\n"))
+  val blockCommentGen = Gen.alphaNumStr.map(s => Comment.Block(s"/*$s*/"))
+  val commentGen = Gen.oneOf(singleLineCommentGen, blockCommentGen)
+
+  val tokenGen =
+    for {
+      t <- Gen.oneOf(literalGen, operatorGen, keywordGen, commentGen)
+      w <- Gen.oneOf(" ", "\t", "\n", "\r")
+    } yield t.lexeme ++ w
+
+  val loxGen =
+    for {
+      n <- Gen.choose(1, 1000)
+      ts <- Gen.listOfN(n, tokenGen)
+      if ts.size > 0
+    } yield ts
+
+}

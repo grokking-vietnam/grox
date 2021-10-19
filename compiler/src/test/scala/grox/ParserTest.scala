@@ -1,8 +1,14 @@
 package grox
 
-import munit.CatsEffectSuite
+import scala.deriving.Mirror
 
-class ParserTest extends CatsEffectSuite {
+import cats.*
+import cats.implicits.*
+
+import munit.CatsEffectSuite
+import org.scalacheck.{Arbitrary, Gen}
+
+class ParserTest extends munit.FunSuite {
 
   test("whitespaces empty") {
     assertEquals(Parser.whitespaces.parseAll(""), Right(()))

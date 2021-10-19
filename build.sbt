@@ -1,5 +1,3 @@
-import Dependencies._
-
 inThisBuild(
   Seq(
     scalaVersion := "3.1.0-RC2",
@@ -20,7 +18,7 @@ inThisBuild(
 
 val commonSettings = Seq(
   scalacOptions -= "-Xfatal-warnings",
-  libraryDependencies ++= Cats.all,
+  libraryDependencies ++= Dependencies.all,
 )
 
 val compiler = project.settings(commonSettings)

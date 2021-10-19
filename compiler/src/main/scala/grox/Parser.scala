@@ -7,7 +7,6 @@ object Parser {
 
   val whitespace: P[Unit] = P.charIn(' ', '\t', '\n', '\r').void
   val whitespaces: P0[Unit] = P.until0(P.not(whitespace)).void
-  val maybeSpace: P0[Unit] = whitespaces.?.void
 
   val bangEqualOrBang = Operator.BangEqual.parse | Operator.Bang.parse
 
@@ -71,7 +70,7 @@ object Parser {
     case ParseFailure(position: Int, locations: LocationMap) extends Error
   }
 
-  val parser = maybeSpace *> token.rep.map(_.toList)
+  val parser = whitespaces *> token.rep.map(_.toList)
 
   def parse(str: String): Either[Error, List[Token]] = {
     val lm = LocationMap(str)
