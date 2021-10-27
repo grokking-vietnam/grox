@@ -1,6 +1,6 @@
 inThisBuild(
   Seq(
-    scalaVersion := "3.1.0-RC2",
+    scalaVersion := "3.1.0",
     versionScheme := Some("early-semver"),
 
     // Github Workflow
