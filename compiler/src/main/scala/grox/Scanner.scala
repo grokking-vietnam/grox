@@ -3,7 +3,7 @@ package grox
 import cats.data.NonEmptyList
 import cats.parse.{LocationMap, Numbers => N, Parser => P, Parser0 => P0, Rfc5234 => R}
 
-object Parser {
+object Scanner {
 
   val whitespace: P[Unit] = P.charIn(' ', '\t', '\n', '\r').void
   val whitespaces: P0[Unit] = P.until0(P.not(whitespace)).void
