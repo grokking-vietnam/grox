@@ -75,8 +75,7 @@ object Parser {
   def parse(str: String): Either[Error, List[Token]] = {
     val lm = LocationMap(str)
     parser.parse(str) match {
-      case Right(("", ls)) =>
-        Right(ls)
+      case Right(("", ls)) => Right(ls)
       case Right((rest, ls)) =>
         val idx = str.indexOf(rest)
         Left(Error.PartialParse(ls, idx, lm))
