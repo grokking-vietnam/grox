@@ -8,19 +8,19 @@ import cats.implicits.*
 import munit.ScalaCheckSuite
 import org.scalacheck.{Arbitrary, Gen, Prop}
 
-class ParserQuickCheck extends ScalaCheckSuite {
+class ScannerQuickCheck extends ScalaCheckSuite {
 
   property("parse succesfully") {
     Prop.forAll(loxGen) { ts =>
       val lox = ts.foldMap(identity)
-      Parser.parse(lox).isRight == true
+      Scanner.parse(lox).isRight == true
     }
   }
 
   property("parsed tokens should have the same size as input") {
     Prop.forAll(loxGen) { ts =>
       val lox = ts.foldMap(identity)
-      val resultSize = Parser.parse(lox).map(_.size)
+      val resultSize = Scanner.parse(lox).map(_.size)
       resultSize == Right(ts.size)
     }
   }
