@@ -2,17 +2,17 @@
 
 Giới thiệu về các khái niệm căn bản, các giai đoạn thực thi của compiler.
 
-* [The Parts of a Language](#The-Parts-of-a-Language)
+* [The Parts of a Language](#the-parts-of-a-language)
     * [Scanning/Lexing](#scanning)
     * [Parsing](#parsing)
     * [Static analysis](#static-analysis)
-    * [Intermediate representations](#intermediate-representations)
+    * [Intermediate representations](#intermediate-representation)
     * [Optimization](#optimization)
     * [Code Generation](#code-generation)
     * [Virtual Machine](#virtual-machine)
     * [Runtime](#runtime)
-* [Shortcut and alternative routes](#Shortcut-and-alternative-routes)
-    * [Single-pass compilers](#single-pass-compiler)
+* [Shortcut and alternative routes](#shortcut-and-alternative-routes)
+    * [Single-pass compilers](#single-pass-compilers)
     * [Tree-walk interpreters](#tree-walk-interpreters)
     * [Transpiler](#transpiler)
     * [Just-in-time compilation](#just-in-time-compilation)
