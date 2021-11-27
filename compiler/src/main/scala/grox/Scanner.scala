@@ -10,16 +10,20 @@ object Scanner {
   val whitespaces: P0[Unit] = P.until0(P.not(whitespace)).void
   val singleLine: P0[String] = P.until0(endOfLine)
 
+  // != | !
   val bangEqualOrBang: P[Operator] = Operator.BangEqual.parse | Operator.Bang.parse
 
+  // == | =
   val equalEqualOrEqual: P[Operator] = Operator.EqualEqual.parse | Operator.Equal.parse
 
+  // >= | >
   val greaterEqualOrGreater: P[Operator] = Operator.GreaterEqual.parse | Operator.Greater.parse
 
+  // <= | <
   val lessEqualOrLess: P[Operator] = Operator.LessEqual.parse | Operator.Less.parse
 
   val keywords: List[P[Keyword]] = Keyword.values.map(_.parse).toList
-  // test only
+  // for test only
   val keyword: P[Keyword] = P.oneOf(keywords)
 
   val slashSlash = P.string("//").as("//")
@@ -35,12 +39,15 @@ object Scanner {
       .map(c => Comment.Block(s"/*$c*/"))
   }
 
+  // /**/ | // | /
   val commentOrSlash: P[Token] = blockComment | singleLineComment | Operator.Slash.parse
 
   val underscore = P.char('_').as('_')
   val alphaOrUnderscore = R.alpha | underscore
   val alphaNumeric = alphaOrUnderscore | N.digit
 
+  // An identifier can only start with an undercore or a letter
+  // and can contain underscore or letter or numeric character
   val identifier: P[Literal] = (alphaOrUnderscore ~ alphaNumeric.rep0)
     .map(p => p._1 :: p._2)
     .string
@@ -97,5 +104,6 @@ object Scanner {
   }
 
   extension (o: Operator) def parse = P.string(o.lexeme).as(o)
-  extension (k: Keyword) def parse = (P.string(k.lexeme) ~ (whitespace | P.end)).void.backtrack.as(k)
+  extension (k: Keyword)
+    def parse = (P.string(k.lexeme) ~ (whitespace | P.end)).void.backtrack.as(k)
 }
