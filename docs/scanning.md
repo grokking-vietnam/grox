@@ -5,7 +5,7 @@
     * [Lexeme and Token](#lexeme-and-token)
     * [Regular language](#regular-language)
 * [Implementation](#implementation)
-    * [Parser Combinato](#parser-combinator)
+    * [Parser Combinator](#parser-combinator)
 * [Resources](#resources)
 
 ## Scanning
