@@ -10,6 +10,9 @@ import org.scalacheck.{Arbitrary, Gen, Prop}
 
 class ScannerQuickCheck extends ScalaCheckSuite {
 
+  // generate random list of tokens
+  // and put them together as input
+  // our sanner should parse it succesfully
   property("parse succesfully") {
     Prop.forAll(loxGen) { ts =>
       val lox = ts.foldMap(identity)
@@ -17,6 +20,10 @@ class ScannerQuickCheck extends ScalaCheckSuite {
     }
   }
 
+  // generate random list of tokens
+  // and put them together as input
+  // our sanner should parse it succesfully
+  // and the result should have the same size as the input
   property("parsed tokens should have the same size as input") {
     Prop.forAll(loxGen) { ts =>
       val lox = ts.foldMap(identity)
@@ -31,9 +38,9 @@ class ScannerQuickCheck extends ScalaCheckSuite {
 
   val literalGen = Gen.oneOf(identifierGen, numberGen, strGen)
 
-  val operatorGen = Gen.oneOf(Operator.values)
+  val operatorGen = Gen.oneOf(Operator.values.toSeq)
 
-  val keywordGen = Gen.oneOf(Keyword.values)
+  val keywordGen = Gen.oneOf(Keyword.values.toSeq)
 
   val singleLineCommentGen = Gen.alphaNumStr.map(s => Comment.SingleLine(s"//$s\n"))
   val blockCommentGen = Gen.alphaNumStr.map(s => Comment.Block(s"/*$s*/"))

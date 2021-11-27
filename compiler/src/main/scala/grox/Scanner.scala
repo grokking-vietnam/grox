@@ -5,43 +5,54 @@ import cats.parse.{LocationMap, Numbers => N, Parser => P, Parser0 => P0, Rfc523
 
 object Scanner {
 
-  val whitespace: P[Unit] = P.charIn(' ', '\t', '\n', '\r').void
+  val endOfLine: P[Unit] = R.cr | R.lf
+  val whitespace: P[Unit] = endOfLine | R.wsp
   val whitespaces: P0[Unit] = P.until0(P.not(whitespace)).void
+  val singleLine: P0[String] = P.until0(endOfLine)
 
-  val bangEqualOrBang = Operator.BangEqual.parse | Operator.Bang.parse
+  val bangEqualOrBang: P[Operator] = Operator.BangEqual.parse | Operator.Bang.parse
 
-  val equalEqualOrEqual = Operator.EqualEqual.parse | Operator.Equal.parse
+  val equalEqualOrEqual: P[Operator] = Operator.EqualEqual.parse | Operator.Equal.parse
 
-  val greaterEqualOrGreater = Operator.GreaterEqual.parse | Operator.Greater.parse
+  val greaterEqualOrGreater: P[Operator] = Operator.GreaterEqual.parse | Operator.Greater.parse
 
-  val lessEqualOrLess = Operator.LessEqual.parse | Operator.Less.parse
+  val lessEqualOrLess: P[Operator] = Operator.LessEqual.parse | Operator.Less.parse
 
-  val keywords = Keyword.values.map(k => keySpace(k.lexeme).as(k)).toList
-  val keyword = P.oneOf(keywords)
+  val keywords: List[P[Keyword]] = Keyword.values.map(_.parse).toList
+  // test only
+  val keyword: P[Keyword] = P.oneOf(keywords)
 
-  val singleLineComment =
-    P.string("//") *> P.until0(P.string("\n")).map(c => Comment.SingleLine(s"//$c"))
+  val slashSlash = P.string("//").as("//")
 
-  val blockComment = (P.string("/*") *> P.until0(P.string("*/")) <* P.string("*/")).map(c =>
-    Comment.Block(s"/*$c*/")
+  val singleLineComment: P[Comment] = (slashSlash ~ singleLine).map((ss, line) =>
+    Comment.SingleLine(s"$ss$line")
   )
 
-  val commentOrSlash = blockComment | singleLineComment | Operator.Slash.parse
+  val blockComment: P[Comment] = {
+    val startOfBlockComment = P.string("/*").as("/*")
+    val endOfBlockComment = P.string("*/").as("*/")
+    (startOfBlockComment *> P.until0(endOfBlockComment) <* endOfBlockComment)
+      .map(c => Comment.Block(s"/*$c*/"))
+  }
 
-  val alphaNumeric = R.alpha | N.digit | P.char('_').as('_')
+  val commentOrSlash: P[Token] = blockComment | singleLineComment | Operator.Slash.parse
 
-  val identifier = ((R.alpha | P.char('_')) ~ alphaNumeric.rep0)
+  val underscore = P.char('_').as('_')
+  val alphaOrUnderscore = R.alpha | underscore
+  val alphaNumeric = alphaOrUnderscore | N.digit
+
+  val identifier: P[Literal] = (alphaOrUnderscore ~ alphaNumeric.rep0)
     .map(p => p._1 :: p._2)
     .string
     .map(Literal.Identifier(_))
 
-  val str = (R.dquote *> P.until0(R.dquote) <* R.dquote).map(Literal.Str(_))
+  val str: P[Literal] = (R.dquote *> P.until0(R.dquote) <* R.dquote).map(Literal.Str(_))
 
-  val frac = (P.char('.') *> N.digit.rep).map('.' :: _).backtrack
-  val fracOrNone = frac.rep0(0, 1).map(_.flatMap(_.toList)).string
-  val number = (N.digits ~ fracOrNone).map(p => p._1 + p._2).map(Literal.Number(_))
+  val frac = (P.char('.') *> N.digits).map('.' +: _).backtrack
+  val fracOrNone = frac.rep0(0, 1).string
+  val number: P[Literal] = (N.digits ~ fracOrNone).map(p => p._1 + p._2).map(Literal.Number(_))
 
-  val allParsers =
+  val allTokens =
     keywords ++ List(
       Operator.LeftParen.parse,
       Operator.RightParen.parse,
@@ -63,7 +74,7 @@ object Scanner {
       number,
     )
 
-  val token: P[Token] = P.oneOf(allParsers.map(_ <* whitespaces))
+  val token: P[Token] = P.oneOf(allTokens.map(_ <* whitespaces))
 
   enum Error {
     case PartialParse[A](got: A, position: Int, locations: LocationMap) extends Error
@@ -85,8 +96,8 @@ object Scanner {
     }
   }
 
-  // parse a keyword and some space or backtrack
   private def keySpace(str: String): P[Unit] = (P.string(str) ~ (whitespace | P.end)).void.backtrack
 
   extension (o: Operator) def parse = P.string(o.lexeme).as(o)
+  extension (k: Keyword) def parse = keySpace(k.lexeme).as(k)
 }
