@@ -96,8 +96,6 @@ object Scanner {
     }
   }
 
-  private def keySpace(str: String): P[Unit] = (P.string(str) ~ (whitespace | P.end)).void.backtrack
-
   extension (o: Operator) def parse = P.string(o.lexeme).as(o)
-  extension (k: Keyword) def parse = keySpace(k.lexeme).as(k)
+  extension (k: Keyword) def parse = (P.string(k.lexeme) ~ (whitespace | P.end)).void.backtrack.as(k)
 }
