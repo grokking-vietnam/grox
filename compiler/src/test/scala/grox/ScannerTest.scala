@@ -69,6 +69,11 @@ class ScannerTest extends munit.FunSuite {
     assertEquals(Scanner.blockComment.parseAll(comment), Right((Comment.Block(comment))))
   }
 
+  test("nested block comment") {
+    val comment = "/* this is a /*nested*/ block /*comment*/ */"
+    assertEquals(Scanner.blockComment.parseAll(comment), Right(Comment.Block(comment)))
+  }
+
   test("single line comment empty") {
     val comment = "//"
     assertEquals(Scanner.singleLineComment.parseAll(comment), Right((Comment.SingleLine(comment))))
@@ -316,3 +321,4 @@ print Foo(); // expect: Foo instance"""
   }
 
 }
+
