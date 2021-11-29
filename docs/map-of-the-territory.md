@@ -27,14 +27,14 @@ Giới thiệu về các khái niệm căn bản, các giai đoạn thực thi c
 
 Còn được gọi là lexing hoặc lexical analysis. Một scanner (hoặc lexer) nhận một string và chia nhỏ nó thành một chuỗi của token.
 
-Tokens có thể coi như "từ" và dấu câu, dùng để tạo nên ngữ pháp của một ngôn ngữ.
+Tokens có thể coi như "từ" và dấu câu, được dùng để tạo nên ngữ pháp của một ngôn ngữ.
 ![ex1](https://i.imgur.com/ETU1ZVC.png)
 
 Fun fact: **Lexical** comes from the Greek root **lex**, meaning **word**
 
 ### Parsing
 
-Parsers có đầu vào là một dãy của token và trả về một cấu trúc dữ liệu kiểu cây hay được gọi là parse tree hoặc abstract syntax tree(AST) hoặc syntax trees. Thêm vào đó parsers còn có nhiệm vụ thông báo các lỗi ngữ pháp (syntax error) cho người dùng.
+Parsers có đầu vào là một chuỗi token và trả về một cấu trúc dữ liệu kiểu cây thường được gọi là parse tree hoặc abstract syntax tree(AST) hoặc syntax trees. Thêm vào đó parsers còn có nhiệm vụ thông báo các lỗi ngữ pháp (syntax error) cho người dùng.
 
 Đối chiếu với các ngôn ngữ nói thì, scanner sẽ chia nhỏ một đoạn văn thành từng từ, dấu câu; còn parser sẽ dựa vào đó mà phân tích ngữ pháp cả đoạn văn.
 
@@ -44,24 +44,24 @@ Parsers có đầu vào là một dãy của token và trả về một cấu tr
 
 Dựa vào ASTs từ giai đoạn trước, phần này sẽ làm những công việc sau:
 
-- **binding/resolution**: với mỗi định danh(identifier; vd: tên biến hoặc tên hàm), chúng ta cần tìm nơi nó định nghĩa, nơi nó được sử dụng; phạm vi/scope hợp lệ của nó.
-- **type checking**: nếu ngôn ngữ thuộc dạng staticallly typed; khi khai báo một biến bất kỳ, chúng ta phải xác định được type của biến đó. Và report type error khi cần thiết.
-- Sau khi phân tích xong, chúng ta sẽ lưu lại những thông tin cần thiết để phục vụ cho các giai đoạn tiếp theo. Có 3 cách chính như sau:
+- **binding/resolution**: với mỗi định danh(identifier; vd: tên biến hoặc tên hàm), chúng ta cần tìm nơi nó định nghĩa, nơi nó được sử dụng; phạm vi(scope) hợp lệ của nó.
+- **type checking**: nếu một ngôn ngữ thuộc dạng staticallly typed; khi khai báo một biến bất kỳ, chúng ta phải xác định được type của biến đó. Và report type error khi cần thiết.
+- Sau khi phân tích xong, chúng ta sẽ lưu lại những thông tin cần thiết để phục vụ cho các giai đoạn tiếp theo. Có 3 cách lưu chính như sau:
     1. Chèn ngay vào ASTs dưới dạng *attributes*
     2. Lưu vào [Symbol Table](https://www.geeksforgeeks.org/symbol-table-compiler/); thông thường dành cho identifiers và giá trị của chúng.
-    3. Chuyển hẳn sang một cấu trúc AST mới có nhiều khả năng hơn.
+    3. Chuyển hẳn sang một cấu trúc AST mới có nhiều thông tin hơn.
 
 #### Notes
 
-3 giai đoạn phía trên được gọi là phần front end của compiler. Các phần còn lại được gọi là back end.
+3 giai đoạn phía trên được gọi là phần front end của compiler. Các phần được trình bày tiếp theo được gọi là back end.
 
 ### Intermediate Representation
 
 Có thể tưởng tượng compiler như một pipeline, gồm 2 giai đoạn (phase) lớn (front end và back end) và nhiều giai đoạn nhỏ. Output của phase này sẽ là input của phase kia.
 
-Giai đoạn front end tập trung chủ yếu vào phần source code. Giai đoạn back end tập trung vào phần chạy chương trình (inal architecture where the program will run). Ở giữa 2 giai đoạn đó thì code được lưu dưới dạng *intermediate representation(IR)*. IR sẽ không gắn chặt với input (vd: source code) hay output (vd: binary code) của compiler. Có thể coi IR như một interface giữa 2 ngôn ngữ đó.
+Giai đoạn front end tập trung chủ yếu vào phần source code. Giai đoạn back end tập trung vào phần chạy chương trình (final architecture where the program will run). Ở giữa 2 giai đoạn đó thì code được lưu dưới dạng *intermediate representation(IR)*. IR sẽ không gắn chặt với input (vd: source code) hay output (vd: binary code) của compiler. Có thể coi IR như một interface giữa 2 ngôn ngữ đó.
 
-Nhờ đó mà chúng ta có thể support nhiều runtime một cách dễ dàng: dùng chung 1 front end, và từng runtime sẽ có backend của riêng nó.
+Nhờ vào IR, mà chúng ta có thể support nhiều runtime một cách dễ dàng: dùng chung 1 front end, và mỗi runtime khác nhau sẽ có backend của riêng nó.
 
 Ví dụ như Kotlin, Scala đều có thể chạy trên 3 runtime khác nhau: JVM, Javascript, Native. Hoặc [GCC](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) có thể biên dịch hàng tá ngôn ngữ và có thể target trên dưới 100 architectures khác nhau.
 
@@ -108,7 +108,7 @@ Trong cả 2 trường hợp đó chúng ta vẫn cần phải một số servic
 - Quản lý memory/gabarge collector
 - Nếu language hỗ trợ runtim checking (vd: `instance of`), chúng ta cần nắm được type của từng object trong cả quá trình thực thi.
 
-Tất cả những thứ đó được chạy trong runtime nên được gọi là runtime.
+Tất cả những thứ đó được thực hiện trong lúc chạy chương trình nên được gọi là runtime.
 
 Ở những ngôn ngữ được compile hoàn toàn thành native code, thì runtime được đính kèm luôn vào chương trình (vd như Golang).
 
@@ -122,7 +122,7 @@ Phần trên đã mô tả tất cả các bước mà chúng ta có thể phả
 
 Có một số compiler gộp parsing, analysis và code generation lại làm một, thành ra output code được trực tiếp tạo ra từ parser. Chúng không sử dụng ASTs cũng như IRs trong quá trình biên dịch. Chúng được gọi là **single-pass compilers**.
 
-Nhứng **single-pass compilers** này sẽ có nhiều giới hạn:
+Những **single-pass compilers** này sẽ có nhiều giới hạn:
 - Không có một cấu trúc dữ liệu trung gian để lưu lại global information
 - Không thể quay lại các phần trước của chương trình. Nghĩa là khi compiler thấy một biểu thức nào đó thì nó phải có khả năng biên dịch biểu thức đó ngay.
 
