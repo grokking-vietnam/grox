@@ -32,12 +32,15 @@ object Scanner {
     Comment.SingleLine(s"$ss$line")
   )
 
-  val blockComment: P[Comment] = {
-    val startOfBlockComment = P.string("/*").as("/*")
-    val endOfBlockComment = P.string("*/").as("*/")
-    (startOfBlockComment *> P.until0(endOfBlockComment) <* endOfBlockComment)
-      .map(c => Comment.Block(s"/*$c*/"))
-  }
+  val blockComment: P[Comment] =
+    val start = P.string("/*")
+    val end = P.string("*/")
+    val notStartOrEnd: P[Char] = (!(start | end)).with1 *> P.anyChar
+    P.recursive[Comment.Block] { recurse =>
+      (start *>
+        (notStartOrEnd | recurse).rep0
+        <* end).string.map(Comment.Block(_))
+    }
 
   // /**/ | // | /
   val commentOrSlash: P[Token] = blockComment | singleLineComment | Operator.Slash.parse

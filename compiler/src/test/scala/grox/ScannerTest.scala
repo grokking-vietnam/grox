@@ -321,4 +321,3 @@ print Foo(); // expect: Foo instance"""
   }
 
 }
-
