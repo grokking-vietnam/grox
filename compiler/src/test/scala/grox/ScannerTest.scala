@@ -107,7 +107,7 @@ class ScannerTest extends munit.FunSuite {
     assertEquals(Scanner.identifier.parseAll(identifier), Right(Literal.Identifier(identifier)))
   }
 
-  test("str") {
+  test("string") {
     val str = """"orchi_1231""""
     assertEquals(Scanner.str.parseAll(str), Right(Literal.Str("orchi_1231")))
   }
@@ -117,12 +117,17 @@ class ScannerTest extends munit.FunSuite {
     assertEquals(Scanner.number.parseAll(str), Right(Literal.Number(str)))
   }
 
+  test("fraction only failed") {
+    val str = ".1234"
+    assertEquals(Scanner.number.parseAll(str).isLeft, true)
+  }
+
   test("number with frac") {
     val str = "1234.2323"
     assertEquals(Scanner.number.parseAll(str), Right(Literal.Number(str)))
   }
 
-  test("number and dot") {
+  test("number and dot failed") {
     val str = "1234."
     assertEquals(Scanner.number.parseAll(str).isLeft, true)
   }

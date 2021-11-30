@@ -7,8 +7,8 @@ object Scanner {
 
   val endOfLine: P[Unit] = R.cr | R.lf
   val whitespace: P[Unit] = endOfLine | R.wsp
-  val whitespaces: P0[Unit] = P.until0(P.not(whitespace)).void
-  val singleLine: P0[String] = P.until0(endOfLine)
+  val whitespaces: P0[Unit] = P.until0(!whitespace).void
+  val line: P0[String] = P.until0(endOfLine)
 
   // != | !
   val bangEqualOrBang: P[Operator] = Operator.BangEqual.parse | Operator.Bang.parse
@@ -23,14 +23,13 @@ object Scanner {
   val lessEqualOrLess: P[Operator] = Operator.LessEqual.parse | Operator.Less.parse
 
   val keywords: List[P[Keyword]] = Keyword.values.map(_.parse).toList
-  // for test only
+  // for testing purpose only
   val keyword: P[Keyword] = P.oneOf(keywords)
 
-  val slashSlash = P.string("//").as("//")
-
-  val singleLineComment: P[Comment] = (slashSlash ~ singleLine).map((ss, line) =>
-    Comment.SingleLine(s"$ss$line")
-  )
+  val singleLineComment: P[Comment] = {
+    val start = P.string("//")
+    (start *> line).string.map(Comment.SingleLine(_))
+  }
 
   val blockComment: P[Comment] =
     val start = P.string("/*")
@@ -42,22 +41,26 @@ object Scanner {
         <* end).string.map(Comment.Block(_))
     }
 
-  // /**/ | // | /
   val commentOrSlash: P[Token] = blockComment | singleLineComment | Operator.Slash.parse
-
-  val underscore = P.char('_').as('_')
-  val alphaOrUnderscore = R.alpha | underscore
-  val alphaNumeric = alphaOrUnderscore | N.digit
 
   // An identifier can only start with an undercore or a letter
   // and can contain underscore or letter or numeric character
-  val identifier: P[Literal] = (alphaOrUnderscore ~ alphaNumeric.rep0)
-    .map(p => p._1 :: p._2)
-    .string
-    .map(Literal.Identifier(_))
+  val identifier: P[Literal] = {
+
+    val underscore = P.char('_').as('_')
+    val alphaOrUnderscore = R.alpha | underscore
+    val alphaNumeric = alphaOrUnderscore | N.digit
+
+    (alphaOrUnderscore ~ alphaNumeric.rep0)
+      .map(p => p._1 :: p._2)
+      .string
+      .map(Literal.Identifier(_))
+  }
 
   val str: P[Literal] = (R.dquote *> P.until0(R.dquote) <* R.dquote).map(Literal.Str(_))
 
+  // valid number: 1234 or 12.43
+  // invalid number: .1234 or 1234.
   val frac = (P.char('.') *> N.digits).map('.' +: _).backtrack
   val fracOrNone = frac.rep0(0, 1).string
   val number: P[Literal] = (N.digits ~ fracOrNone).map(p => p._1 + p._2).map(Literal.Number(_))
@@ -84,14 +87,9 @@ object Scanner {
       number,
     )
 
-  val token: P[Token] = P.oneOf(allTokens.map(_ <* whitespaces))
+  val token: P[Token] = P.oneOf(allTokens).surroundedBy(whitespaces)
 
-  enum Error {
-    case PartialParse[A](got: A, position: Int, locations: LocationMap) extends Error
-    case ParseFailure(position: Int, locations: LocationMap) extends Error
-  }
-
-  val parser = whitespaces *> token.rep.map(_.toList)
+  val parser = token.rep.map(_.toList)
 
   def parse(str: String): Either[Error, List[Token]] = {
     val lm = LocationMap(str)
@@ -106,7 +104,11 @@ object Scanner {
     }
   }
 
+  enum Error {
+    case PartialParse[A](got: A, position: Int, locations: LocationMap) extends Error
+    case ParseFailure(position: Int, locations: LocationMap) extends Error
+  }
+
   extension (o: Operator) def parse = P.string(o.lexeme).as(o)
-  extension (k: Keyword)
-    def parse = (P.string(k.lexeme) ~ (whitespace | P.end)).void.backtrack.as(k)
+  extension (k: Keyword) def parse = (P.string(k.lexeme) ~ (whitespace | P.end)).backtrack.as(k)
 }
