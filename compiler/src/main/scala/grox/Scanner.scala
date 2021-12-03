@@ -60,7 +60,7 @@ object Scanner {
   // valid numbers: 1234 or 12.43
   // invalid numbers: .1234 or 1234.
   val number: P[Literal] = {
-    val fraction = (P.char('.') *> N.digits).map('.' +: _).backtrack
+    val fraction = (P.char('.') *> N.digits).string.backtrack
     (N.digits ~ fraction.?).string.map(Literal.Number(_))
   }
 
