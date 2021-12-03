@@ -31,9 +31,9 @@ type Parser[A] = String => Either[Parser.Error, (String, A)]
 Trong thực tế thì Parser được định nghĩa phức tạp hơn một xíu như sau:
 
 ```
-sealed abstract class Parser[+A] { 
+sealed abstract class Parser[+A] {
   final def parse(str: String): Either[Parser.Error, (String, A)]
-  
+
   // Attempt to parse all of the input `str` into an `A` value.
   final def parseAll(str: String): Either[Parser.Error, A]
 }
@@ -42,60 +42,71 @@ sealed abstract class Parser[+A] {
 
 ## Parser with cats
 
-Sau khi đã có định ngĩa của parser, chúng ta sẽ khám cách sử dụng parser và parser combinator bằng library [cats-parse](https://github.com/typelevel/cats-parse). Các phần sau đa phần được lấy trực tiếp từ [Readme](https://github.com/typelevel/cats-parse#readme).
+Sau khi đã có định nghĩa của parser, chúng ta sẽ khám cách sử dụng parser và parser combinator bằng library [cats-parse](https://github.com/typelevel/cats-parse). Các phần sau đa phần được lấy trực tiếp từ [cats-parse](https://github.com/typelevel/cats-parse#readme) với một số chỉnh sửa.
 
 
 ### Simple Parsers
 
 Library cats-parse cung cấp một tập hợp các parser cơ bản, để tạo thành các building block cho bất cứ parser phức tạp nào.
 
-```
-// Đầu tiên là Parser.anyChar, là một parser luôn luôn trả về ký tự đầu tiên của chuỗi input (fail trong trường hợp đầu vào là một empty string).
 
+Đầu tiên là `Parser.anyChar`, là một parser luôn luôn trả về ký tự đầu tiên của chuỗi input (fail trong trường hợp đầu vào là một empty string).
+
+```
 val p: Parser[Char] = Parser.anyChar
 
 p.parse("t")
-// res0: Either[Error, Tuple2[String, Char]] = Right((,t))
+// Either[Error, Tuple2[String, Char]] = Right((,t))
 p.parse("")
-// res1: Either[Error, Tuple2[String, Char]] = Left(Error(0,NonEmptyList(InRange(0,,))))
+// Either[Error, Tuple2[String, Char]] = Left(Error(0,NonEmptyList(InRange(0,,))))
 p.parse("two")
-// res2: Either[Error, Tuple2[String, Char]] = Right((wo,t))
+// Either[Error, Tuple2[String, Char]] = Right((wo,t))
+```
 
+`Parser.string` là parser mà nó sẽ parse thành công nếu string input bắt đầu với giá trị của `str`
 
-// Parser.string là parser mà nó sẽ parse thành công nếu string input bắt đầu với giá trị của `str`
+```
 val p: Parser[Unit] = Parser.string("hello")
 
 p.parse("hello")
-// res0: Either[Error, Tuple2[String, Unit]] = Right((,()))
+// Either[Error, Tuple2[String, Unit]] = Right((,()))
 p.parse("hell")
-// res1: Either[Error, Tuple2[String, Unit]] = Left(Error(0,NonEmptyList(OneOfStr(0,List(hello)))))
+// Either[Error, Tuple2[String, Unit]] = Left(Error(0,NonEmptyList(OneOfStr(0,List(hello)))))
 p.parse("hello world")
 // res2: Either[Error, Tuple2[String, Unit]] = Right((world ,hello))
+```
 
-// sp tương tự như anyChar nhưng chỉ đúng khi ký tự đầu tiên là ký tự khoảng trắng.
-// Chú ý rằng sp có type là Parser[Unit], điều đó có nghĩa là nó sẽ trả về Unit nếu thành công.
-sp.parse(" ")
+`Parser.sp` tương tự như `Parser.anyChar` nhưng chỉ đúng khi ký tự đầu tiên là ký tự khoảng trắng. Chú ý rằng `Parser.sp` có type là `Parser[Unit]``, điều đó có nghĩa là nó sẽ trả về `Unit` nếu thành công.
+
+```
+Parser.sp.parse(" ")
 // Either[Error, Tuple2[String, Unit]] = Right((,()))
-sp.parse("o_o")
+Parser.sp.parse("o_o")
 // Either[Error, Tuple2[String, Unit]] = Left(Error(0,NonEmptyList(InRange(0, , ))))
 
+```
 
-// alpha tương tự như anyChar nhưng chỉ đúng khi ký tự đầu tiên là ký tự alphabet.
-alpha.parse("z")
+`Parser.alpha` tương tự như `Parser.anyChar` nhưng chỉ đúng khi ký tự đầu tiên là ký tự alphabet.
+```
+Parser.alpha.parse("z")
 // Either[Error, Tuple2[String, Char]] = Right((,z))
-alpha.parse("3")
+Parser.alpha.parse("3")
 // Either[Error, Tuple2[String, Char]] = Left(Error(0,NonEmptyList(InRange(0,A,Z), InRange(0,a,z))))
+```
 
-// digit tương tự như alpha nhưng chỉ đúng khi ký tự đầu tiên là ký tự từ 0-9
-digit.parse("3")
+`Parser.digit` tương tự như `Parser.alpha` nhưng chỉ đúng khi ký tự đầu tiên là ký tự từ 0-9
+```
+Parser.digit.parse("3")
 // Either[Error, Tuple2[String, Char]] = Right((,3))
-digit.parse("z")
+Parser.digit.parse("z")
 //  Either[Error, Tuple2[String, Char]] = Left(Error(0,NonEmptyList(InRange(0,0,9))))
+```
 
-
-// Parser.charIn nhận một string đầu vào và trả về một parser mà nó sẽ parse thành công nếu ký tự đầu tiên là một character trong string đầu vào.
+`Parser.charIn` nhận một string đầu vào và trả về một parser mà nó sẽ parse thành công nếu ký tự đầu tiên là một character trong string đầu vào.
+```
 val charIn = Parser.charIn("123456789") // tương đương với digit
-
+charIn.parse("3")
+// Either[Error, Tuple2[String, Char]] = Right((,3))
 ```
 
 
@@ -105,7 +116,7 @@ val charIn = Parser.charIn("123456789") // tương đương với digit
 Đầu ra của parser có thể được xử lý bằng `map` function.
 
 ```
-case class CharWrapper(value: Char) 
+case class CharWrapper(value: Char)
 
 val p: Parser[CharWrapper] = Parser.anyChar.map(char => CharWrapper(char))
 
@@ -113,7 +124,7 @@ p.parse("t")
 // res0 = Right((,CharWrapper(t)))
 ```
 
-Library cung cấp sẵn một số hàm cho type `String` và `Unit`
+Library cung cấp sẵn một số hàm cho để mapping sang type `String` và `Unit` dễ dàng hơn
 
 ```
 /* String */

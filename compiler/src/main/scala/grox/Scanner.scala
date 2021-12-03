@@ -46,7 +46,6 @@ object Scanner {
   // An identifier can only start with an undercore or a letter
   // and can contain underscore or letter or numeric character
   val identifier: P[Literal] = {
-
     val underscore = P.char('_').as('_')
     val alphaOrUnderscore = R.alpha | underscore
     val alphaNumeric = alphaOrUnderscore | N.digit
@@ -60,9 +59,10 @@ object Scanner {
 
   // valid numbers: 1234 or 12.43
   // invalid numbers: .1234 or 1234.
-  val frac = (P.char('.') *> N.digits).map('.' +: _).backtrack
-  val fracOrNone = frac.rep0(0, 1).string
-  val number: P[Literal] = (N.digits ~ fracOrNone).string.map(Literal.Number(_))
+  val number: P[Literal] = {
+    val fraction = (P.char('.') *> N.digits).map('.' +: _).backtrack
+    (N.digits ~ fraction.?).string.map(Literal.Number(_))
+  }
 
   val allTokens =
     keywords ++ List(
