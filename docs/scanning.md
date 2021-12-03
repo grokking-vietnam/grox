@@ -11,7 +11,7 @@
 
 ## Introduction
 
-Là bước đầu tiên của bất cứ compiler hoặc interpreter nào. Scanning hay còn được gọi là lexing hoặc lexical analysis. Một scanner (hoặc lexer) nhận một string và chia nhỏ nó thành một chuỗi của token. Token có thể coi như "từ" và "dấu câu" được dùng để tạo nên ngữ pháp của một ngôn ngữ. 
+Là bước đầu tiên của bất cứ compiler hoặc interpreter nào. Scanning hay còn được gọi là lexing hoặc lexical analysis. Một scanner (hoặc lexer) nhận một string và chia nhỏ nó thành một chuỗi của token. Token có thể coi như "từ" và "dấu câu" được dùng để tạo nên ngữ pháp của một ngôn ngữ.
 
 
 Fun fact: **Lexical** comes from the Greek root **lex**, meaning **word**
