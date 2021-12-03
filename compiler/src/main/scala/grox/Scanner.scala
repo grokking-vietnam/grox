@@ -8,7 +8,6 @@ object Scanner {
   val endOfLine: P[Unit] = R.cr | R.lf
   val whitespace: P[Unit] = endOfLine | R.wsp
   val whitespaces: P0[Unit] = P.until0(!whitespace).void
-  val line: P0[String] = P.until0(endOfLine)
 
   // != | !
   val bangEqualOrBang: P[Operator] = Operator.BangEqual.parse | Operator.Bang.parse
@@ -28,6 +27,7 @@ object Scanner {
 
   val singleLineComment: P[Comment] = {
     val start = P.string("//")
+    val line: P0[String] = P.until0(endOfLine)
     (start *> line).string.map(Comment.SingleLine(_))
   }
 
@@ -52,18 +52,17 @@ object Scanner {
     val alphaNumeric = alphaOrUnderscore | N.digit
 
     (alphaOrUnderscore ~ alphaNumeric.rep0)
-      .map(p => p._1 :: p._2)
       .string
       .map(Literal.Identifier(_))
   }
 
-  val str: P[Literal] = (R.dquote *> P.until0(R.dquote) <* R.dquote).map(Literal.Str(_))
+  val str: P[Literal] = P.until0(R.dquote).with1.surroundedBy(R.dquote).map(Literal.Str(_))
 
-  // valid number: 1234 or 12.43
-  // invalid number: .1234 or 1234.
+  // valid numbers: 1234 or 12.43
+  // invalid numbers: .1234 or 1234.
   val frac = (P.char('.') *> N.digits).map('.' +: _).backtrack
   val fracOrNone = frac.rep0(0, 1).string
-  val number: P[Literal] = (N.digits ~ fracOrNone).map(p => p._1 + p._2).map(Literal.Number(_))
+  val number: P[Literal] = (N.digits ~ fracOrNone).string.map(Literal.Number(_))
 
   val allTokens =
     keywords ++ List(
