@@ -4,7 +4,7 @@
 
 Trong bài này, mình sẽ trình bày về parser combinators một kỹ thuật thường được sử dụng trong Functional Programming khi giải quyết các bài toán parsing. Nếu chúng ta coi Parser là một function có input là String và output là một structured data; thì parser combinator là một higher-order function nhận một hoặc nhiều parser và kết hợp chúng lại thành một parser mới. Ý tưởng ở đây là chúng ta có thể dùng các parser đơn giản và gộp chúng lại bằng các parser combinator để giải quyết các bài toán phức tạp hơn.
 
-Một số ví dụ bài toán về parsing như: compiler cần parse source code thành [Abstract Syntax Tree/AST](https://en.wikipedia.org/wiki/Abstract_syntax_tree) hoặc một chuỗi các token (nếu compiler tách riêng [lexing](https://en.wikipedia.org/wiki/Lexical_analysis)); json parser sẽ parser json string thành các data class.
+Một số ví dụ bài toán về parsing như: compiler cần parse source code thành [Abstract Syntax Tree/AST](https://en.wikipedia.org/wiki/Abstract_syntax_tree) hoặc một chuỗi các token (nếu compiler tách riêng [scanning](/docs/scanning.md)); json parser sẽ parser json string thành các data class.
 
 Sau đây mình sẽ sử dụng ngôn ngữ [Scala 3](https://docs.scala-lang.org/scala3/getting-started.html) và thư viện [cats-parse](https://github.com/typelevel/cats-parse) để giải thích về parser combinator nhưng trước hết hãy bắt đầu bằng việc khám phá type của parser[^1].
 
@@ -63,7 +63,7 @@ p.parse("two")
 // Either[Error, Tuple2[String, Char]] = Right((wo,t))
 ```
 
-`Parser.string` là parser mà nó sẽ parse thành công nếu string input bắt đầu với giá trị của `str`. Chú ý rằng `Parser.string` sẽ trả về một parser có type là `Parser[Unit]``, điều đó có nghĩa là nó sẽ trả về `Unit` nếu thành công.
+`Parser.string` là parser mà nó sẽ parse thành công nếu string input bắt đầu với giá trị của `str`. Chú ý rằng `Parser.string` sẽ trả về một parser có type là `Parser[Unit]`, điều đó có nghĩa là nó sẽ trả về `Unit` nếu thành công.
 
 ```
 val p: Parser[Unit] = Parser.string("hello")
@@ -193,7 +193,7 @@ p2.parse("t ")
 // Either[Error, Tuple2[String, Char]] = Right((,t))
 
 // Chú ý nếu muốn bỏ qua kết quả của alpha thì chuyển mũi tên
-val p21: Parser[Char] = alpha *> sp
+val p21: Parser[Unit] = alpha *> sp
 
 /* surroundedBy */
 
@@ -237,9 +237,9 @@ val numberOrNone: Parser0[List[Char]] = digit.rep0
 number.parse("73")
 // Either[Error, Tuple2[String, NonEmptyList[Char]]] = Right((,NonEmptyList(7, 3)))
 number.parse("")
-//  Either[Error, Tuple2[String, NonEmptyList[Char]]] = Left(Error(0,NonEmptyList(InRange(0,0,9))))
+// Either[Error, Tuple2[String, NonEmptyList[Char]]] = Left(Error(0,NonEmptyList(InRange(0,0,9))))
 numberOrNone.parse("")
-//  Either[Error, Tuple2[String, List[Char]]] = Right((,List()))
+// Either[Error, Tuple2[String, List[Char]]] = Right((,List()))
 numberOrNone.parse("73")
 // Either[Error, Tuple2[String, List[Char]]] = Right((,List(7, 3)))
 ```
@@ -254,7 +254,7 @@ val word2 = alpha.rep.string
 val word2 = alpha.repAs[String]
 
 word1.parse("bla")
-//  Either[Error, Tuple2[String, String]] = Right((,bla))
+// Either[Error, Tuple2[String, String]] = Right((,bla))
 ```
 
 3 parser ở trên hoàn toàn giống nhau về mặt kết quả, nhưng 2 parser sau sẽ tối ưu hơn vì chúng không phải tạo ra List trung gian
@@ -268,7 +268,7 @@ Có một số parser không bao giờ trả về kết quả và type của ch�
 val p: Parser[String] = (alpha.rep <* sp.?).rep.string
 
 p.parse("hello world")
-// : Either[Error, Tuple2[String, String]] = Right((,hello world))
+// Either[Error, Tuple2[String, String]] = Right((,hello world))
 ```
 
 ### Error Handling
