@@ -42,7 +42,7 @@ sealed abstract class Parser[+A] {
 
 ## Parser with cats
 
-Sau khi đã có định nghĩa của parser, chúng ta sẽ khám cách sử dụng parser và parser combinator bằng library [cats-parse](https://github.com/typelevel/cats-parse). Các phần sau đa phần được lấy trực tiếp từ [cats-parse](https://github.com/typelevel/cats-parse#readme) với một số chỉnh sửa.
+Sau khi đã có định nghĩa của parser, chúng ta sẽ khám cách sử dụng parser và parser combinator bằng library [cats-parse](https://github.com/typelevel/cats-parse) - một trong những parser combinators library cho ngôn ngữ Scala. Các phần sau đa phần được lấy trực tiếp từ [cats-parse](https://github.com/typelevel/cats-parse#readme) với một số chỉnh sửa.
 
 
 ### Simple Parsers
@@ -63,7 +63,7 @@ p.parse("two")
 // Either[Error, Tuple2[String, Char]] = Right((wo,t))
 ```
 
-`Parser.string` là parser mà nó sẽ parse thành công nếu string input bắt đầu với giá trị của `str`
+`Parser.string` là parser mà nó sẽ parse thành công nếu string input bắt đầu với giá trị của `str`. Chú ý rằng `Parser.string` sẽ trả về một parser có type là `Parser[Unit]``, điều đó có nghĩa là nó sẽ trả về `Unit` nếu thành công.
 
 ```
 val p: Parser[Unit] = Parser.string("hello")
@@ -73,36 +73,44 @@ p.parse("hello")
 p.parse("hell")
 // Either[Error, Tuple2[String, Unit]] = Left(Error(0,NonEmptyList(OneOfStr(0,List(hello)))))
 p.parse("hello world")
-// res2: Either[Error, Tuple2[String, Unit]] = Right((world ,hello))
+// Either[Error, Tuple2[String, Unit]] = Right(( world ,hello))
 ```
 
-`Parser.sp` tương tự như `Parser.anyChar` nhưng chỉ đúng khi ký tự đầu tiên là ký tự khoảng trắng. Chú ý rằng `Parser.sp` có type là `Parser[Unit]``, điều đó có nghĩa là nó sẽ trả về `Unit` nếu thành công.
+`sp` tương tự như `Parser.anyChar` nhưng chỉ đúng khi ký tự đầu tiên là ký tự khoảng trắng.
 
 ```
-Parser.sp.parse(" ")
+import cats.parse.Rfc5234.sp
+
+sp.parse(" ")
 // Either[Error, Tuple2[String, Unit]] = Right((,()))
-Parser.sp.parse("o_o")
+sp.parse("o_o")
 // Either[Error, Tuple2[String, Unit]] = Left(Error(0,NonEmptyList(InRange(0, , ))))
 
 ```
 
-`Parser.alpha` tương tự như `Parser.anyChar` nhưng chỉ đúng khi ký tự đầu tiên là ký tự alphabet.
+`alpha` tương tự như `Parser.anyChar` nhưng chỉ đúng khi ký tự đầu tiên là ký tự alphabet.
+
 ```
-Parser.alpha.parse("z")
+import cats.parse.Rfc5234.alpha
+alpha.parse("z")
 // Either[Error, Tuple2[String, Char]] = Right((,z))
-Parser.alpha.parse("3")
+alpha.parse("3")
 // Either[Error, Tuple2[String, Char]] = Left(Error(0,NonEmptyList(InRange(0,A,Z), InRange(0,a,z))))
 ```
 
-`Parser.digit` tương tự như `Parser.alpha` nhưng chỉ đúng khi ký tự đầu tiên là ký tự từ 0-9
+`digit` tương tự như `Parser.alpha` nhưng chỉ đúng khi ký tự đầu tiên là ký tự từ 0-9
+
 ```
-Parser.digit.parse("3")
+import cats.parse.Rfc5234.digit
+
+digit.parse("3")
 // Either[Error, Tuple2[String, Char]] = Right((,3))
-Parser.digit.parse("z")
+digit.parse("z")
 //  Either[Error, Tuple2[String, Char]] = Left(Error(0,NonEmptyList(InRange(0,0,9))))
 ```
 
 `Parser.charIn` nhận một string đầu vào và trả về một parser mà nó sẽ parse thành công nếu ký tự đầu tiên là một character trong string đầu vào.
+
 ```
 val charIn = Parser.charIn("123456789") // tương đương với digit
 charIn.parse("3")
@@ -121,7 +129,7 @@ case class CharWrapper(value: Char)
 val p: Parser[CharWrapper] = Parser.anyChar.map(char => CharWrapper(char))
 
 p.parse("t")
-// res0 = Right((,CharWrapper(t)))
+// Right((,CharWrapper(t)))
 ```
 
 Library cung cấp sẵn một số hàm cho để mapping sang type `String` và `Unit` dễ dàng hơn
@@ -169,9 +177,9 @@ import cats.parse.Parser
 val p1: Parser[(Char, Unit)] = alpha ~ sp
 
 p1.parse("t")
-// res0: Either[Error, Tuple2[String, Tuple2[Char, Unit]]] = Left(Error(1,NonEmptyList(InRange(1, , ))))
+// Either[Error, Tuple2[String, Tuple2[Char, Unit]]] = Left(Error(1,NonEmptyList(InRange(1, , ))))
 p1.parse("t ")
-// res1: Either[Error, Tuple2[String, Tuple2[Char, Unit]]] = Right((,(t,())))
+// Either[Error, Tuple2[String, Tuple2[Char, Unit]]] = Right((,(t,())))
 
 /* productL, productR */
 
@@ -180,9 +188,9 @@ p1.parse("t ")
 val p2: Parser[Char] = alpha <* sp
 
 p2.parse("t")
-// res2: Either[Error, Tuple2[String, Char]] = Left(Error(1,NonEmptyList(InRange(1, , ))))
+// Either[Error, Tuple2[String, Char]] = Left(Error(1,NonEmptyList(InRange(1, , ))))
 p2.parse("t ")
-// res3: Either[Error, Tuple2[String, Char]] = Right((,t))
+// Either[Error, Tuple2[String, Char]] = Right((,t))
 
 // Chú ý nếu muốn bỏ qua kết quả của alpha thì chuyển mũi tên
 val p21: Parser[Char] = alpha *> sp
@@ -193,9 +201,9 @@ val p4: Parser[Char] = sp *> alpha <* sp
 val p5: Parser[Char] = alpha.surroundedBy(sp)
 
 p4.parse(" a ")
-// res0: Either[Error, Tuple2[String, Char]] = Right((,a))
+// Either[Error, Tuple2[String, Char]] = Right((,a))
 p5.parse(" a ")
-// res1: Either[Error, Tuple2[String, Char]] = Right((,a))
+// Either[Error, Tuple2[String, Char]] = Right((,a))
 
 /* between */
 
@@ -203,18 +211,18 @@ val p6: Parser[Char] = sp *> alpha <* digit
 val p7: Parser[Char] = alpha.between(sp, digit)
 
 p6.parse(" a1")
-// res2: Either[Error, Tuple2[String, Char]] = Right((,a))
+// Either[Error, Tuple2[String, Char]] = Right((,a))
 p7.parse(" a1")
-// res3: Either[Error, Tuple2[String, Char]] = Right((,a))
+// Either[Error, Tuple2[String, Char]] = Right((,a))
 
 /* OrElse */
 
 val p3: Parser[AnyVal] = alpha | sp
 
 p3.parse("t")
-// res4: Either[Error, Tuple2[String, AnyVal]] = Right((,t))
+// Either[Error, Tuple2[String, AnyVal]] = Right((,t))
 p3.parse(" ")
-// res5: Either[Error, Tuple2[String, AnyVal]] = Right((,()))
+// Either[Error, Tuple2[String, AnyVal]] = Right((,()))
 ```
 
 
@@ -282,11 +290,11 @@ val p2: Parser[Char] = sp *> alpha
 
 // epsilon failure
 p1.parse("123")
-// res0: Either[Error, Tuple2[String, Char]] = Left(Error(0,NonEmptyList(InRange(0,A,Z), InRange(0,a,z))))
+// Either[Error, Tuple2[String, Char]] = Left(Error(0,NonEmptyList(InRange(0,A,Z), InRange(0,a,z))))
 
 // arresting failure
 p2.parse(" 1")
-// res1: Either[Error, Tuple2[String, Char]] = Left(Error(1,NonEmptyList(InRange(1,A,Z), InRange(1,a,z))))
+// Either[Error, Tuple2[String, Char]] = Left(Error(1,NonEmptyList(InRange(1,A,Z), InRange(1,a,z))))
 ```
 
 Chúng ta cần phân biệt hai loại lỗi này vì, loại đầu tiên cho chúng ta biết parser không khớp với input đầu vào ngay khi bắt đầu parse, và loại thứ 2 xảy ra trong quá trình parse.
@@ -300,7 +308,7 @@ val p1 = sp *> digit <* sp // _digit_
 val p2 = sp *> digit // _digit
 
 p1.parse(" 1") // (1)
-// res1 = Left(Error(2,NonEmptyList(InRange(2, , ))))
+// Left(Error(2,NonEmptyList(InRange(2, , ))))
 
 (p1 | p2 ).parse(" 1") // (2)
 // Either[Error, Tuple2[String, Char]] = Left(Error(2,NonEmptyList(InRange(2, , ))))
