@@ -12,7 +12,7 @@ object Dependencies {
 
   object Tests {
     val munit = "org.scalameta" %% "munit" % "0.7.29" % Test
-    val munitCatsEffect = "org.typelevel" %% "munit-cats-effect-3" % "1.0.6" % Test
+    val munitCatsEffect = "org.typelevel" %% "munit-cats-effect-3" % "1.0.7" % Test
     val scalaCheck = "org.scalacheck" %% "scalacheck" % "1.15.4" % Test
     val munitScalaCheck = "org.scalameta" %% "munit-scalacheck" % "0.7.29" % Test
 
