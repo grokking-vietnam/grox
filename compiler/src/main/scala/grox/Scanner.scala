@@ -46,8 +46,7 @@ object Scanner {
   // An identifier can only start with an undercore or a letter
   // and can contain underscore or letter or numeric character
   val identifier: P[Literal] = {
-    val underscore = P.char('_').as('_')
-    val alphaOrUnderscore = R.alpha | underscore
+    val alphaOrUnderscore = R.alpha | P.char('_')
     val alphaNumeric = alphaOrUnderscore | N.digit
 
     (alphaOrUnderscore ~ alphaNumeric.rep0)
