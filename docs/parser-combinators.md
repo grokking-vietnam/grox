@@ -12,25 +12,25 @@ Sau đây mình sẽ sử dụng ngôn ngữ [Scala 3](https://docs.scala-lang.o
 
 Như chúng ta đã nói ở trên, parser là một function nhận String và trả về một kết quả mà chúng ta đang mong đợi. Từ đó chúng ta có thể định nghĩa parser như sau:
 
-```
+```scala
 type Parser[A] = String => A
 ```
 
 Type như vậy thì đơn giản nhưng chưa đủ. Điều đầu tiên chúng ta thấy là không phải lúc nào cũng có thể parse thành công. Khi input không đúng cú pháp thì parser phải trả về lỗi tương ứng. Và trong thế giới của Functional Programming thì chúng ta phải thể hiện điều đó khi khai báo kiểu cho parser. Sau đây là định nghĩa mới của parser bằng cách sử dụng Either [^either]
 
-```
+```scala
 type Parser[A] = String => Either[ParseError, A]
 ```
 
 Điều tiếp theo là như chúng ta đã nói ở trên về parser combinator, chúng ta không muốn viết một cái parser phức tạp một lần duy nhất, mà chúng ta muốn viết những parser đơn giản, cơ bản rồi kết hợp chúng lại với nhau. Ví dụ như khi parse một biểu thức toán học đơn giản như sau `(3 + 5) * 4` chúng ta sẽ viết một cái parser cho dấu `(` rồi một parser khác cho số tự nhiên, rồi các phép toán ... Do đó parser của chúng ta không nên tiêu thụ hoàn toàn String input mà chỉ nên sử dụng một phần và trả về phần còn lại cho các parser tiếp theo tiêu thụ. Từ đó chúng ta có một định nghĩa mà chúng ta có thể thoã mãn như sau:
 
-```
+```scala
 type Parser[A] = String => Either[Parser.Error, (String, A)]
 ```
 
 Trong thực tế thì Parser được định nghĩa phức tạp hơn một xíu như sau:
 
-```
+```scala
 sealed abstract class Parser[+A] {
   final def parse(str: String): Either[Parser.Error, (String, A)]
 
@@ -52,7 +52,7 @@ Library cats-parse cung cấp một tập hợp các parser cơ bản, để t�
 
 Đầu tiên là `Parser.anyChar`, là một parser luôn luôn trả về ký tự đầu tiên của chuỗi input (fail trong trường hợp đầu vào là một empty string).
 
-```
+```scala
 val p: Parser[Char] = Parser.anyChar
 
 p.parse("t")
@@ -65,7 +65,7 @@ p.parse("two")
 
 `Parser.string` là parser mà nó sẽ parse thành công nếu string input bắt đầu với giá trị của `str`. Chú ý rằng `Parser.string` sẽ trả về một parser có type là `Parser[Unit]`, điều đó có nghĩa là nó sẽ trả về `Unit` nếu thành công.
 
-```
+```scala
 val p: Parser[Unit] = Parser.string("hello")
 
 p.parse("hello")
@@ -78,7 +78,7 @@ p.parse("hello world")
 
 `sp` tương tự như `Parser.anyChar` nhưng chỉ đúng khi ký tự đầu tiên là ký tự khoảng trắng.
 
-```
+```scala
 import cats.parse.Rfc5234.sp
 
 sp.parse(" ")
@@ -90,7 +90,7 @@ sp.parse("o_o")
 
 `alpha` tương tự như `Parser.anyChar` nhưng chỉ đúng khi ký tự đầu tiên là ký tự alphabet.
 
-```
+```scala
 import cats.parse.Rfc5234.alpha
 alpha.parse("z")
 // Either[Error, Tuple2[String, Char]] = Right((,z))
@@ -100,7 +100,7 @@ alpha.parse("3")
 
 `digit` tương tự như `Parser.alpha` nhưng chỉ đúng khi ký tự đầu tiên là ký tự từ 0-9
 
-```
+```scala
 import cats.parse.Rfc5234.digit
 
 digit.parse("3")
@@ -111,7 +111,7 @@ digit.parse("z")
 
 `Parser.charIn` nhận một string đầu vào và trả về một parser mà nó sẽ parse thành công nếu ký tự đầu tiên là một character trong string đầu vào.
 
-```
+```scala
 val charIn = Parser.charIn("123456789") // tương đương với digit
 charIn.parse("3")
 // Either[Error, Tuple2[String, Char]] = Right((,3))
@@ -123,7 +123,7 @@ charIn.parse("3")
 
 Đầu ra của parser có thể được xử lý bằng `map` function.
 
-```
+```scala
 case class CharWrapper(value: Char)
 
 val p: Parser[CharWrapper] = Parser.anyChar.map(char => CharWrapper(char))
@@ -134,7 +134,7 @@ p.parse("t")
 
 Library cung cấp sẵn một số hàm cho để mapping sang type `String` và `Unit` dễ dàng hơn
 
-```
+```scala
 /* String */
 
 val p2: Parser[String] = digit.map((c: Char) => c.toString)
@@ -167,7 +167,7 @@ Các parser có thể kết hợp với nhau bằng các operator sau:
 - `between` - tương đương với `border1 *> parsingResult <* border2`;
 - `|` - `orElse` - Parser thành công nếu một trong hai parser đầu vào thành công;
 
-```
+```scala
 import cats.parse.Rfc5234.{sp, alpha, digit}
 import cats.parse.Parser
 
@@ -230,7 +230,7 @@ p3.parse(" ")
 
 `cats-parse` cung cấp 2 function để chúng ta biến một Parser[A] thành Paser[List[A]] đó là `rep` và `rep0`. Với `rep` parser cần phải parse thành công ít nhất một phần tử, còn `rep0` thì có thể cho ra một List rỗng.
 
-```
+```scala
 val number: Parser[NonEmptyList[Char]] = digit.rep
 val numberOrNone: Parser0[List[Char]] = digit.rep0
 
@@ -248,7 +248,7 @@ numberOrNone.parse("73")
 
 `rep` và `rep0` có thể kết hợp với `string` function mà chúng ta đã nhắc đến ở trên.
 
-```
+```scala
 val word1 = alpha.rep.map((l: NonEmptyList[Char]) => l.toList.mkString)
 val word2 = alpha.rep.string
 val word2 = alpha.repAs[String]
@@ -264,7 +264,7 @@ word1.parse("bla")
 Có một số parser không bao giờ trả về kết quả và type của chúng sẽ là `Parser0`. Chúng ta có thể chuyển type `Parser` về `Parser0` bằng `rep0` hoặc `?` aka `optional`.
 
 
-```
+```scala
 val p: Parser[String] = (alpha.rep <* sp.?).rep.string
 
 p.parse("hello world")
@@ -278,13 +278,13 @@ Như chúng ta đã nói ở phần đầu tiên, một parser nếu parse khôn
 - *arresting failure*: lỗi mà parser đã sử dụng ít nhất một character
 
 Về mặt implementation `Parser.Error` có định nghĩa như sau:
-```
+```scala
 final case class Error(failedAtOffset: Int, expected: NonEmptyList[Expectation])
 ```
 
 Nếu `failedAtOffset == 0` thì đó là `epsilon failure` và `arresting failure` trong trường hợp còn lại.
 
-```
+```scala
 val p1: Parser[Char] = alpha
 val p2: Parser[Char] = sp *> alpha
 
@@ -303,7 +303,7 @@ Chúng ta cần phân biệt hai loại lỗi này vì, loại đầu tiên cho 
 
 Backtrack là một function giúp chúng ta chuyển *arresting failure* thành *epsilon failure*. Nó cũng giúp tua lại offset của input về trước khi parser bắt đầu. Đây là một function cực kỳ hữu dụng khi chúng ta muốn kết hợp nhiều parser lại với nhau.
 
-```
+```scala
 val p1 = sp *> digit <* sp // _digit_
 val p2 = sp *> digit // _digit
 
@@ -326,7 +326,7 @@ Parser(3) parse thành công vì `backtrack` chuyển *arresting failure* thành
 
 Có hiệu ứng tương tự như `backtrack` với `|`, nhưng với operator `~` và nó cho phép chúng ta tiếp tục parsing khi toán tử bên phải trả về `epsilon failure`. Nó rất hữu ích trong trường hợp chúng ta không biết chính xác output mà chúng ta cần trước khi quá trình parsing kết thúc. Như ví dụ dưới đây chúng ta parse đầu vào cho một search engine. Input có thể có dạng `key:value` hoặc chỉ mỗi `value`
 
-```
+```scala
 val searchWord = (alpha.rep.string ~ sp.?).rep.string
 val fieldValue = alpha.rep.string ~ pchar(':')
 
@@ -354,7 +354,7 @@ Parser `p2` parse thành công ở (2) trong khi `p1` thất bại ở (3) bởi
 [^1]: Trong phần đầu mình sẽ sử dụng pseudocode, implmentation trong thực tế sẽ tương tự nhưng phức tạp hơn.
 [^either]: `Either[E, A]` được định ngĩa như sau(phiên bản sơ lược):
 
-    ```
+    ```scala
       enum Either[E, A] {
         case Left(value: E)
         case Right(value: A)
