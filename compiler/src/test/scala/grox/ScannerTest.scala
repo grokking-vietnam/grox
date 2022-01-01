@@ -4,6 +4,7 @@ import scala.deriving.Mirror
 
 import cats.*
 import cats.implicits.*
+import Token.*
 
 import munit.CatsEffectSuite
 import org.scalacheck.{Arbitrary, Gen}
