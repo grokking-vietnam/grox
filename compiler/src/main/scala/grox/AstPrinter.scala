@@ -1,21 +1,16 @@
 package grox
 
+import scala.annotation.tailrec
+
 import Expr._
 
-class AstPrinterVisitor extends Expr.Visitor[String]:
+object AstPrinter {
 
-  def parenthesize(name: String, exprs: Expr*): String =
-    val exprStr = exprs.map(expr => dispatch(expr, new AstPrinterVisitor)).mkString(" ")
-    s"($name ${exprStr})"
+  def print(expr: Expr): String =
+    expr match
+      case e: Literal  => e.value.lexeme
+      case e: Unary    => s"(${e.operator.lexeme} ${print(e.expression)})"
+      case e: Grouping => s"(group ${print(e.expression)})"
+      case e: Binary   => s"(${e.operator.lexeme} ${print(e.left)} ${print(e.right)})"
 
-  def visitBinaryExpr(
-    expr: Expr.Binary
-  ): String = parenthesize(expr.operator.lexeme, expr.left, expr.right)
-
-  def visitGroupingExpr(expr: Grouping): String = parenthesize("group", expr.expression)
-  def visitUnaryExpr(expr: Unary): String = parenthesize(expr.operator.lexeme, expr.expression)
-  def visitLiteralExpr(expr: Literal): String = expr.value.lexeme
-
-object AstPrinter extends App {
-  def print(expr: Expr): String = dispatch(expr, new AstPrinterVisitor)
 }

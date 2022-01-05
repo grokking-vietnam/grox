@@ -2,7 +2,6 @@ package grox
 
 import cats.data.NonEmptyList
 import cats.parse.{LocationMap, Numbers => N, Parser => P, Parser0 => P0, Rfc5234 => R}
-import Token.*
 
 object Scanner {
 

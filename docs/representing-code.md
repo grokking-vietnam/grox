@@ -103,6 +103,5 @@ Với scala 3 chúng ta có thể biểu diễn một binary như sau:
 
 ```scala
 enum Expr:
-    case Binary(left: Expr, operator: Token, right: Expr)
+  case Binary(left: Expr, operator: Token, right: Expr)
 ```
-
