@@ -1,18 +1,13 @@
 package grox
 
-import grox.Expr._
-import grox.{AstPrinter, Token}
+import Expr._
 import munit.CatsEffectSuite
 
 class AstPrinterTest extends munit.FunSuite:
   test("Example 1 + 2") {
     assertEquals(
       AstPrinter.print(
-        Binary(
-          Literal(MyToken.Number("1")),
-          MyToken.Plus,
-          Literal(MyToken.Number("2")),
-        )
+        Add(Number(1), Number(2))
       ),
       "(+ 1 2)",
     )
@@ -21,14 +16,10 @@ class AstPrinterTest extends munit.FunSuite:
   test("Example -123*(45.67)") {
     assertEquals(
       AstPrinter.print(
-        Binary(
-          Unary(
-            MyToken.Minus,
-            Literal(MyToken.Number("123")),
-          ),
-          MyToken.Star,
-          Grouping(Literal(MyToken.Number("45.67"))),
-        )
+        Multiply(
+          Minus(
+            Number(123)),
+          Grouping(Number(45.67)))
       ),
       "(* (- 123) (group 45.67))",
     )

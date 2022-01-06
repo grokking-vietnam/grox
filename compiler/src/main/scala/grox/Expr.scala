@@ -1,8 +1,14 @@
 package grox
 
-enum Expr:
+import cats.kernel.Comparison.GreaterThan
 
-  case Binary(left: Expr, operator: MyToken[MyOperator], right: Expr)
-  case Grouping(expression: Expr)
-  case Unary(operator: MyToken[MyUnary], expression: Expr)
-  case Literal(value: MyToken[MyLiteral])
+enum Expr:
+  case Add(left: Expr, right: Expr)
+  case Subtract(left: Expr, right: Expr)
+  case Multiply(left: Expr, right: Expr)
+  case Divide(left: Expr, right: Expr)
+  case Negate(expr: Expr)
+  case Minus(expr: Expr)
+  case Number(value: Int | Double)
+  case Str(value: String)
+  case Grouping(expr: Expr)

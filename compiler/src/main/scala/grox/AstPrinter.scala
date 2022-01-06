@@ -1,16 +1,21 @@
 package grox
 
 import scala.annotation.tailrec
+import javax.naming.BinaryRefAddr
+import Expr.*
 
-import Expr._
+object AstPrinter:
 
-object AstPrinter {
-
-  def print(expr: Expr): String =
+  final def print(expr: Expr): String =
     expr match
-      case e: Literal  => e.value.lexeme
-      case e: Unary    => s"(${e.operator.lexeme} ${print(e.expression)})"
-      case e: Grouping => s"(group ${print(e.expression)})"
-      case e: Binary   => s"(${e.operator.lexeme} ${print(e.left)} ${print(e.right)})"
+      case Number(value) => value.toString
+      case Str(value) => value.toString
+      case Negate(e) => s"(! ${print(e)})"
+      case Minus(e) => s"(- ${print(e)})"
+      case Grouping(e) => s"(group ${print(e)})"
 
-}
+      // Binary
+      case Add(left,right) => s"(+ ${print(left)} ${print(right)})"
+      case Subtract(left,right) => s"(- ${print(left)} ${print(right)})"
+      case Multiply(left,right) => s"(* ${print(left)} ${print(right)})"
+      case Divide(left,right) => s"(/ ${print(left)} ${print(right)})"
