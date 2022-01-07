@@ -1,9 +1,5 @@
 package grox
 
-import javax.naming.BinaryRefAddr
-
-import scala.annotation.tailrec
-
 import Expr.*
 
 object AstPrinter:

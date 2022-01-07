@@ -73,7 +73,7 @@ Từ đó chúng ta có thể viết ra các strings dựa trên BNF ở trên:
 
 ## A Grammar for Lox expressions
 
-Syntatic Grammar phức tạp hơn Lexical Grammar rất là nhiều, vì vậy rất khó để trình bày được toàn bộ SG trong 1 lần giống như cách chúng ta làm ở phần Scanner. Vì vậy, chúng ta sẽ nghiền ngẫm từng tập con của ngôn ngữ và thêm syntax mới trong các chương tiếp theo. Hiện tại, chúng ta sẽ chỉ quan tâm đến 1 expression:
+Syntatic Grammar phức tạp hơn Lexical Grammar rất là nhiều, vì vậy rất khó để trình bày được toàn bộ SG trong 1 lần giống như cách chúng ta làm ở phần Scanner. Vì vậy, chúng ta sẽ nghiền ngẫm từng tập con của ngôn ngữ và thêm syntax mới trong các chương tiếp theo. Hiện tại, chúng ta sẽ chỉ quan tâm đến expression:
 
 ```
 expression     → literal
@@ -99,9 +99,86 @@ Trên đây là syntax để chúng ta có thể biểu diễn được 1 expres
 
 Dễ thấy, grammar của chúng ta có thể được biểu diễn bằng cấu trúc cây. Bởi vì cấu trúc này được dùng để biểu diễn syntax cho ngôn ngữ grox nên nó được gọi là **syntax tree.**
 
-Với scala 3 chúng ta có thể biểu diễn một binary như sau:
+### Modelling Data with Algebraic Data Type
+
+Trong FP, ADT là một kiểu dữ liệu được tạo nên bằng cách kết hợp các kiểu dữ liệu khác.
+
+Ví dụ 1: 1 biểu thức Binary sẽ **có** vế trái, về phái và 1 toán tử. Trong Scala chúng ta có thể biểu diễn kiểu Binary bằng 1 case class:
+
+```scala
+case class Binary(left: Expr, operator: Operator, right: Expr)
+```
+
+Khi đó, Binary được gọi là 1 Product Type
+
+Ví dụ 2: 1 Literal **có thể là** Number hoặc String. Với Scala chúng ta có thể biểu diễu Literal bằng Enum hoặc Union Type
+
+```scala
+type Literal = Str | Number
+enum Literal:
+  case Str, Number
+```
+Khi đó, Literal được gọi là 1 Sum type
+
+Trong Scala 3, khái niệm `enum` để rộng để có thể biểu diễn luôn một ADT hoàn chỉnh hay thậm chí là một Generalize ADT (GADT).
+
+Ví dụ chúng ta có thể định nghĩa expression của grammar trên trong Scala 3 như sau:
 
 ```scala
 enum Expr:
-  case Binary(left: Expr, operator: Token, right: Expr)
+  case Binary(left: Expr, o: Operator, right: Expr)
+  case Unary(o: Operator, expr: Expr)
+  case Grouping(expr: Expr)
+  case Literal(o: Str | Number)
+```
+
+Tuy nhiên ở chương này, chúng ta sẽ define Expr một cách tường minh hơn bằng cách tách biệt Binary thành các phép toán số học như bên dưới:
+
+```scala
+enum Expr:
+  case Add(left: Expr, right: Expr)
+  case Subtract(left: Expr, right: Expr)
+  case Multiply(left: Expr, right: Expr)
+  case Divide(left: Expr, right: Expr)
+  case Negate(expr: Expr)
+  case Minus(expr: Expr)
+  case Number(value: Int | Double)
+  case Str(value: String)
+  case Grouping(expr: Expr)
+```
+
+Để đơn giản, trong chương này chúng ta sẽ quan tâm đến một số phép tính số học, trong các phần sau chúng ta sẽ tìm hiểu thêm về các biểu thức logic.
+
+## Working with Trees
+
+OOP vs FP
+
+![](https://craftinginterpreters.com/image/representing-code/table.png)
+
+Chúng ta thấy rằng, với mỗi kiểu expression chúng ta sẽ có 1 số các operations đi kèm với nó.
+
+Trong các ngôn ngữ OOP như Java, code của chúng ta thường sẽ theo hướng là các ô trên cùng 1 hàng sẽ dính liền với nhau. Tức là các kiểu expression sẽ share chung với nhau các operation.
+
+![](https://craftinginterpreters.com/image/representing-code/rows.png)
+
+Vì vậy, khi chúng ta thêm 1 kiểu expression mới, thì code của chúng ta sẽ rất đơn giản. Chúng ta không cần phải động vào các kiểu expression đã có mà chỉ cần "extends" thêm 1 kiểu mới. Nhưng khi chúng ta muốn thêm 1 operation mới, thì chúng ta phải quay lại và sửa lại tất cả các expression đã có.
+
+Đối với các ngôn ngữ FP như ML. Type và Operation tách biệt nhau, mỗi kiểu expression khác nhau thì chúng có các operation khác nhau cho kiểu đó. Vì vậy, các ô trong cùng 1 cột sẽ dính liền với nhau.
+
+![](https://craftinginterpreters.com/image/representing-code/columns.png)
+
+Trong FP, khi chúng ta muốn định nghĩa 1 function cho nhiều kiểu expression khác nhau. Chúng ta sẽ dùng đến pattern matching. Khi chúng ta thêm 1 operation mới, chúng ta sẽ không cần sửa các operation khác. Tuy nhiên, khi chúng ta có thêm 1 kiểu mới, chúng ta phải quay lại và sửa code của tất cả các operation đã có.
+
+## A (Not Very) Pretty Printer
+
+Khi chúng ta debug parser, chúng ta thường phải debug AST. Vì vậy chúng ta muốn có 1 format đẹp cho AST. Quá trình convert 1 AST sang string thường được gọi là "pretty printing".
+
+Thế nhưng, 1 printer không nên in ra những cái kiểu như `1 + 2 * 3` mà để phục vụ debug, chúng ta cần phải biểu diễn xem là phép toán nào đươc thực hiện trước, phép + hay phép * là đỉnh của cây.
+
+![](https://craftinginterpreters.com/image/representing-code/expression.png)
+
+AST ở trên sẽ được in ra là (xem sourcecode):
+
+```
+(* (- 123) (group 45.67))
 ```
