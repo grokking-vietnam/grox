@@ -1,3 +1,5 @@
+# Representing Code
+
 Ở phần trước, chúng ta đã thử biến đổi source code từ dạng raw sang một list tokens. Hôm nay, chúng ta sẽ tiếp tục biểu diễn list token này sang 1 dạng phức tạp và đầy đủ hơn.
 
 Đầu tiên, chúng ta sẽ bắt đầu với 1 ví dụ đơn giản, làm thế nào để tính biểu thức sau:
