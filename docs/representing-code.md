@@ -37,12 +37,12 @@ Bảng chữ cái ở đây có thể lấy từ ngôn ngữ tự nhiên hoặc 
 
 ## Rules for grammars
 
-Khi chúng ta đã định nghĩa được các quy tắc cho ngôn ngữ của mìnhh thì chúng ta có thể dùng rule để tạo ra các strings (hay ở đây chính là viết code). Rules trong trường hợp này gọi là **productions** và chúng _produce_ ra các strings.
+Chúng ta cần phải định nghĩa một tập giới hạn các quy tắc (rule) để tạo ra các strings. Rules trong trường hợp này gọi là **productions** vì chúng _produce_ ra các strings.
 
-Mỗi production trong CFG có phần đầu (head) - tên của nó và phần thân (body) mô tả nó sẽ generate ra cái gì. Ở dạng cơ bản nhất thì, phần thân chỉ bao gồm một danh sách các kí hiệu (Symbols). Các kí hiệu có 2 kiểu:
+Mỗi production(rule) trong CFG có phần đầu (head) - tên và phần thân (body) mô tả nó sẽ tạo ra cái gì. Ở dạng cơ bản nhất thì, phần thân chỉ bao gồm một danh sách các kí hiệu (Symbols). Các kí hiệu có 2 kiểu:
 
 - **Terminal** là một chữ cái trong bảng chữ cái. Chúng ta có thể nghĩ nó như là một literal. Trong syntactic grammar nó là các token chúng ta đã có được từ Scanner.
-- **Nonterminal** dùng để chỉ đến 1 rule trong gammar của chúng ta.
+- **Nonterminal** dùng để chỉ đến 1 rule trong gammar.
 
 Chỉ còn 1 điều cuối cùng cần phải lưu ý:  Chúng ta có thể có nhiều rules có cùng tên. Khi chúng ta gặp một nonterminal với 1 tên nào đó chúng ta được phép chọn 1 rule bất kì cho nó.
 
@@ -91,7 +91,7 @@ operator       → "==" | "!=" | "<" | "<=" | ">" | ">="
                | "+"  | "-"  | "*" | "/" ;
 ```
 
-Trên đây là syntax để chúng ta có thể biểu diễn được 1 expression giống như sau:
+Trên đây là các rule để chúng ta có thể biểu diễn được 1 expression giống như sau:
 
 ```scala
 1 - (2 * 3) < 4 == false
