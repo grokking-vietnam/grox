@@ -2,12 +2,12 @@ package grox
 
 import cats.implicits.*
 import cats.instances.*
-import cats.kernel.Eq
+import cats.kernel.{Eq, Order}
 
 // Todo
 // Array
 // Nil
-enum Expr[T: Eq]:
+enum Expr[T: Order]:
 
   // math operators
   case Plus(left: Expr[Double], right: Expr[Double]) extends Expr[Double]
@@ -17,13 +17,16 @@ enum Expr[T: Eq]:
   case Negate(exp: Expr[Double]) extends Expr[Double]
 
   // logic operator
-  case Greater(left: Expr[Double], right: Expr[Double]) extends Expr[Boolean]
-  case GreaterEqual(left: Expr[Double], right: Expr[Double]) extends Expr[Boolean]
-  case Less(left: Expr[Double], right: Expr[Double]) extends Expr[Boolean]
-  case LessEqual(left: Expr[Double], right: Expr[Double]) extends Expr[Boolean]
   case Not(exp: Expr[Boolean]) extends Expr[Boolean]
-  case Equal(left: Expr[T], right: Expr[T]) extends Expr[Boolean]
-  case NotEqual(left: Expr[T], right: Expr[T]) extends Expr[Boolean]
+
+  // order operator
+  case Greater[T: Order](left: Expr[T], right: Expr[T]) extends Expr[Boolean]
+  case GreaterEqual[T: Order](left: Expr[T], right: Expr[T]) extends Expr[Boolean]
+  case Less[T: Order](left: Expr[T], right: Expr[T]) extends Expr[Boolean]
+  case LessEqual[T: Order](left: Expr[T], right: Expr[T]) extends Expr[Boolean]
+
+  case Equal[T: Eq](left: Expr[T], right: Expr[T]) extends Expr[Boolean]
+  case NotEqual[T: Eq](left: Expr[T], right: Expr[T]) extends Expr[Boolean]
 
   case Bool(value: Boolean) extends Expr[Boolean]
   case Num(value: Double) extends Expr[Double]
@@ -55,7 +58,9 @@ enum Expr[T: Eq]:
 
 object Expr {
 
-  def t[T: Eq](e: Equal[T]): Boolean = eval(e.left) === eval(e.right)
+  def tEq[T: Eq](e: Equal[T]): Boolean = eval(e.left) === eval(e.right)
+
+  def tAdd(e: Plus): Double = eval(e.left) + eval(e.right)
 
   def eval[T](expr: Expr[T]): T = ???
   // expr match {
