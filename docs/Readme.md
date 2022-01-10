@@ -1,9 +1,13 @@
 # Mục lục
 
-* [Introduction](/docs/introduction.md)
-* [Lox Language](/docs/lox-language.md)
-* [Map of the territory](/docs/map-of-the-territory.md)
-* [Scanning](/docs/scanning.md)
-* [Representing Code](/docs/representing-code.md)
-* [Parser Combinator](/docs/parser-combinators.md)
+## Miscellaneous
+  * [Introduction](/docs/introduction.md)
 
+## Book
+  * [Lox Language](/docs/book/lox-language.md)
+  * [Map of the territory](/docs/book/map-of-the-territory.md)
+  * [Scanning](/docs/book/scanning.md)
+  * [Representing Code](/docs/book/representing-code.md)
+
+## Functional Programming
+  * [Parser Combinators](/docs/fp/parser-combinators.md)
