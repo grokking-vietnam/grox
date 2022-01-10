@@ -2,6 +2,7 @@
 
 ## Miscellaneous
   * [Introduction](/docs/introduction.md)
+  * [Resources](/docs/resources.md)
 
 ## Book
   * [Lox Language](/docs/book/lox-language.md)
