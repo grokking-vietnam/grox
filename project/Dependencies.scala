@@ -7,7 +7,6 @@ object Dependencies {
   val catsMtlVersion = "1.2.1"
   val catsParseVersion = "0.3.6"
 
-
   object Cats {
     val catsEffect = "org.typelevel" %% "cats-effect" % catsEffectVersion
     val catsMtl = "org.typelevel" %% "cats-mtl" % catsMtlVersion
