@@ -1,9 +1,11 @@
 # Prerequisites
 
 ## sdkman
-`sdkman` là công cụ all-in-one cho phép thiết lập và quản lý phiên bản của nhiều sdk. Cài đặt tại https://sdkman.io/install.
+`sdkman` là công cụ all-in-one cho phép thiết lập và quản lý phiên bản của nhiều sdk.
 
-Kiểm tra cài đặt sdk bằng:
+Cài đặt `sdkman` tại https://sdkman.io/install.
+
+Kiểm tra việc cài đặt thành công bằng:
 ```
 $ sdk version
 
@@ -30,7 +32,7 @@ $ sdk install scala 3.1.0
 ```
 $ sdk install sbt 1.6.1
 ```
-Tìm hiểu thêm tại https://www.scala-sbt.org/learn.html.
+Tìm hiểu thêm về `sbt` tại https://www.scala-sbt.org/learn.html.
 
 # Build, test and run
 
@@ -50,8 +52,9 @@ sbt> compiler/run
 ## (Optional) Build faster with `bloop`
 `bloop` là ứng dụng chạy nền có nhiệm vụ tối ưu quá trình build cho IDE, build tool hay script.
 
-Cài đặt tại https://scalacenter.github.io/bloop/setup#sbt.
-Sau khi cài đặt hoàn tất, kiểm tra và bật server bằng lệnh:
+Cài đặt `bloop` tại https://scalacenter.github.io/bloop/setup#sbt.
+
+Sau khi cài đặt hoàn tất, bật bloop server bằng lệnh:
 ```
 $ bloop server
 Attempting a connection to the server...
@@ -59,7 +62,7 @@ Resolving ch.epfl.scala:bloop-frontend_2.12:1.4.12...
 Starting bloop server at 127.0.0.1:8212...
 ```
 
-Khi bloop server đã khởi chạy, tại đường dẫn của project, xuất build từ `sbt` đến `bloop`:
+Tại đường dẫn của project, xuất build từ `sbt` đến `bloop`:
 ```
 $ sbt bloopInstall
 ... 
@@ -71,7 +74,7 @@ $ sbt bloopInstall
 
 ```
 
-Lấy danh sách các projects:
+Lấy danh sách các sub-project:
 
 ```
 $ bloop projects
