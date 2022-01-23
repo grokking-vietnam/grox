@@ -5,6 +5,9 @@ import cats.implicits._
 
 import com.monovore.decline._
 import com.monovore.decline.effect._
+import grox.command.ScannerCommand
+import grox.utils.FileUtils
+import grox.Scanner
 
 object Main
   extends CommandIOApp(
@@ -13,22 +16,17 @@ object Main
     version = "0.0.1",
   ) {
 
-  override def main: Opts[IO[ExitCode]] = {
-    val helpOpts = Opts.flag("help", help = "Help String").orFalse
-
-    helpOpts.map { helpOption =>
+  override def main: Opts[IO[ExitCode]] = ScannerCommand
+    .scannerOpts
+    .map { case ScannerCommand(path) =>
       for {
-        _ <-
-          if (helpOption) {
-            IO.println("Help")
-          } else {
-            IO.println("Hello grox")
-          }
-        exitCode <- IO(ExitCode.Success)
-      } yield exitCode
+        content <- FileUtils.open(path).use { buffer =>
+          IO(buffer.getLines.mkString)
+        }
+        tokens <- ScannerCommand.scan(content)
+        _ <- IO.println(tokens)
 
+      } yield (ExitCode.Success)
     }
-
-  }
 
 }
