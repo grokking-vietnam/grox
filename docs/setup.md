@@ -1,53 +1,51 @@
 # Prerequisites
+* **Java 17 SDK**
+* **sbt v1.6.1**
+
+
+Dưới đây là hướng dẫn cài đặt các công cụ trên bằng [sdkman](https://sdkman.io), ngoài ra bạn cũng có thể tự tải xuồng dùng homebrew trên Mac hoặc apt trên Linux.
 
 ## sdkman
-`sdkman` là công cụ all-in-one cho phép thiết lập và quản lý phiên bản của nhiều sdk.
+`sdkman` là công cụ all-in-one cho phép thiết lập và quản lý phiên bản của nhiều sdk. Cài đặt tại https://sdkman.io/install
 
-Cài đặt `sdkman` tại https://sdkman.io/install.
-
-Kiểm tra việc cài đặt thành công bằng:
+## java sdk
 ```
-$ sdk version
-
-SDKMAN 5.13.1
-```
-
-Chuyển phiên bản của sdk, ví dụ `scala`, trong terminal hiện tại:
-```
-$ sdk use scala 3.1.0
-```
-
-## java
-```
-$ sdk install java 11.0.12-open
-```
-
-## scala
-```
-$ sdk install scala 3.1.0
+$ sdk install java 17.0.2-oracle
 ```
 
 ## sbt
-`sbt` là công cụ để build, test và run Scala project.
 ```
 $ sdk install sbt 1.6.1
 ```
-Tìm hiểu thêm về `sbt` tại https://www.scala-sbt.org/learn.html.
 
-# Build, test and run
+# Development
 
-Tại đường dẫn của project, khởi chạy `sbt` shell:
+## IDE
+Sử dụng `Intelij + Scala plugin` hoặc `VSCode/Vim + Metals`.
+
+## Linting
 
 ```
-$ sbt
+$ sbt prepare 
 ```
 
-Trong sbt shell, compile/test/run bằng:
+## Test
 ```
-sbt> compiler/compile  
-sbt> compiler/test
-sbt> compiler/run
+$ sbt test
 ```
+
+## Compile
+
+```
+$ sbt compile
+```
+
+## Run
+
+```
+$ sbt compiler/run  # lưu ý cần chọn project cụ thể để run 
+```
+
 
 ## (Optional) Build faster with `bloop`
 `bloop` là ứng dụng chạy nền có nhiệm vụ tối ưu quá trình build cho IDE, build tool hay script.
@@ -74,7 +72,7 @@ $ sbt bloopInstall
 
 ```
 
-Lấy danh sách các sub-project:
+Lấy danh sách projects:
 
 ```
 $ bloop projects
