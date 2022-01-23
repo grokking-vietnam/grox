@@ -10,12 +10,9 @@ object ScannerCommand {
 
   case class ThrowableError(error: Error) extends Exception
 
-  def scan(content: String): IO[List[Token]] =
-    for {
-      c <- IO.pure(content)
-      tokens <- IO.fromEither(Scanner.parse(c).leftMap(ThrowableError.apply))
-
-    } yield tokens
+  def scan(content: String): Either[Error, List[Token]] = {
+    Scanner.parse(content)
+  }
 
   val pathOpts: Opts[String] = Opts.argument[String](metavar = "path")
 
