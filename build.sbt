@@ -28,6 +28,14 @@ lazy val root = project
   .settings(publish := {}, publish / skip := true)
   .aggregate(compiler)
 
+lazy val docs = project // new documentation project
+  .in(file("grox-docs")) // important: it must not be docs/
+  .dependsOn(root)
+  .settings(
+    mdocVariables := Map("VERSION" -> version.value)
+  )
+  .enablePlugins(MdocPlugin, DocusaurusPlugin)
+
 // Commands
 addCommandAlias("build", "prepare; test")
 addCommandAlias("testAll", "all test")
