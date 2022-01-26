@@ -16,7 +16,7 @@ const sidebars = {
   docs: [
     'Readme',
     'introduction',
-    {'Book': ['lox-language','map-of-the-territory', 'representing-code', 'scanning'].map(i => 'book/'+i)},
+    {'Crafting Interpeters': ['lox-language','map-of-the-territory', 'scanning', 'representing-code'].map(i => 'book/'+i)},
     {'Functional Programming': ['parser-combinators'].map(i => 'fp/'+i)},
     'resources'
   ]

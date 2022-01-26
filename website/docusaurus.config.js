@@ -39,10 +39,10 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       navbar: {
-        title: 'Grox Language',
+        title: 'Grox',
         logo: {
           alt: 'Grox Language Logo',
-          src: 'img/logo.svg',
+          src: 'https://lh6.googleusercontent.com/oUZRYCilXlOtk_pmz8ptrsfvgdmgWTrm90W2AZxjVezIi6J8xykxlfNhVugElpzjV24gAgLYoqjl0CW6NzjH5_0=w16383',
         },
         items: [
           {
