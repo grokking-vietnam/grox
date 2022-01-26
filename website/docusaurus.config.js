@@ -103,8 +103,7 @@ const config = {
       },
       prism: {
         theme: lightCodeTheme,
-        darkTheme: darkCodeTheme,
-        additionalLanguages: ['scala']
+        darkTheme: darkCodeTheme
       },
     }),
 };
