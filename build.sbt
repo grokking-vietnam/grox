@@ -32,7 +32,8 @@ lazy val docs = project // new documentation project
   .in(file("grox-docs")) // important: it must not be docs/
   .dependsOn(root)
   .settings(
-    mdocVariables := Map("VERSION" -> version.value)
+    moduleName := "grox-docs",
+    mdocVariables := Map("VERSION" -> version.value),
   )
   .enablePlugins(MdocPlugin, DocusaurusPlugin)
 
