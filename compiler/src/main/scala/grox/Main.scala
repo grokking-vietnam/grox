@@ -1,16 +1,16 @@
 package grox
 
+import javax.management.InstanceAlreadyExistsException
+
+import cats.data.EitherT
 import cats.effect.{ExitCode, IO, IOApp}
 import cats.implicits._
 
 import com.monovore.decline._
 import com.monovore.decline.effect._
+import grox._
 import grox.command.ScannerCommand
 import grox.utils.FileUtils
-import grox.Scanner
-import grox._
-import cats.data.EitherT
-import javax.management.InstanceAlreadyExistsException
 
 object Main
   extends CommandIOApp(

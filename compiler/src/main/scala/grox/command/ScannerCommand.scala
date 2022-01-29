@@ -1,10 +1,11 @@
 package grox.command
 
+import cats.effect._
+import cats.implicits._
+
 import com.monovore.decline._
 import grox.Scanner._
 import grox._
-import cats.effect._
-import cats.implicits._
 
 object ScannerCommand {
 
