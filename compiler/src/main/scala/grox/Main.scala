@@ -37,11 +37,9 @@ object Main
         _ <- EitherT.liftF(IO.println(tokens))
 
       } yield tokens).value.flatMap {
-        case Right(_) => IO.pure(ExitCode.Success)
-        case Left(err : FileError) => 
-          IO.println("Couldn't open file").map(_ => ExitCode.Error)
-        case Left(err : ScannerError) => 
-          IO.println("Couldn't scan file").map(_ => ExitCode.Error)
+        case Right(_)                => IO.pure(ExitCode.Success)
+        case Left(err: FileError)    => IO.println("Couldn't open file").map(_ => ExitCode.Error)
+        case Left(err: ScannerError) => IO.println("Couldn't scan file").map(_ => ExitCode.Error)
 
       }
     }
