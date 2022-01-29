@@ -8,12 +8,6 @@ import cats.implicits._
 
 object ScannerCommand {
 
-  case class ThrowableError(error: Error) extends Exception
-
-  def scan(content: String): Either[Error, List[Token]] = {
-    Scanner.parse(content)
-  }
-
   val pathOpts: Opts[String] = Opts.argument[String](metavar = "path")
 
   val scannerOpts: Opts[ScannerCommand] =
