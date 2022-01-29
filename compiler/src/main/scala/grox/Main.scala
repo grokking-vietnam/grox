@@ -8,7 +8,9 @@ import com.monovore.decline.effect._
 import grox.command.ScannerCommand
 import grox.utils.FileUtils
 import grox.Scanner
+import grox._
 import cats.data.EitherT
+import javax.management.InstanceAlreadyExistsException
 
 object Main
   extends CommandIOApp(
@@ -28,17 +30,13 @@ object Main
               IO(buffer.getLines.mkString)
             }
             .attempt
-        )
-        tokens <- EitherT.fromEither[IO](ScannerCommand.scan(content))
+        ).leftMap(grox.FileError.apply)
+        tokens <- EitherT
+          .fromEither[IO](ScannerCommand.scan(content))
+          .leftMap(grox.ScannerError.apply)
         _ <- EitherT.liftF(IO.println(tokens))
 
-      } yield tokens)
-        .value
-        .map {
-          case Right(_) => ExitCode.Success
-          case Left(_)  => ExitCode.Error
-        }
-
+      } yield tokens).value.map(_ => ExitCode.Success)
     }
 
 }
