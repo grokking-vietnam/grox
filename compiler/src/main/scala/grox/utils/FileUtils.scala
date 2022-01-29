@@ -1,8 +1,10 @@
 package grox.utils
 
+import java.io.{File, FileInputStream}
+
+import scala.io.{BufferedSource, Source}
+
 import cats.effect.{IO, Resource}
-import java.io.{FileInputStream, File}
-import scala.io.{Source, BufferedSource}
 
 object FileUtils {
 
