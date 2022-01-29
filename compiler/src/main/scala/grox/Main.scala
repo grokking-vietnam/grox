@@ -32,7 +32,7 @@ object Main
             .attempt
         ).leftMap(grox.FileError.apply)
         tokens <- EitherT
-          .fromEither[IO](ScannerCommand.scan(content))
+          .fromEither[IO](Scanner.parse(content))
           .leftMap(grox.ScannerError.apply)
         _ <- EitherT.liftF(IO.println(tokens))
 
