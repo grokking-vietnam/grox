@@ -15,10 +15,10 @@ enum Expr[T]:
   case Minus(left: Expr[Double], right: Expr[Double]) extends Expr[Double]
   case Times(left: Expr[Double], right: Expr[Double]) extends Expr[Double]
   case Divide(left: Expr[Double], right: Expr[Double]) extends Expr[Double]
-  case Negate(exp: Expr[Double]) extends Expr[Double]
+  case Negate(expr: Expr[Double]) extends Expr[Double]
 
   // logic operators
-  case Not(exp: Expr[Boolean]) extends Expr[Boolean]
+  case Not(expr: Expr[Boolean]) extends Expr[Boolean]
   case And(left: Expr[Boolean], right: Expr[Boolean]) extends Expr[Boolean]
   case Or(left: Expr[Boolean], right: Expr[Boolean]) extends Expr[Boolean]
 
@@ -30,7 +30,7 @@ enum Expr[T]:
   case Equal(left: Expr[T], right: Expr[T]) extends Expr[Boolean]
   case NotEqual(left: Expr[T], right: Expr[T]) extends Expr[Boolean]
 
-  case Grouping(exp: Expr[T]) extends Expr[T]
+  case Grouping(expr: Expr[T]) extends Expr[T]
 
   case Bool(value: Boolean) extends Expr[Boolean]
   case Num(value: Double) extends Expr[Double]
@@ -46,8 +46,8 @@ object Expr {
       case Minus(left, right)        => eval(left) - eval(right)
       case Times(left, right)        => eval(left) * eval(right)
       case Divide(left, right)       => eval(left) / eval(right)
-      case Negate(exp)               => -eval(exp)
-      case Not(exp)                  => !eval(exp)
+      case Negate(expr)              => -eval(expr)
+      case Not(expr)                 => !eval(expr)
       case And(left, right)          => eval(left) && eval(right)
       case Or(left, right)           => eval(left) || eval(right)
       case Greater(left, right)      => eval(left) > eval(right)
