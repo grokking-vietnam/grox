@@ -5,16 +5,26 @@ import java.io.{File, FileInputStream}
 import scala.io.{BufferedSource, Source}
 
 import cats.effect.{IO, Resource}
+import cats.effect.kernel.Sync
 
-object FileUtils {
+trait FileUtils[F[_]] {
+  def open(path: String): Resource[F, BufferedSource]
 
-  def open(path: String): Resource[IO, BufferedSource] =
+  def read(f: BufferedSource): F[String]
+
+}
+
+class ExtendFileUtils[F[_]: Sync] extends FileUtils[F] {
+
+  override def open(path: String): Resource[F, BufferedSource] =
     Resource.make {
-      IO.blocking(Source.fromFile(path))
+      Sync[F].blocking(Source.fromFile(path))
     } { buffer =>
-      IO.blocking(
+      Sync[F].blocking(
         buffer.close()
-      ).handleErrorWith(_ => IO.unit)
+      )
     }
+
+  override def read(f: BufferedSource): F[String] = Sync[F].blocking(f.getLines.mkString)
 
 }
