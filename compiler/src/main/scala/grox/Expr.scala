@@ -6,8 +6,6 @@ package grox
 // [ ] comparision operators with Order
 // [ ] variables
 
-type S = Double | Boolean
-
 enum Expr[T]:
 
   // math operators
