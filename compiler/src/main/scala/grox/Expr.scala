@@ -33,9 +33,6 @@ enum Expr[T]:
   case Bool(value: Boolean) extends Expr[Boolean]
   case Num(value: Double) extends Expr[Double]
 
-  // case BoolVal(name: String) extends Expr[Boolean]
-  // case NumVal(name: String) extends Expr[Double]
-
 object Expr {
 
   def eval[T](expr: Expr[T]): T =
@@ -57,6 +54,27 @@ object Expr {
       case Grouping(expr)            => eval(expr)
       case Bool(value)               => value
       case Num(value)                => value
+    }
+
+  def show[T](expr: Expr[T]): String =
+    expr match {
+      case Plus(left, right)         => s"(${show(left)} + ${show(right)})"
+      case Minus(left, right)        => s"(${show(left)} - ${show(right)})"
+      case Times(left, right)        => s"(${show(left)} * ${show(right)})"
+      case Divide(left, right)       => s"(${show(left)} / ${show(right)})"
+      case Negate(expr)              => s"(-${show(expr)})"
+      case Not(expr)                 => s"(!${show(expr)})"
+      case And(left, right)          => s"(${show(left)} && ${show(right)})"
+      case Or(left, right)           => s"(${show(left)} || ${show(right)})"
+      case Greater(left, right)      => s"(${show(left)} > ${show(right)})"
+      case GreaterEqual(left, right) => s"(${show(left)} >= ${show(right)})"
+      case Less(left, right)         => s"(${show(left)} < ${show(right)})"
+      case LessEqual(left, right)    => s"(${show(left)} <= ${show(right)})"
+      case Equal(left, right)        => s"(${show(left)} == ${show(right)})"
+      case NotEqual(left, right)     => s"(${show(left)} != ${show(right)})"
+      case Grouping(expr)            => s"(${show(expr)})"
+      case Bool(value)               => value.toString
+      case Num(value)                => value.toString
     }
 
 }
