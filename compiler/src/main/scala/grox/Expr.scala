@@ -67,11 +67,11 @@ object Expr {
       case And(left, right)          => s"(${show(left)} && ${show(right)})"
       case Or(left, right)           => s"(${show(left)} || ${show(right)})"
       case Greater(left, right)      => s"(${show(left)} > ${show(right)})"
-      case GreaterEqual(left, right) => s"(${show(left)} >= ${show(right)})"
+      case GreaterEqual(left, right) => s"(${show(left)} ≥ ${show(right)})"
       case Less(left, right)         => s"(${show(left)} < ${show(right)})"
-      case LessEqual(left, right)    => s"(${show(left)} <= ${show(right)})"
+      case LessEqual(left, right)    => s"(${show(left)} ≤ ${show(right)})"
       case Equal(left, right)        => s"(${show(left)} == ${show(right)})"
-      case NotEqual(left, right)     => s"(${show(left)} != ${show(right)})"
+      case NotEqual(left, right)     => s"(${show(left)} ≠ ${show(right)})"
       case Grouping(expr)            => s"(${show(expr)})"
       case Bool(value)               => value.toString
       case Num(value)                => value.toString
