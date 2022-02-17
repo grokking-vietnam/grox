@@ -60,8 +60,8 @@ object Expr {
     expr match {
       case Plus(left, right)         => s"(${show(left)} + ${show(right)})"
       case Minus(left, right)        => s"(${show(left)} - ${show(right)})"
-      case Times(left, right)        => s"(${show(left)} * ${show(right)})"
-      case Divide(left, right)       => s"(${show(left)} / ${show(right)})"
+      case Times(left, right)        => s"(${show(left)} × ${show(right)})"
+      case Divide(left, right)       => s"(${show(left)} ÷ ${show(right)})"
       case Negate(expr)              => s"(-${show(expr)})"
       case Not(expr)                 => s"(!${show(expr)})"
       case And(left, right)          => s"(${show(left)} && ${show(right)})"
