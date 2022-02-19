@@ -1,6 +1,5 @@
 package grox
 
-
 object Parser {
 
   // final def parse(str: String): Either[Parser.Error, (String, A)] = {
