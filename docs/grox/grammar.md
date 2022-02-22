@@ -19,7 +19,7 @@ bool_expr           -> "true" | "false"
                     | comparison                       
 not                 -> "!" bool_expr
 logic               -> bool_expr ("and" | "or") bool_expr 
-comparison          -> expr "<" "<=" "==" ">=" ">" expr  
+comparison          -> expr ("<" | "<=" | "==" | ">=" | ">") expr  
 
 double_expr         -> Double 
                     | negate 
