@@ -3,14 +3,15 @@
 ## Expression
 
 ```
-expression        → literal
-                  | operator
-                  | grouping ;
+expression     → literal
+               | unary
+               | binary
+               | grouping ;
 
-literal           → Double | Boolean ;
-grouping          → "(" expression ")" ;
-binary            → expression operator expression ;
-operator          → "==" | "!=" | "<" | "<=" | ">" | ">="
-                  | "+"  | "-"  | "*" | "/"
-                  | "&&" | "||" | "!" ;
+literal        → NUMBER | STRING | "true" | "false" | "nil" ;
+grouping       → "(" expression ")" ;
+unary          → ( "-" | "!" ) expression ;
+binary         → expression operator expression ;
+operator       → "==" | "!=" | "<" | "<=" | ">" | ">="
+               | "+"  | "-"  | "*" | "/" ;
 ```
