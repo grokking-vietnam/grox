@@ -4,27 +4,36 @@ import java.io.{File, FileInputStream}
 
 import scala.io.{BufferedSource, Source}
 
-import cats.effect.{IO, Resource}
+import cats._
 import cats.effect.kernel.Sync
+import cats.effect.{IO, Resource}
+import cats.implicits._
 
-trait FileUtils[F[_]] {
-  def open(path: String): Resource[F, BufferedSource]
+import grox._
 
-  def read(f: BufferedSource): F[String]
+object FileUtils {
 
-}
-
-class ExtendFileUtils[F[_]: Sync] extends FileUtils[F] {
-
-  override def open(path: String): Resource[F, BufferedSource] =
+  def open[F[_]](
+    path: String
+  )(
+    implicit Sync: Sync[F]
+  ): Resource[F, BufferedSource] =
     Resource.make {
-      Sync[F].blocking(Source.fromFile(path))
+      Sync.blocking(Source.fromFile(path))
     } { buffer =>
-      Sync[F].blocking(
+      Sync.blocking(
         buffer.close()
       )
     }
 
-  override def read(f: BufferedSource): F[String] = Sync[F].blocking(f.getLines.mkString)
+  def read[F[_]](
+    f: BufferedSource
+  )(
+    implicit Sync: Sync[F],
+    ME: MonadError[F, Throwable],
+  ): F[String] = Sync.blocking(f.getLines.mkString).attempt.flatMap {
+    case Right(r) => Sync.pure(r)
+    case Left(e)  => ME.raiseError(e)
+  }
 
 }

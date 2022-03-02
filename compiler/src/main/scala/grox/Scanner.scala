@@ -1,7 +1,10 @@
 package grox
 
-import cats.ApplicativeError
+import cats._
 import cats.data.NonEmptyList
+import cats.implicits._
+import cats.mtl._
+import cats.mtl.implicits._
 import cats.parse.{LocationMap, Numbers => N, Parser => P, Parser0 => P0, Rfc5234 => R}
 
 trait Scanner[F[_]] {
@@ -10,9 +13,10 @@ trait Scanner[F[_]] {
 
 object Scanner {
 
-  def instance[F[_]](using F: ApplicativeError[F, Scanner.Error]): Scanner[F] =
+  def instance[F[_]](implicit FR: Raise[F, Scanner.Error], A: Applicative[F]): Scanner[F] =
     new Scanner {
-      def parse(str: String) = Scanner.parse(str).fold(F.raiseError, F.pure)
+      def parse(str: String) = Scanner.parse(str).fold(FR.raise, A.pure)
+
     }
 
   val endOfLine: P[Unit] = R.cr | R.lf
