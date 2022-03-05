@@ -1,5 +1,7 @@
 package grox
 
+import cats.Show
+
 // Todo add support for:
 // [ ] String literal
 // [ ] String operators
@@ -69,9 +71,9 @@ object Expr {
       case Negate(expr) => s"-${formatNestedExpr(expr, show(expr))}"
       case Not(expr)    => s"!${formatNestedExpr(expr, show(expr))}"
       case And(left, right) =>
-        s"${formatNestedExpr(left, show(left))} && ${formatNestedExpr(right, show(right))}"
+        s"${formatNestedExpr(left, show(left))} and ${formatNestedExpr(right, show(right))}"
       case Or(left, right) =>
-        s"${formatNestedExpr(left, show(left))} || ${formatNestedExpr(right, show(right))}"
+        s"${formatNestedExpr(left, show(left))} or ${formatNestedExpr(right, show(right))}"
       case Greater(left, right) =>
         s"${formatNestedExpr(left, show(left))} > ${formatNestedExpr(right, show(right))}"
       case GreaterEqual(left, right) =>
@@ -95,4 +97,5 @@ object Expr {
       case _                => s"($exprShow)"
     }
 
+  given exprShow[T]: Show[Expr[T]] = Show.show(Expr.show)
 }
