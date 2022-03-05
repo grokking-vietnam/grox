@@ -26,12 +26,24 @@ Sử dụng `Intelij + Scala plugin` hoặc `VSCode/Vim + Metals`.
 ## Linting
 
 ```
-$ sbt prepare 
+$ sbt prepare
 ```
 
 ## Test
+
 ```
 $ sbt test
+```
+
+Test 
+
+```
+$ sbt test
+```
+
+Test một file duy nhất:
+```
+$ sbt testOnly grox.ScannerTest
 ```
 
 ## Compile
@@ -43,7 +55,7 @@ $ sbt compile
 ## Run
 
 ```
-$ sbt compiler/run  # lưu ý cần chọn project cụ thể để run 
+$ sbt compiler/run  # lưu ý cần chọn project cụ thể để run
 ```
 
 
@@ -63,7 +75,7 @@ Starting bloop server at 127.0.0.1:8212...
 Tại đường dẫn của project, xuất build từ `sbt` đến `bloop`:
 ```
 $ sbt bloopInstall
-... 
+...
 [success] Generated .bloop/root.json
 [success] Generated .bloop/compiler.json
 [success] Generated .bloop/root-test.json
@@ -84,11 +96,19 @@ root-test
 
 
 Compile:
+
 ```
 $ bloop compile compiler
 ```
 
 Test:
+
 ```
 $ bloop test compiler
+```
+
+Test một file duy nhất:
+
+```
+$ bloop test compiler -o grox.ScannerTest
 ```
