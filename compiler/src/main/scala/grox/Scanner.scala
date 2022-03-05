@@ -15,7 +15,10 @@ object Scanner {
 
   def instance[F[_]](implicit FR: Raise[F, grox.Error], A: Applicative[F]): Scanner[F] =
     new Scanner {
-      def parse(str: String) = Scanner.parse(str).fold(err => FR.raise(grox.ScannerError(err)), A.pure)
+
+      def parse(
+        str: String
+      ) = Scanner.parse(str).fold(err => FR.raise(grox.ScannerError(err)), A.pure)
 
     }
 
