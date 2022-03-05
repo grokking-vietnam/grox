@@ -26,7 +26,7 @@ object ScannerCommand {
   )(
     implicit Sync: Sync[F],
     ME: MonadError[F, Throwable],
-    AE: Handle[F, Scanner.Error],
+    AE: Handle[F, grox.Error],
     CS: Console[F],
   ): F[cats.effect.ExitCode] =
     (for {
@@ -37,10 +37,7 @@ object ScannerCommand {
       _ <- CS.println(tokens)
     } yield tokens)
       .map(tokens => ExitCode.Success)
-      .handleWith[Scanner.Error] { case e: Scanner.Error => Sync.pure(ExitCode.Error) }
-      .recover { case exc: Throwable =>
-        ExitCode.Error
-      }
+      .recover { case exc: Throwable => ExitCode.Error }
 
 }
 

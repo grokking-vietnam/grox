@@ -13,9 +13,9 @@ trait Scanner[F[_]] {
 
 object Scanner {
 
-  def instance[F[_]](implicit FR: Raise[F, Scanner.Error], A: Applicative[F]): Scanner[F] =
+  def instance[F[_]](implicit FR: Raise[F, grox.Error], A: Applicative[F]): Scanner[F] =
     new Scanner {
-      def parse(str: String) = Scanner.parse(str).fold(FR.raise, A.pure)
+      def parse(str: String) = Scanner.parse(str).fold(err => FR.raise(grox.ScannerError(err)), A.pure)
 
     }
 
