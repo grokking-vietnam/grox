@@ -14,6 +14,7 @@ object Dependencies {
     val decline = "com.monovore" %% "decline" % declineVersion
     val declineEffect = "com.monovore" %% "decline-effect" % declineVersion
 
+
     val all = Seq(catsEffect, catsMtl, catsParse, decline, declineEffect)
   }
 
