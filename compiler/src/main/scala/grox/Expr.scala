@@ -2,11 +2,7 @@ package grox
 
 import cats.Show
 
-type LiteralType = Double | String | Boolean | Null
-
 enum Expr:
-
-  // Binary
 
   // arithmetic
   case Add(left: Expr, right: Expr)
@@ -26,11 +22,12 @@ enum Expr:
   case Negate(expr: Expr)
   case Not(expr: Expr)
 
-  case Literal(value: LiteralType)
-
+  case Literal(value: Expr.LiteralType)
   case Grouping(expr: Expr)
 
 object Expr:
+
+  type LiteralType = Double | String | Boolean | Null
 
   def show(expr: Expr): String =
     expr match
