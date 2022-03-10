@@ -211,4 +211,38 @@ class ParserTest extends munit.FunSuite:
       assertEquals(parse(ts), (Right(want), rmn))
   }
 
+  test("error: expect expression") {
+    // 1 + 2 / (3 - )
+    new TestSets:
+      val ts = List(
+        num1,
+        Operator.Plus,
+        num2,
+        Operator.Slash,
+        Operator.LeftParen,
+        num3,
+        Operator.Minus,
+        Operator.RightParen,
+      )
+      assertEquals(parse(ts), (Left(Error.ExpectExpression), List(Operator.RightParen)))
+  }
+
+  test("error: expect closing paren") {
+    // 1 + 2 / (3 - 4  true false
+    new TestSets:
+      val ts = List(
+        num1,
+        Operator.Plus,
+        num2,
+        Operator.Slash,
+        Operator.LeftParen,
+        num3,
+        Operator.Minus,
+        num4,
+        Keyword.True,
+        Keyword.False,
+      )
+      assertEquals(parse(ts), (Left(Error.ExpectClosing), List(Keyword.True, Keyword.False)))
+  }
+
 end ParserTest
