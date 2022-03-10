@@ -3,6 +3,7 @@ package grox
 import Parser.*
 
 class ParserTest extends munit.FunSuite:
+
   trait TestSets:
     val num1 = Literal.Number("1")
     val num2 = Literal.Number("2")
@@ -17,7 +18,6 @@ class ParserTest extends munit.FunSuite:
     val expr4 = Expr.Literal(4)
     val expr5 = Expr.Literal(5)
     val expr42 = Expr.Literal(42)
-
 
   test("empty") {
     assertEquals(parse(Nil), (Left(Error.ExpectExpression), Nil))
@@ -86,13 +86,10 @@ class ParserTest extends munit.FunSuite:
   test("factor with unary") {
     // -1 * 2 * -3
     new TestSets:
-      val ts = List(
-        Operator.Minus, num1,
-        Operator.Star, num2, 
-        Operator.Star, Operator.Minus, num3)
+      val ts = List(Operator.Minus, num1, Operator.Star, num2, Operator.Star, Operator.Minus, num3)
       val want = Expr.Multiply(
         Expr.Multiply(Expr.Negate(expr1), expr2),
-        Expr.Negate(expr3)
+        Expr.Negate(expr3),
       )
       assertEquals(parse(ts), (Right(want), Nil))
   }
@@ -109,16 +106,20 @@ class ParserTest extends munit.FunSuite:
     new TestSets:
       val ts = List(
         num1,
-        Operator.Plus, Operator.Minus, num2,
-        Operator.Star, num3,
-        Operator.Minus, num4
+        Operator.Plus,
+        Operator.Minus,
+        num2,
+        Operator.Star,
+        num3,
+        Operator.Minus,
+        num4,
       )
       val want = Expr.Subtract(
         Expr.Add(
           expr1,
           Expr.Multiply(Expr.Negate(expr2), expr3),
         ),
-        expr4
+        expr4,
       )
       assertEquals(parse(ts), (Right(want), Nil))
   }
@@ -127,13 +128,18 @@ class ParserTest extends munit.FunSuite:
     // 1 * 2 > -3 * 4
     new TestSets:
       val ts = List(
-        num1, Operator.Star, num2, 
-        Operator.Greater, 
-        Operator.Minus, num3, Operator.Plus, num4
+        num1,
+        Operator.Star,
+        num2,
+        Operator.Greater,
+        Operator.Minus,
+        num3,
+        Operator.Plus,
+        num4,
       )
       val want = Expr.Greater(
         Expr.Multiply(expr1, expr2),
-        Expr.Add(Expr.Negate(expr3), expr4)
+        Expr.Add(Expr.Negate(expr3), expr4),
       )
       assertEquals(parse(ts), (Right(want), Nil))
   }
@@ -143,16 +149,22 @@ class ParserTest extends munit.FunSuite:
     new TestSets:
       val ts = List(
         Keyword.False,
-        Operator.BangEqual, num1, Operator.Star, num2, 
-        Operator.Greater, 
-        Operator.Minus, num3, Operator.Plus, num4
+        Operator.BangEqual,
+        num1,
+        Operator.Star,
+        num2,
+        Operator.Greater,
+        Operator.Minus,
+        num3,
+        Operator.Plus,
+        num4,
       )
       val want = Expr.NotEqual(
         Expr.Literal(false),
         Expr.Greater(
           Expr.Multiply(expr1, expr2),
-          Expr.Add(Expr.Negate(expr3), expr4)
-        )
+          Expr.Add(Expr.Negate(expr3), expr4),
+        ),
       )
       assertEquals(parse(ts), (Right(want), Nil))
   }
@@ -162,16 +174,23 @@ class ParserTest extends munit.FunSuite:
     new TestSets:
       val ts = List(
         Keyword.False,
-        Operator.EqualEqual, 
+        Operator.EqualEqual,
         Operator.Bang,
         Operator.LeftParen,
-        num1, Operator.Star, num2, 
-        Operator.Greater, 
-        Operator.Minus, num3, Operator.Plus, num4,
-        Operator.Slash, num5,
+        num1,
+        Operator.Star,
+        num2,
+        Operator.Greater,
+        Operator.Minus,
+        num3,
+        Operator.Plus,
+        num4,
+        Operator.Slash,
+        num5,
         Operator.RightParen,
-
-        num1, Operator.EqualEqual, num2
+        num1,
+        Operator.EqualEqual,
+        num2,
       )
       val want = Expr.Equal(
         Expr.Literal(false),
@@ -180,12 +199,12 @@ class ParserTest extends munit.FunSuite:
             Expr.Greater(
               Expr.Multiply(expr1, expr2),
               Expr.Add(
-                Expr.Negate(expr3), 
-                Expr.Divide(expr4, expr5)
-              )
+                Expr.Negate(expr3),
+                Expr.Divide(expr4, expr5),
+              ),
             )
           )
-        )
+        ),
       )
       val rmn = List(num1, Operator.EqualEqual, num2)
 
