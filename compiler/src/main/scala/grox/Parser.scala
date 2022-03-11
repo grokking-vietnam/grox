@@ -90,7 +90,7 @@ object Parser:
       case Keyword.False :: rest      => Right(Expr.Literal(false), rest)
       case Keyword.Nil :: rest        => Right(Expr.Literal(null), rest)
       case Operator.LeftParen :: rest => parenBody(rest)
-      case _                          => Left((Err.ExpectExpression, tokens))
+      case _                          => Left(Err.ExpectExpression, tokens)
 
   // Parse the body within a pair of parentheses (the part after "(")
   def parenBody(
@@ -98,5 +98,5 @@ object Parser:
   ): P = expression(tokens).flatMap((expr, rest) =>
     rest match
       case Operator.RightParen :: rmn => Right(Expr.Grouping(expr), rmn)
-      case _                          => Left((Err.ExpectClosing, rest))
+      case _                          => Left(Err.ExpectClosing, rest)
   )
