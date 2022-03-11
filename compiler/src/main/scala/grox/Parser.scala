@@ -3,11 +3,13 @@ package grox
 object Parser:
 
   enum Error(msg: String):
-    case Unexpected(t: Token) extends Error(s"Unexpected '${t.lexeme}'")
+    // case Unexpected(t: Token) extends Error(s"Unexpected '${t.lexeme}'")
     case ExpectExpression extends Error("Expect expression")
     case ExpectClosing extends Error("Expect ')' after expression")
 
   type ExprTokens = (Either[Error, Expr], List[Token])
+  type BinaryOp = Token => Option[(Expr, Expr) => Expr]
+  type UnaryOp = Token => Option[Expr => Expr]
 
   // Parse a single expression and return remaining tokens
   def parse(ts: List[Token]): ExprTokens = expression(ts)
@@ -21,77 +23,68 @@ object Parser:
   // Consider "equality" expression as an example. Its direct descendant is "comparison"
   // and its OPERATOR is ("==" | "!=").
   def binary(
-    operators: List[Operator],
+    op: BinaryOp,
     descendant: List[Token] => ExprTokens,
   )(
     tokens: List[Token]
   ): ExprTokens =
     def matchOp(ts: List[Token], l: Expr): ExprTokens =
       ts match
-        case token :: rest if operators.contains(token) =>
-          descendant(rest) match
-            case (Left(e), rest) => (Left(e), rest)
-            case (Right(r), remaining) =>
-              makeBinary(token, l, r) match
-                case None       => (Left(Error.Unexpected(token)), remaining)
-                case Some(expr) => matchOp(remaining, expr)
+        case token :: rest =>
+          op(token) match
+            case Some(fn) =>
+              descendant(rest) match
+                case (Left(e), rest)       => (Left(e), rest)
+                case (Right(r), remaining) => matchOp(remaining, fn(l, r))
+            case None => (Right(l), ts)
         case _ => (Right(l), ts)
 
     descendant(tokens) match
       case (Left(e), rest)     => (Left(e), rest)
       case (Right(expr), rest) => matchOp(rest, expr)
 
-  def makeBinary(token: Token, left: Expr, right: Expr): Option[Expr] =
-    token match
-      case Operator.EqualEqual   => Some(Expr.Equal(left, right))
-      case Operator.BangEqual    => Some(Expr.NotEqual(left, right))
-      case Operator.Less         => Some(Expr.Less(left, right))
-      case Operator.LessEqual    => Some(Expr.LessEqual(left, right))
-      case Operator.Greater      => Some(Expr.Greater(left, right))
-      case Operator.GreaterEqual => Some(Expr.GreaterEqual(left, right))
-      case Operator.Plus         => Some(Expr.Add(left, right))
-      case Operator.Minus        => Some(Expr.Subtract(left, right))
-      case Operator.Star         => Some(Expr.Multiply(left, right))
-      case Operator.Slash        => Some(Expr.Divide(left, right))
-      case _                     => None
+  val equalityOp: BinaryOp =
+    case Operator.EqualEqual => Some(Expr.Equal)
+    case Operator.BangEqual  => Some(Expr.NotEqual)
+    case _                   => None
 
-  val equalityOperators = List(
-    Operator.EqualEqual,
-    Operator.BangEqual,
-  )
+  val comparisonOp: BinaryOp =
+    case Operator.Less         => Some(Expr.Less)
+    case Operator.LessEqual    => Some(Expr.LessEqual)
+    case Operator.Greater      => Some(Expr.Greater)
+    case Operator.GreaterEqual => Some(Expr.GreaterEqual)
+    case _                     => None
 
-  val comparisonOperators = List(
-    Operator.Less,
-    Operator.LessEqual,
-    Operator.Greater,
-    Operator.GreaterEqual,
-  )
+  val termOp: BinaryOp =
+    case Operator.Plus  => Some(Expr.Add)
+    case Operator.Minus => Some(Expr.Subtract)
+    case _              => None
 
-  val termOperators = List(Operator.Plus, Operator.Minus)
-  val factorOperators = List(Operator.Star, Operator.Slash)
-  val unaryOperators = List(Operator.Minus, Operator.Bang)
+  val factorOp: BinaryOp =
+    case Operator.Star  => Some(Expr.Multiply)
+    case Operator.Slash => Some(Expr.Divide)
+    case _              => None
 
-  def equality = binary(equalityOperators, comparison)
-  def comparison = binary(comparisonOperators, term)
-  def term = binary(termOperators, factor)
-  def factor = binary(factorOperators, unary)
+  val unaryOp: UnaryOp =
+    case Operator.Minus => Some(Expr.Negate)
+    case Operator.Bang  => Some(Expr.Not)
+    case _              => None
+
+  def equality = binary(equalityOp, comparison)
+  def comparison = binary(comparisonOp, term)
+  def term = binary(termOp, factor)
+  def factor = binary(factorOp, unary)
 
   def unary(tokens: List[Token]): ExprTokens =
     tokens match
-      case token :: rest if unaryOperators.contains(token) =>
-        unary(rest) match
-          case (Left(e), rest) => (Left(e), rest)
-          case (Right(expr), rest) => // (makeUnary(token, expr), rest)
-            makeUnary(token, expr) match
-              case Some(expr) => (Right(expr), rest)
-              case None       => (Left(Error.Unexpected(token)), rest)
-      case ts => primary(ts)
-
-  def makeUnary(token: Token, expr: Expr): Option[Expr] =
-    token match
-      case Operator.Minus => Some(Expr.Negate(expr))
-      case Operator.Bang  => Some(Expr.Not(expr))
-      case _              => None
+      case token :: rest =>
+        unaryOp(token) match
+          case Some(fn) =>
+            unary(rest) match
+              case (Left(e), rest)     => (Left(e), rest)
+              case (Right(expr), rest) => (Right(fn(expr)), rest)
+          case None => primary(tokens)
+      case _ => primary(tokens)
 
   def primary(tokens: List[Token]): ExprTokens =
     tokens match
