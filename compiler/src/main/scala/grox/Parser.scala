@@ -2,19 +2,23 @@ package grox
 
 object Parser:
 
-  enum Error(msg: String):
+  enum Err(msg: String):
     // case Unexpected(t: Token) extends Error(s"Unexpected '${t.lexeme}'")
-    case ExpectExpression extends Error("Expect expression")
-    case ExpectClosing extends Error("Expect ')' after expression")
+    case ExpectExpression extends Err("Expect expression")
+    case ExpectClosing extends Err("Expect ')' after expression")
 
-  type ExprTokens = (Either[Error, Expr], List[Token])
+  type Error = (Err, List[Token])
+  type Success = (Expr, List[Token])
+  type P = Either[Error, Success]
+
+  // type ExprTokens = (Either[Error, Expr], List[Token])
   type BinaryOp = Token => Option[(Expr, Expr) => Expr]
   type UnaryOp = Token => Option[Expr => Expr]
 
   // Parse a single expression and return remaining tokens
-  def parse(ts: List[Token]): ExprTokens = expression(ts)
+  def parse(ts: List[Token]): P = expression(ts)
 
-  def expression(tokens: List[Token]): ExprTokens = equality(tokens)
+  def expression(tokens: List[Token]): P = equality(tokens)
 
   // Parse binary expressions that share this grammar
   // ```
@@ -24,24 +28,19 @@ object Parser:
   // and its OPERATOR is ("==" | "!=").
   def binary(
     op: BinaryOp,
-    descendant: List[Token] => ExprTokens,
+    descendant: List[Token] => P,
   )(
     tokens: List[Token]
-  ): ExprTokens =
-    def matchOp(ts: List[Token], l: Expr): ExprTokens =
+  ): P =
+    def matchOp(ts: List[Token], l: Expr): P =
       ts match
         case token :: rest =>
           op(token) match
-            case Some(fn) =>
-              descendant(rest) match
-                case (Left(e), rest)       => (Left(e), rest)
-                case (Right(r), remaining) => matchOp(remaining, fn(l, r))
-            case None => (Right(l), ts)
-        case _ => (Right(l), ts)
+            case Some(fn) => descendant(rest).flatMap((r, rmn) => matchOp(rmn, fn(l, r)))
+            case None     => Right(l, ts)
+        case _ => Right(l, ts)
 
-    descendant(tokens) match
-      case (Left(e), rest)     => (Left(e), rest)
-      case (Right(expr), rest) => matchOp(rest, expr)
+    descendant(tokens).flatMap((expr, rest) => matchOp(rest, expr))
 
   val equalityOp: BinaryOp =
     case Operator.EqualEqual => Some(Expr.Equal)
@@ -75,32 +74,29 @@ object Parser:
   def term = binary(termOp, factor)
   def factor = binary(factorOp, unary)
 
-  def unary(tokens: List[Token]): ExprTokens =
+  def unary(tokens: List[Token]): P =
     tokens match
       case token :: rest =>
         unaryOp(token) match
-          case Some(fn) =>
-            unary(rest) match
-              case (Left(e), rest)     => (Left(e), rest)
-              case (Right(expr), rest) => (Right(fn(expr)), rest)
-          case None => primary(tokens)
+          case Some(fn) => unary(rest).flatMap((expr, rmn) => Right(fn(expr), rmn))
+          case None     => primary(tokens)
       case _ => primary(tokens)
 
-  def primary(tokens: List[Token]): ExprTokens =
+  def primary(tokens: List[Token]): P =
     tokens match
-      case Literal.Number(l) :: rest  => (Right(Expr.Literal(l.toDouble)), rest)
-      case Literal.Str(l) :: rest     => (Right(Expr.Literal(l)), rest)
-      case Keyword.True :: rest       => (Right(Expr.Literal(true)), rest)
-      case Keyword.False :: rest      => (Right(Expr.Literal(false)), rest)
-      case Keyword.Nil :: rest        => (Right(Expr.Literal(null)), rest)
+      case Literal.Number(l) :: rest  => Right(Expr.Literal(l.toDouble), rest)
+      case Literal.Str(l) :: rest     => Right(Expr.Literal(l), rest)
+      case Keyword.True :: rest       => Right(Expr.Literal(true), rest)
+      case Keyword.False :: rest      => Right(Expr.Literal(false), rest)
+      case Keyword.Nil :: rest        => Right(Expr.Literal(null), rest)
       case Operator.LeftParen :: rest => parenBody(rest)
-      case _                          => (Left(Error.ExpectExpression), tokens)
+      case _                          => Left((Err.ExpectExpression, tokens))
 
   // Parse the body within a pair of parentheses (the part after "(")
-  def parenBody(tokens: List[Token]): ExprTokens =
-    expression(tokens) match
-      case (Left(e), rest) => (Left(e), rest)
-      case (Right(expr), rest) =>
-        rest match
-          case Operator.RightParen :: remaining => (Right(Expr.Grouping(expr)), remaining)
-          case _                                => (Left(Error.ExpectClosing), rest)
+  def parenBody(
+    tokens: List[Token]
+  ): P = expression(tokens).flatMap((expr, rest) =>
+    rest match
+      case Operator.RightParen :: rmn => Right(Expr.Grouping(expr), rmn)
+      case _                          => Left((Err.ExpectClosing, rest))
+  )
