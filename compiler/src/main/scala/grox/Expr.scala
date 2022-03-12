@@ -2,78 +2,49 @@ package grox
 
 import cats.Show
 
-// Todo add support for:
-// [ ] String literal
-// [ ] String operators
-// [ ] comparision operators with Order
-// [ ] variables
+type LiteralType = Double | String | Boolean | Null
 
-enum Expr[T]:
+enum Expr:
 
-  // math operators
-  case Plus(left: Expr[Double], right: Expr[Double]) extends Expr[Double]
-  case Minus(left: Expr[Double], right: Expr[Double]) extends Expr[Double]
-  case Times(left: Expr[Double], right: Expr[Double]) extends Expr[Double]
-  case Divide(left: Expr[Double], right: Expr[Double]) extends Expr[Double]
-  case Negate(expr: Expr[Double]) extends Expr[Double]
+  // Binary
 
-  // logic operators
-  case Not(expr: Expr[Boolean]) extends Expr[Boolean]
-  case And(left: Expr[Boolean], right: Expr[Boolean]) extends Expr[Boolean]
-  case Or(left: Expr[Boolean], right: Expr[Boolean]) extends Expr[Boolean]
+  // arithmetic
+  case Add(left: Expr, right: Expr)
+  case Subtract(left: Expr, right: Expr)
+  case Multiply(left: Expr, right: Expr)
+  case Divide(left: Expr, right: Expr)
 
-  // comparision operators
-  case Greater(left: Expr[Double], right: Expr[Double]) extends Expr[Boolean]
-  case GreaterEqual(left: Expr[Double], right: Expr[Double]) extends Expr[Boolean]
-  case Less(left: Expr[Double], right: Expr[Double]) extends Expr[Boolean]
-  case LessEqual(left: Expr[Double], right: Expr[Double]) extends Expr[Boolean]
-  case Equal(left: Expr[T], right: Expr[T]) extends Expr[Boolean]
-  case NotEqual(left: Expr[T], right: Expr[T]) extends Expr[Boolean]
+  // comparison
+  case Greater(left: Expr, right: Expr)
+  case GreaterEqual(left: Expr, right: Expr)
+  case Less(left: Expr, right: Expr)
+  case LessEqual(left: Expr, right: Expr)
+  case Equal(left: Expr, right: Expr)
+  case NotEqual(left: Expr, right: Expr)
 
-  case Grouping(expr: Expr[T]) extends Expr[T]
+  // Unary
+  case Negate(expr: Expr)
+  case Not(expr: Expr)
 
-  case Bool(value: Boolean) extends Expr[Boolean]
-  case Num(value: Double) extends Expr[Double]
+  case Literal(value: LiteralType)
+
+  case Grouping(expr: Expr)
 
 object Expr {
-
-  def eval[T](expr: Expr[T]): T =
+  def show(expr: Expr): String =
     expr match {
-      case Plus(left, right)         => eval(left) + eval(right)
-      case Minus(left, right)        => eval(left) - eval(right)
-      case Times(left, right)        => eval(left) * eval(right)
-      case Divide(left, right)       => eval(left) / eval(right)
-      case Negate(expr)              => -eval(expr)
-      case Not(expr)                 => !eval(expr)
-      case And(left, right)          => eval(left) && eval(right)
-      case Or(left, right)           => eval(left) || eval(right)
-      case Greater(left, right)      => eval(left) > eval(right)
-      case GreaterEqual(left, right) => eval(left) >= eval(right)
-      case Less(left, right)         => eval(left) < eval(right)
-      case LessEqual(left, right)    => eval(left) <= eval(right)
-      case Equal(left, right)        => eval(left) == eval(right)
-      case NotEqual(left, right)     => eval(left) != eval(right)
-      case Grouping(expr)            => eval(expr)
-      case Bool(value)               => value
-      case Num(value)                => value
-    }
-
-  def show[T](expr: Expr[T]): String =
-    expr match {
-      case Plus(left, right) =>
+      case Add(left, right) =>
         s"${formatNestedExpr(left, show(left))} + ${formatNestedExpr(right, show(right))}"
-      case Minus(left, right) =>
+      case Subtract(left, right) =>
         s"${formatNestedExpr(left, show(left))} - ${formatNestedExpr(right, show(right))}"
-      case Times(left, right) =>
+      case Multiply(left, right) =>
         s"${formatNestedExpr(left, show(left))} × ${formatNestedExpr(right, show(right))}"
       case Divide(left, right) =>
         s"${formatNestedExpr(left, show(left))} ÷ ${formatNestedExpr(right, show(right))}"
+
       case Negate(expr) => s"-${formatNestedExpr(expr, show(expr))}"
       case Not(expr)    => s"!${formatNestedExpr(expr, show(expr))}"
-      case And(left, right) =>
-        s"${formatNestedExpr(left, show(left))} and ${formatNestedExpr(right, show(right))}"
-      case Or(left, right) =>
-        s"${formatNestedExpr(left, show(left))} or ${formatNestedExpr(right, show(right))}"
+
       case Greater(left, right) =>
         s"${formatNestedExpr(left, show(left))} > ${formatNestedExpr(right, show(right))}"
       case GreaterEqual(left, right) =>
@@ -86,16 +57,17 @@ object Expr {
         s"${formatNestedExpr(left, show(left))} == ${formatNestedExpr(right, show(right))}"
       case NotEqual(left, right) =>
         s"${formatNestedExpr(left, show(left))} ≠ ${formatNestedExpr(right, show(right))}"
+
       case Grouping(expr) => s"${formatNestedExpr(expr, show(expr))})"
-      case Bool(value)    => value.toString
-      case Num(value)     => value.toString
+
+      case Literal(value)    => value.toString
     }
 
-  private def formatNestedExpr[T](expr: Expr[T], exprShow: String): String =
+  private def formatNestedExpr(expr: Expr, exprShow: String): String =
     expr match {
-      case Num(_) | Bool(_) => exprShow
+      case Literal(_)       => exprShow
       case _                => s"($exprShow)"
     }
 
-  given exprShow[T]: Show[Expr[T]] = Show.show(Expr.show)
+  given exprShow: Show[Expr] = Show.show(Expr.show)
 }

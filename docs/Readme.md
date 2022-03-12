@@ -2,6 +2,7 @@
 
 ## Miscellaneous
   * [Introduction](/docs/introduction.md)
+  * [Setup](/docs/setup.md)
   * [Resources](/docs/resources.md)
 
 ## Book
