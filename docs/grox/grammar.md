@@ -27,5 +27,5 @@ unary         -> ("-" | "!") unary
               | primary
 primary       -> NUMBER | STRING | "true" | "false" | "nil" 
               | groupping
-groupping     -> "(" expression ")"
+grouping     -> "(" expression ")"
 ```

@@ -20,62 +20,62 @@ class ParserTest extends munit.FunSuite:
     val expr42 = Expr.Literal(42)
 
   test("empty") {
-    assertEquals(parse(Nil), Left((Err.ExpectExpression, Nil)))
+    assertEquals(parse(Nil), Left(Error.ExpectExpression(Nil)))
   }
 
   test("primary number") {
     val ts = List(Literal.Number("42"))
     val want = Expr.Literal(42)
-    assertEquals(parse(ts), Right((want, Nil)))
+    assertEquals(parse(ts), Right(want, Nil))
   }
 
   test("primary string") {
     val ts = List(Literal.Str("you rox!"))
     val want = Expr.Literal("you rox!")
-    assertEquals(parse(ts), Right((want, Nil)))
+    assertEquals(parse(ts), Right(want, Nil))
   }
 
   test("primary true") {
     val ts = List(Keyword.True)
     val want = Expr.Literal(true)
-    assertEquals(parse(ts), Right((want, Nil)))
+    assertEquals(parse(ts), Right(want, Nil))
   }
 
   test("primary true") {
     val ts = List(Keyword.False)
     val want = Expr.Literal(false)
-    assertEquals(parse(ts), Right((want, Nil)))
+    assertEquals(parse(ts), Right(want, Nil))
   }
 
   test("primary nil") {
     val ts = List(Keyword.Nil)
     val want = Expr.Literal(null)
-    assertEquals(parse(ts), Right((want, Nil)))
+    assertEquals(parse(ts), Right(want, Nil))
   }
 
   test("unary negate") {
     val ts = List(Operator.Minus, Literal.Number("42"))
     val want = Expr.Negate(Expr.Literal(42))
-    assertEquals(parse(ts), Right((want, Nil)))
+    assertEquals(parse(ts), Right(want, Nil))
   }
 
   test("unary not") {
     val ts = List(Operator.Bang, Keyword.False)
     val want = Expr.Not(Expr.Literal(false))
-    assertEquals(parse(ts), Right((want, Nil)))
+    assertEquals(parse(ts), Right(want, Nil))
   }
 
   test("unary multiple minus") {
     val ts = List(Operator.Minus, Operator.Minus, Operator.Minus, Literal.Number("1"))
     val want = Expr.Negate(Expr.Negate(Expr.Negate(Expr.Literal(1))))
-    assertEquals(parse(ts), Right((want, Nil)))
+    assertEquals(parse(ts), Right(want, Nil))
   }
 
   test("factor 2 numbers") {
     new TestSets:
       val ts = List(num2, Operator.Star, num5)
       val want = Expr.Multiply(expr2, expr5)
-      assertEquals(parse(ts), Right((want, Nil)))
+      assertEquals(parse(ts), Right(want, Nil))
   }
 
   test("factor 4 numbers") {
@@ -83,7 +83,7 @@ class ParserTest extends munit.FunSuite:
     new TestSets:
       val ts = List(num2, Operator.Star, num5, Operator.Star, num1, Operator.Slash, num42)
       val want = Expr.Divide(Expr.Multiply(Expr.Multiply(expr2, expr5), expr1), expr42)
-      assertEquals(parse(ts), Right((want, Nil)))
+      assertEquals(parse(ts), Right(want, Nil))
   }
 
   test("factor with unary") {
@@ -94,14 +94,14 @@ class ParserTest extends munit.FunSuite:
         Expr.Multiply(Expr.Negate(expr1), expr2),
         Expr.Negate(expr3),
       )
-      assertEquals(parse(ts), Right((want, Nil)))
+      assertEquals(parse(ts), Right(want, Nil))
   }
 
   test("term 2 numbers") {
     new TestSets:
       val ts = List(num2, Operator.Minus, Operator.Minus, num3)
       val want = Expr.Subtract(expr2, Expr.Negate(expr3))
-      assertEquals(parse(ts), Right((want, Nil)))
+      assertEquals(parse(ts), Right(want, Nil))
   }
 
   test("term 4 numbers") {
@@ -124,7 +124,7 @@ class ParserTest extends munit.FunSuite:
         ),
         expr4,
       )
-      assertEquals(parse(ts), Right((want, Nil)))
+      assertEquals(parse(ts), Right(want, Nil))
   }
 
   test("comparison") {
@@ -144,7 +144,7 @@ class ParserTest extends munit.FunSuite:
         Expr.Multiply(expr1, expr2),
         Expr.Add(Expr.Negate(expr3), expr4),
       )
-      assertEquals(parse(ts), Right((want, Nil)))
+      assertEquals(parse(ts), Right(want, Nil))
   }
 
   test("equality") {
@@ -169,7 +169,7 @@ class ParserTest extends munit.FunSuite:
           Expr.Add(Expr.Negate(expr3), expr4),
         ),
       )
-      assertEquals(parse(ts), Right((want, Nil)))
+      assertEquals(parse(ts), Right(want, Nil))
   }
 
   test("combination") {
@@ -227,7 +227,7 @@ class ParserTest extends munit.FunSuite:
         Operator.Minus,
         Operator.RightParen,
       )
-      assertEquals(parse(ts), Left(Err.ExpectExpression, List(Operator.RightParen)))
+      assertEquals(parse(ts), Left(Error.ExpectExpression(List(Operator.RightParen))))
   }
 
   test("error: expect closing paren") {
@@ -245,7 +245,7 @@ class ParserTest extends munit.FunSuite:
         Keyword.True,
         Keyword.False,
       )
-      assertEquals(parse(ts), Left(Err.ExpectClosing, List(Keyword.True, Keyword.False)))
+      assertEquals(parse(ts), Left(Error.ExpectClosing(List(Keyword.True, Keyword.False))))
   }
 
 end ParserTest
