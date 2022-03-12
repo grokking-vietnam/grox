@@ -31,6 +31,7 @@ enum Expr:
   case Grouping(expr: Expr)
 
 object Expr {
+
   def show(expr: Expr): String =
     expr match {
       case Add(left, right) =>
@@ -60,13 +61,13 @@ object Expr {
 
       case Grouping(expr) => s"${formatNestedExpr(expr, show(expr))})"
 
-      case Literal(value)    => value.toString
+      case Literal(value) => value.toString
     }
 
   private def formatNestedExpr(expr: Expr, exprShow: String): String =
     expr match {
-      case Literal(_)       => exprShow
-      case _                => s"($exprShow)"
+      case Literal(_) => exprShow
+      case _          => s"($exprShow)"
     }
 
   given exprShow: Show[Expr] = Show.show(Expr.show)
