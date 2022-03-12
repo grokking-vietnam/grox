@@ -1,5 +1,7 @@
 package grox
 
+import cats.Show
+
 type LiteralType = Double | String | Boolean | Null
 
 enum Expr:
@@ -28,4 +30,45 @@ enum Expr:
 
   case Grouping(expr: Expr)
 
-object Expr {}
+object Expr {
+
+  def show(expr: Expr): String =
+    expr match {
+      case Add(left, right) =>
+        s"${formatNestedExpr(left, show(left))} + ${formatNestedExpr(right, show(right))}"
+      case Subtract(left, right) =>
+        s"${formatNestedExpr(left, show(left))} - ${formatNestedExpr(right, show(right))}"
+      case Multiply(left, right) =>
+        s"${formatNestedExpr(left, show(left))} × ${formatNestedExpr(right, show(right))}"
+      case Divide(left, right) =>
+        s"${formatNestedExpr(left, show(left))} ÷ ${formatNestedExpr(right, show(right))}"
+
+      case Negate(expr) => s"-${formatNestedExpr(expr, show(expr))}"
+      case Not(expr)    => s"!${formatNestedExpr(expr, show(expr))}"
+
+      case Greater(left, right) =>
+        s"${formatNestedExpr(left, show(left))} > ${formatNestedExpr(right, show(right))}"
+      case GreaterEqual(left, right) =>
+        s"${formatNestedExpr(left, show(left))} ≥ ${formatNestedExpr(right, show(right))}"
+      case Less(left, right) =>
+        s"${formatNestedExpr(left, show(left))} < ${formatNestedExpr(right, show(right))}"
+      case LessEqual(left, right) =>
+        s"${formatNestedExpr(left, show(left))} ≤ ${formatNestedExpr(right, show(right))}"
+      case Equal(left, right) =>
+        s"${formatNestedExpr(left, show(left))} == ${formatNestedExpr(right, show(right))}"
+      case NotEqual(left, right) =>
+        s"${formatNestedExpr(left, show(left))} ≠ ${formatNestedExpr(right, show(right))}"
+
+      case Grouping(expr) => s"${formatNestedExpr(expr, show(expr))})"
+
+      case Literal(value) => value.toString
+    }
+
+  private def formatNestedExpr(expr: Expr, exprShow: String): String =
+    expr match {
+      case Literal(_) => exprShow
+      case _          => s"($exprShow)"
+    }
+
+  given exprShow: Show[Expr] = Show.show(Expr.show)
+}
