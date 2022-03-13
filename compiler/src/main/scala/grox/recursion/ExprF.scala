@@ -1,6 +1,7 @@
 package grox.recursion
 
 import cats.Functor
+import cats.implicits.*
 
 import grox.Expr
 import grox.Expr.*
@@ -8,12 +9,11 @@ import grox.Expr.*
 def cata[F[_]: Functor, A, B](
   algebra: F[B] => B, // F-Algebra
   project: A => F[A],
-): A => B = {
+): A => B =
 
   def loop(state: A): B = algebra(Functor[F].map(project(state))(loop))
 
   loop
-}
 
 enum ExprF[+A]:
   case AddF(left: A, right: A)
@@ -34,7 +34,7 @@ enum ExprF[+A]:
   case LiteralF(value: LiteralType)
   case GroupingF(expr: A)
 
-object Recursion:
+object ExprF:
 
   import ExprF.*
 
@@ -60,7 +60,7 @@ object Recursion:
         case LiteralF(expr)  => LiteralF(expr)
         case GroupingF(expr) => GroupingF(f(expr))
 
-    val project: Expr => ExprF[Expr] = {
+    val project: Expr => ExprF[Expr] =
       case Add(left, right)      => AddF(left, right)
       case Subtract(left, right) => SubtractF(left, right)
       case Multiply(left, right) => MultiplyF(left, right)
@@ -80,26 +80,65 @@ object Recursion:
 
       case Literal(value) => LiteralF(value)
       case Grouping(expr) => GroupingF(expr)
-    }
 
-    val mkStringAlgebra: ExprF[String] => String = {
-      case AddF(left, right)      => s"$left + $right"
-      case SubtractF(left, right) => s"$left - $right"
-      case MultiplyF(left, right) => s"$left * $right"
-      case DivideF(left, right)   => s"$left / $right"
+end ExprF
 
-      case GreaterF(left, right)      => s"$left > $right"
-      case GreaterEqualF(left, right) => s"$left >= $right"
-      case LessF(left, right)         => s"$left < $right"
-      case LessEqualF(left, right)    => s"$left <= $right"
-      case EqualF(left, right)        => s"$left == $right"
-      case NotEqualF(left, right)     => s"$left != $right"
+object ExprShow:
 
-      case NegateF(expr) => s"-$expr"
-      case NotF(expr)    => s"$expr"
+  import ExprF.*
 
-      case LiteralF(expr)  => expr.toString
-      case GroupingF(expr) => s"($expr)"
-    }
+  val mkStringAlgebra: ExprF[String] => String =
+    case AddF(left, right)      => s"$left + $right"
+    case SubtractF(left, right) => s"$left - $right"
+    case MultiplyF(left, right) => s"$left * $right"
+    case DivideF(left, right)   => s"$left / $right"
 
-end Recursion
+    case GreaterF(left, right)      => s"$left > $right"
+    case GreaterEqualF(left, right) => s"$left >= $right"
+    case LessF(left, right)         => s"$left < $right"
+    case LessEqualF(left, right)    => s"$left <= $right"
+    case EqualF(left, right)        => s"$left == $right"
+    case NotEqualF(left, right)     => s"$left != $right"
+
+    case NegateF(expr) => s"-$expr"
+    case NotF(expr)    => s"$expr"
+
+    case LiteralF(expr)  => expr.toString
+    case GroupingF(expr) => s"($expr)"
+
+end ExprShow
+
+object ExprEvaluation:
+
+  import ExprF.*
+
+  enum EvaluationError:
+    case Unexpected
+
+  type EvaluationResult = Either[EvaluationError, LiteralType]
+
+  type Evaluate = (LiteralType, LiteralType) => EvaluationResult
+  def add(left: LiteralType, right: LiteralType): EvaluationResult = ???
+  def evaluate(eval: Evaluate)(left: EvaluationResult, right: EvaluationResult): EvaluationResult =
+    (left, right).mapN(eval).flatten
+
+  val evaluationAlgebra: ExprF[EvaluationResult] => EvaluationResult =
+    case AddF(left, right)      => evaluate(add)(left, right)
+    case SubtractF(left, right) => evaluate(add)(left, right)
+    case MultiplyF(left, right) => evaluate(add)(left, right)
+    case DivideF(left, right)   => evaluate(add)(left, right)
+
+    case GreaterF(left, right)      => evaluate(add)(left, right)
+    case GreaterEqualF(left, right) => evaluate(add)(left, right)
+    case LessF(left, right)         => evaluate(add)(left, right)
+    case LessEqualF(left, right)    => evaluate(add)(left, right)
+    case EqualF(left, right)        => evaluate(add)(left, right)
+    case NotEqualF(left, right)     => evaluate(add)(left, right)
+
+    case NegateF(expr) => expr // todo implement it
+    case NotF(expr)    => expr // todo implement it
+
+    case LiteralF(expr)  => Right(expr)
+    case GroupingF(expr) => expr
+
+end ExprEvaluation
