@@ -96,3 +96,15 @@ object Parser:
       case Operator.RightParen :: rmn => Right(Expr.Grouping(expr), rmn)
       case _                          => Left(Error.ExpectClosing(rest))
   )
+
+  // Discard tokens until a new expression/statement is found
+  def synchronize(tokens: List[Token]): List[Token] =
+    tokens match
+      case t :: rest =>
+        t match
+          case Operator.Semicolon => rest
+          case Keyword.Class | Keyword.Fun | Keyword.Var | Keyword.For | Keyword.If |
+              Keyword.While | Keyword.Print | Keyword.Return =>
+            tokens
+          case _ => synchronize(rest)
+      case Nil => Nil
