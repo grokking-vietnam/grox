@@ -8,7 +8,6 @@ object Parser:
 
   type ParseResult = Either[Error, (Expr, List[Token])]
 
-  // type ExprTokens = (Either[Error, Expr], List[Token])
   type BinaryOp = Token => Option[(Expr, Expr) => Expr]
   type UnaryOp = Token => Option[Expr => Expr]
 
@@ -19,7 +18,7 @@ object Parser:
 
   // Parse binary expressions that share this grammar
   // ```
-  //    expr   -> descendant (OPERATOR descendant)*
+  //    expr   -> descendant (OPERATOR descendant)  *
   // ```
   // Consider "equality" expression as an example. Its direct descendant is "comparison"
   // and its OPERATOR is ("==" | "!=").
@@ -40,30 +39,30 @@ object Parser:
     descendant(tokens).flatMap((expr, rest) => matchOp(rest, expr))
 
   val equalityOp: BinaryOp =
-    case Operator.EqualEqual => Some(Expr.Equal)
-    case Operator.BangEqual  => Some(Expr.NotEqual)
+    case Operator.EqualEqual => Some(Expr.Equal.apply)
+    case Operator.BangEqual  => Some(Expr.NotEqual.apply)
     case _                   => None
 
   val comparisonOp: BinaryOp =
-    case Operator.Less         => Some(Expr.Less)
-    case Operator.LessEqual    => Some(Expr.LessEqual)
-    case Operator.Greater      => Some(Expr.Greater)
-    case Operator.GreaterEqual => Some(Expr.GreaterEqual)
+    case Operator.Less         => Some(Expr.Less.apply)
+    case Operator.LessEqual    => Some(Expr.LessEqual.apply)
+    case Operator.Greater      => Some(Expr.Greater.apply)
+    case Operator.GreaterEqual => Some(Expr.GreaterEqual.apply)
     case _                     => None
 
   val termOp: BinaryOp =
-    case Operator.Plus  => Some(Expr.Add)
-    case Operator.Minus => Some(Expr.Subtract)
+    case Operator.Plus  => Some(Expr.Add.apply)
+    case Operator.Minus => Some(Expr.Subtract.apply)
     case _              => None
 
   val factorOp: BinaryOp =
-    case Operator.Star  => Some(Expr.Multiply)
-    case Operator.Slash => Some(Expr.Divide)
+    case Operator.Star  => Some(Expr.Multiply.apply)
+    case Operator.Slash => Some(Expr.Divide.apply)
     case _              => None
 
   val unaryOp: UnaryOp =
-    case Operator.Minus => Some(Expr.Negate)
-    case Operator.Bang  => Some(Expr.Not)
+    case Operator.Minus => Some(Expr.Negate.apply)
+    case Operator.Bang  => Some(Expr.Not.apply)
     case _              => None
 
   def equality = binary(equalityOp, comparison)

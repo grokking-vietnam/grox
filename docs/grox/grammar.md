@@ -26,6 +26,6 @@ term          -> unary (("*" | "/") unary)*
 unary         -> ("-" | "!") unary 
               | primary
 primary       -> NUMBER | STRING | "true" | "false" | "nil" 
-              | groupping
+              | grouping
 grouping     -> "(" expression ")"
 ```
