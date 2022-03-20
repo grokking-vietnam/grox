@@ -1,7 +1,7 @@
 package grox.commands
 
 import cats._
-import cats.data.EitherT
+import cats.data._
 import cats.effect._
 import cats.effect.std._
 import cats.implicits._
@@ -35,7 +35,6 @@ object ScannerCommand {
     }).recoverWith { e =>
       IO.println(s"Error $e").map(_ => ExitCode.Error)
     }
-
   }
 
   trait ADT[F[_]] {

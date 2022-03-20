@@ -15,10 +15,11 @@ object Main
     version = "0.0.1",
   ) {
 
-  override def main: Opts[IO[ExitCode]] = (ScannerCommand.scannerOpts orElse ParseCommand.helpOpts)
-    .map {
-      case cfg: ScannerCommand.Config => ScannerCommand.run(cfg)
-      case ParseCommand(vebose)       => IO.println("ParseCommand") >> IO(ExitCode.Success)
-    }
+  override def main: Opts[IO[ExitCode]] =
+    (ScannerCommand.scannerOpts orElse ParseCommand.parserOpts)
+      .map {
+        case cfg: ScannerCommand.Config => ScannerCommand.run(cfg)
+        case cfg: ParseCommand.Config   => ParseCommand.run(cfg)
+      }
 
 }
