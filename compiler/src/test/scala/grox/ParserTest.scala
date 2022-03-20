@@ -19,6 +19,8 @@ class ParserTest extends munit.FunSuite:
     val expr5 = Expr.Literal(5)
     val expr42 = Expr.Literal(42)
 
+    val avar = Literal.Identifier("a")
+
   test("empty") {
     assertEquals(parse(Nil), Left(Error.ExpectExpression(Nil)))
   }
@@ -246,6 +248,42 @@ class ParserTest extends munit.FunSuite:
         Keyword.False,
       )
       assertEquals(parse(ts), Left(Error.ExpectClosing(List(Keyword.True, Keyword.False))))
+  }
+
+  test("synchronize: until statement") {
+    // a = a + 1) { print a; }
+    new TestSets:
+      val ts = List(
+        avar,
+        Operator.Equal,
+        avar,
+        Operator.Plus,
+        avar,
+        Operator.RightParen,
+        Operator.LeftBrace,
+        Keyword.Print,
+        avar,
+        Operator.Semicolon,
+        Operator.RightBrace,
+      )
+      val remaining = ts.dropWhile(_ != Keyword.Print)
+      assertEquals(synchronize(ts), remaining)
+  }
+
+  test("synchronize: until new expression") {
+    // + 1; 2 * 3;
+    new TestSets:
+      val ts = List(
+        Operator.Plus,
+        num1,
+        Operator.Semicolon,
+        num2,
+        Operator.Star,
+        num3,
+        Operator.Semicolon,
+      )
+      val remaining = ts.dropWhile(_ != num2)
+      assertEquals(synchronize(ts), remaining)
   }
 
 end ParserTest
