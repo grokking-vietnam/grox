@@ -8,13 +8,13 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 const config = {
   title: 'Grox',
   tagline: 'A programming language written in Scala 3',
-  url: 'https://your-docusaurus-test-site.com',
-  baseUrl: '/',
+  url: 'https://grokking-vietnam.github.io',
+  baseUrl: '/grox',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
   organizationName: 'grokking-vietnam', // Usually your GitHub org/user name.
-  projectName: 'docusaurus', // Usually your repo name.
+  projectName: 'grox', // Usually your repo name.
 
   presets: [
     [
@@ -50,7 +50,7 @@ const config = {
             to: '/docs'
           },
           {
-            href: 'https://github.com/facebook/docusaurus',
+            href: 'https://github.com/grokking-vietnam/grox',
             label: 'GitHub',
             position: 'right',
           },
@@ -76,16 +76,16 @@ const config = {
             title: 'Community',
             items: [
               {
-                label: 'Stack Overflow',
-                href: 'https://stackoverflow.com/questions/tagged/docusaurus',
+                label: 'Grokking Vietnam',
+                href: 'https://www.grokking.org/',
               },
               {
-                label: 'Discord',
-                href: 'https://discordapp.com/invite/docusaurus',
+                label: 'Facebook',
+                href: 'https://www.facebook.com/grokking.vietnam/',
               },
               {
-                label: 'Twitter',
-                href: 'https://twitter.com/docusaurus',
+                label: 'Youtube',
+                href: 'https://www.youtube.com/channel/UCH2gAK9r_7EbvyVt0z5VibQ/featured',
               },
             ],
           },
