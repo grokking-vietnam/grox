@@ -5,7 +5,8 @@ object Parser:
   enum Error(msg: String, tokens: List[Token]):
     case ExpectExpression(tokens: List[Token]) extends Error("Expect expression", tokens)
     case ExpectClosing(tokens: List[Token]) extends Error("Expect ')' after expression", tokens)
-    case ExpectSemicolon(tokens: List[Token]) extends Error("Expect ';' after expression", tokens)
+    case ExpectSemicolon(tokens: List[Token]) extends Error("Expect ';' after statement", tokens)
+    case ExpectRightBrace(tokens: List[Token]) extends Error("Expect '}' after statement", tokens)
 
   type ParseResult = Either[Error, (Expr, List[Token])]
   type ParseStatementResult = Either[Error, (Stmt, List[Token])]
@@ -71,7 +72,25 @@ object Parser:
       cnsm <- consume(Operator.Semicolon, pr._2)
     } yield (Stmt.Print(pr._1), cnsm._2)
 
-  def blockStmt(tokens: List[Token]): ParseStatementResult = ???
+  def blockStmt(tokens: List[Token]): ParseStatementResult =
+    def block(
+      ts: List[Token],
+      stmts: List[Stmt] = List.empty[Stmt],
+    ): Either[Error, (List[Stmt], List[Token])] =
+      ts.headOption match {
+        case Some(token) =>
+          token match {
+            case Operator.RightBrace => Right(stmts, ts)
+            case _ =>
+              declaration(tokens) match {
+                case Right((dclr, rest)) => block(rest, dclr :: stmts)
+                case l @ Left(_)         => l.asInstanceOf[Left[Error, (List[Stmt], List[Token])]]
+              }
+          }
+        case _ => Left(Error.ExpectRightBrace(ts.tail))
+      }
+
+    block(tokens).map((stmts, rest) => (Stmt.Block(stmts), rest))
 
   def ifStmt(tokens: List[Token]): ParseStatementResult = ???
 
