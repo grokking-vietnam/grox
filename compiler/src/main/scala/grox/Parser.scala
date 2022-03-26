@@ -5,16 +5,90 @@ object Parser:
   enum Error(msg: String, tokens: List[Token]):
     case ExpectExpression(tokens: List[Token]) extends Error("Expect expression", tokens)
     case ExpectClosing(tokens: List[Token]) extends Error("Expect ')' after expression", tokens)
+    case ExpectSemicolon(tokens: List[Token]) extends Error("Expect ';' after expression", tokens)
 
   type ParseResult = Either[Error, (Expr, List[Token])]
+  type ParseStatementResult = Either[Error, (Stmt, List[Token])]
 
   type BinaryOp = Token => Option[(Expr, Expr) => Expr]
   type UnaryOp = Token => Option[Expr => Expr]
 
+  case class Inspector(errors: List[Error], stmts: List[Stmt], tokens: List[Token])
+
   // Parse a single expression and return remaining tokens
   def parse(ts: List[Token]): ParseResult = expression(ts)
 
+  def parseStmt(inspector: Inspector): Inspector =
+    inspector.tokens match
+      case Nil => inspector
+      case _ =>
+        declaration(inspector.tokens) match {
+          case Right((stmt, rest)) =>
+            parseStmt(inspector.copy(tokens = rest, stmts = stmt :: inspector.stmts))
+          case Left(err) =>
+            parseStmt(
+              inspector.copy(
+                tokens = synchronize(inspector.tokens),
+                errors = err :: inspector.errors,
+              )
+            )
+        }
+
+  def declaration(tokens: List[Token]): ParseStatementResult =
+    tokens.headOption match {
+      case Some(Keyword.Class) => ???
+      case Some(Keyword.Fun)   => ???
+      case Some(Keyword.Var)   => ???
+      case _                   => statement(tokens)
+    }
+
+  def statement(tokens: List[Token]): ParseStatementResult =
+    tokens.headOption match {
+      case Some(token) =>
+        token match {
+          case Keyword.Print      => printStmt(tokens.tail)
+          case Operator.LeftParen => blockStmt(tokens.tail)
+          case Keyword.If         => ifStmt(tokens.tail)
+          case Keyword.For        => forStmt(tokens.tail)
+          case Keyword.Return     => returnStmt(tokens.tail)
+          case Keyword.While      => whileStmt(tokens.tail)
+          case _                  => expressionStmt(tokens)
+        }
+      case _ => expressionStmt(tokens)
+    }
+
   def expression(tokens: List[Token]): ParseResult = equality(tokens)
+
+  def expressionStmt(tokens: List[Token]): ParseStatementResult =
+    for {
+      pr <- expression(tokens)
+      cnsm <- consume(Operator.Semicolon, pr._2)
+    } yield (Stmt.Expression(pr._1), cnsm._2)
+
+  def printStmt(tokens: List[Token]): ParseStatementResult =
+    for {
+      pr <- expression(tokens)
+      cnsm <- consume(Operator.Semicolon, pr._2)
+    } yield (Stmt.Print(pr._1), cnsm._2)
+
+  def blockStmt(tokens: List[Token]): ParseStatementResult = ???
+
+  def ifStmt(tokens: List[Token]): ParseStatementResult = ???
+
+  def forStmt(tokens: List[Token]): ParseStatementResult = ???
+
+  def returnStmt(tokens: List[Token]): ParseStatementResult = ???
+
+  def whileStmt(tokens: List[Token]): ParseStatementResult = ???
+
+  def consume(expect: Token, tokens: List[Token]): Either[Error, (Token, List[Token])] =
+    tokens.headOption match {
+      case Some(expect) => Right(expect, tokens.tail)
+      case _ =>
+        expect match {
+          case Operator.Semicolon => Left(Error.ExpectSemicolon(tokens.tail))
+        }
+    }
 
   // Parse binary expressions that share this grammar
   // ```
