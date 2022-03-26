@@ -1,6 +1,27 @@
 package grox
 
+import cats._
+
 object Parser:
+
+  trait ParserAgl[F[_]] {
+    def parseToken(tokens: List[Token]): F[Expr]
+  }
+
+  given parser[F[_]](
+    using ME: MonadError[F, grox.Error],
+    A: Applicative[F],
+  ): ParserAgl[F] =
+    new ParserAgl {
+
+      def parseToken(
+        tokens: List[Token]
+      ): F[Expr] = parse(tokens).fold(
+        err => ME.raiseError(grox.Error.ParserError),
+        { case (expr, tokens) => A.pure(expr) },
+      )
+
+    }
 
   enum Error(msg: String, tokens: List[Token]):
     case ExpectExpression(tokens: List[Token]) extends Error("Expect expression", tokens)
