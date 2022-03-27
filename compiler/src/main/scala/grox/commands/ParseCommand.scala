@@ -1,15 +1,15 @@
 package grox.commands
 
-import cats._
-import cats.data._
-import cats.effect._
-import cats.effect.std._
-import cats.implicits._
+import cats.*
+import cats.data.*
+import cats.effect.*
+import cats.effect.std.*
+import cats.implicits.*
 
-import com.monovore.decline._
+import com.monovore.decline.*
 import grox.Parser.ParserAgl
 import grox.Scanner.ScannerAgl
-import grox._
+import grox.*
 import grox.utils.FileUtils.FileAgl
 import grox.utils.FileUtils.implicits.FileUtil
 

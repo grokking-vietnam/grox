@@ -1,8 +1,8 @@
 package grox
 
-import cats.implicits._
+import cats.implicits.*
 
-import Expr._
+import Expr.*
 
 class ExprShowTest extends munit.FunSuite {
   test("Show single Add expression right") {
