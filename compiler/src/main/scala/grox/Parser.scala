@@ -1,6 +1,6 @@
 package grox
 
-import cats._
+import cats.*
 
 object Parser:
 
