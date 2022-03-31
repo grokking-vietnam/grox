@@ -3,9 +3,9 @@ package grox.utils
 import scala.io.Source
 import scala.util.{Failure, Success, Try}
 
-import cats.effect._
-import cats.effect.implicits._
-import cats.implicits._
+import cats.effect.*
+import cats.effect.implicits.*
+import cats.implicits.*
 import cats.{Applicative, MonadError}
 
 object FileUtils {
