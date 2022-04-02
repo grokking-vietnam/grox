@@ -7,6 +7,8 @@ object Parser:
     case ExpectClosing(tokens: List[Token]) extends Error("Expect ')' after expression", tokens)
     case ExpectSemicolon(tokens: List[Token]) extends Error("Expect ';' after statement", tokens)
     case ExpectRightBrace(tokens: List[Token]) extends Error("Expect '}' after statement", tokens)
+    case ExpectVarIdentifier(tokens: List[Token])
+      extends Error("Expect var identifier after 'var' declaration", tokens)
 
   type ExprParser = Either[Error, (Expr, List[Token])]
   type StmtParser = Either[Error, (Stmt, List[Token])]
@@ -39,9 +41,31 @@ object Parser:
     tokens.headOption match {
       case Some(Keyword.Class) => ???
       case Some(Keyword.Fun)   => ???
-      case Some(Keyword.Var)   => ???
+      case Some(Keyword.Var)   => varDeclaration(tokens)
       case _                   => statement(tokens)
     }
+
+  def varDeclaration(tokens: List[Token]): StmtParser =
+    consume(Keyword.Var, tokens).flatMap(varCnsm =>
+      varCnsm
+        ._2
+        .headOption
+        .collectFirst { case token: Literal.Identifier =>
+          for {
+            initializer <-
+              consume(Operator.Equal, varCnsm._2.tail) match {
+                case Left(_) => Right((None, varCnsm._2.tail))
+                case Right(afterEqual) =>
+                  expression(afterEqual._2).map { case (value, afterValue) =>
+                    (Option(value), afterValue)
+                  }
+              }
+            (maybeInitializer, afterInitializer) = initializer
+            semicolonCnsm <- consume(Operator.Semicolon, afterInitializer)
+          } yield (Stmt.Var(token, maybeInitializer), semicolonCnsm._2)
+        }
+        .getOrElse(Left(Error.ExpectVarIdentifier(tokens)))
+    )
 
   def statement(tokens: List[Token]): StmtParser =
     tokens.headOption match {
@@ -84,7 +108,7 @@ object Parser:
             case _ =>
               declaration(tokens) match {
                 case Right((dclr, rest)) => block(rest, dclr :: stmts)
-                case l @ Left(_)         => l.asInstanceOf[Left[Error, (List[Stmt], List[Token])]]
+                case left @ Left(_)      => left.asInstanceOf[Left[Error, (List[Stmt], List[Token])]]
               }
           }
         case _ => Left(Error.ExpectRightBrace(ts.tail))
@@ -103,9 +127,7 @@ object Parser:
       maybeElseBranch <- afterThen
         .headOption
         .collectFirst { case Keyword.Else =>
-          statement(afterThen.tail).map { case (stmt, rest) =>
-            (Option(stmt), rest)
-          }
+          statement(afterThen.tail).map { case (stmt, rest) => (Option(stmt), rest) }
         }
         .getOrElse(Right(None, afterThen))
       (elseBranch, afterElse) = maybeElseBranch
