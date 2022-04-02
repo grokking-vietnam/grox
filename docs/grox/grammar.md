@@ -25,8 +25,10 @@ factor        -> term (("+" | "-") term)*
 term          -> unary (("*" | "/") unary)*
 unary         -> ("-" | "!") unary 
               | primary
-primary       -> NUMBER | STRING | "true" | "false" | "nil" 
-              | grouping
+primary       -> "true" | "false" | "nil"
+              | NUMBER | STRING
+              | "(" expression ")"
+              | IDENTIFIER ;
 grouping     -> "(" expression ")"
 ```
 

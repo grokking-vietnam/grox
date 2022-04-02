@@ -8,8 +8,8 @@ object Parser:
     case ExpectSemicolon(tokens: List[Token]) extends Error("Expect ';' after statement", tokens)
     case ExpectRightBrace(tokens: List[Token]) extends Error("Expect '}' after statement", tokens)
 
-  type ParseResult = Either[Error, (Expr, List[Token])]
-  type ParseStatementResult = Either[Error, (Stmt, List[Token])]
+  type ExprParser = Either[Error, (Expr, List[Token])]
+  type StmtParser = Either[Error, (Stmt, List[Token])]
 
   type BinaryOp = Token => Option[(Expr, Expr) => Expr]
   type UnaryOp = Token => Option[Expr => Expr]
@@ -17,7 +17,7 @@ object Parser:
   case class Inspector(errors: List[Error], stmts: List[Stmt], tokens: List[Token])
 
   // Parse a single expression and return remaining tokens
-  def parse(ts: List[Token]): ParseResult = expression(ts)
+  def parse(ts: List[Token]): ExprParser = expression(ts)
 
   def parseStmt(inspector: Inspector): Inspector =
     inspector.tokens match
@@ -35,7 +35,7 @@ object Parser:
             )
         }
 
-  def declaration(tokens: List[Token]): ParseStatementResult =
+  def declaration(tokens: List[Token]): StmtParser =
     tokens.headOption match {
       case Some(Keyword.Class) => ???
       case Some(Keyword.Fun)   => ???
@@ -43,7 +43,7 @@ object Parser:
       case _                   => statement(tokens)
     }
 
-  def statement(tokens: List[Token]): ParseStatementResult =
+  def statement(tokens: List[Token]): StmtParser =
     tokens.headOption match {
       case Some(token) =>
         token match {
@@ -51,28 +51,28 @@ object Parser:
           case Operator.LeftParen => blockStmt(tokens.tail)
           case Keyword.If         => ifStmt(tokens.tail)
           case Keyword.For        => forStmt(tokens.tail)
-          case Keyword.Return     => returnStmt(tokens.tail)
+          case Keyword.Return     => returnStmt(token, tokens.tail)
           case Keyword.While      => whileStmt(tokens.tail)
           case _                  => expressionStmt(tokens)
         }
       case _ => expressionStmt(tokens)
     }
 
-  def expression(tokens: List[Token]): ParseResult = equality(tokens)
+  def expression(tokens: List[Token]): ExprParser = equality(tokens)
 
-  def expressionStmt(tokens: List[Token]): ParseStatementResult =
+  def expressionStmt(tokens: List[Token]): StmtParser =
     for {
       pr <- expression(tokens)
       cnsm <- consume(Operator.Semicolon, pr._2)
     } yield (Stmt.Expression(pr._1), cnsm._2)
 
-  def printStmt(tokens: List[Token]): ParseStatementResult =
+  def printStmt(tokens: List[Token]): StmtParser =
     for {
       pr <- expression(tokens)
       cnsm <- consume(Operator.Semicolon, pr._2)
     } yield (Stmt.Print(pr._1), cnsm._2)
 
-  def blockStmt(tokens: List[Token]): ParseStatementResult =
+  def blockStmt(tokens: List[Token]): StmtParser =
     def block(
       ts: List[Token],
       stmts: List[Stmt] = List.empty[Stmt],
@@ -92,13 +92,30 @@ object Parser:
 
     block(tokens).map((stmts, rest) => (Stmt.Block(stmts), rest))
 
-  def ifStmt(tokens: List[Token]): ParseStatementResult = ???
+  def ifStmt(tokens: List[Token]): StmtParser =
+    for {
+      leftParenCnsm <- consume(Operator.LeftParen, tokens)
+      afterLeftParen <- expression(leftParenCnsm._2)
+      (condition, afterCond) = afterLeftParen
+      rightParenCnsm <- consume(Operator.RightParen, afterCond)
+      afterRightParen <- statement(rightParenCnsm._2)
+      (thenBranch, afterThen) = afterRightParen
+      maybeElseBranch <- afterThen
+        .headOption
+        .collectFirst { case Keyword.Else =>
+          statement(afterThen.tail).map { case (stmt, rest) =>
+            (Option(stmt), rest)
+          }
+        }
+        .getOrElse(Right(None, afterThen))
+      (elseBranch, afterElse) = maybeElseBranch
+    } yield (Stmt.If(condition, thenBranch, elseBranch), afterElse)
 
-  def forStmt(tokens: List[Token]): ParseStatementResult = ???
+  def returnStmt(keyword: Token, tokens: List[Token]): StmtParser = ???
 
-  def returnStmt(tokens: List[Token]): ParseStatementResult = ???
+  def forStmt(tokens: List[Token]): StmtParser = ???
 
-  def whileStmt(tokens: List[Token]): ParseStatementResult = ???
+  def whileStmt(tokens: List[Token]): StmtParser = ???
 
   def consume(expect: Token, tokens: List[Token]): Either[Error, (Token, List[Token])] =
     tokens.headOption match {
@@ -117,11 +134,11 @@ object Parser:
   // and its OPERATOR is ("==" | "!=").
   def binary(
     op: BinaryOp,
-    descendant: List[Token] => ParseResult,
+    descendant: List[Token] => ExprParser,
   )(
     tokens: List[Token]
-  ): ParseResult =
-    def matchOp(ts: List[Token], l: Expr): ParseResult =
+  ): ExprParser =
+    def matchOp(ts: List[Token], l: Expr): ExprParser =
       ts match
         case token :: rest =>
           op(token) match
@@ -163,7 +180,7 @@ object Parser:
   def term = binary(termOp, factor)
   def factor = binary(factorOp, unary)
 
-  def unary(tokens: List[Token]): ParseResult =
+  def unary(tokens: List[Token]): ExprParser =
     tokens match
       case token :: rest =>
         unaryOp(token) match
@@ -171,7 +188,7 @@ object Parser:
           case None     => primary(tokens)
       case _ => primary(tokens)
 
-  def primary(tokens: List[Token]): ParseResult =
+  def primary(tokens: List[Token]): ExprParser =
     tokens match
       case Literal.Number(l) :: rest  => Right(Expr.Literal(l.toDouble), rest)
       case Literal.Str(l) :: rest     => Right(Expr.Literal(l), rest)
@@ -184,7 +201,7 @@ object Parser:
   // Parse the body within a pair of parentheses (the part after "(")
   def parenBody(
     tokens: List[Token]
-  ): ParseResult = expression(tokens).flatMap((expr, rest) =>
+  ): ExprParser = expression(tokens).flatMap((expr, rest) =>
     rest match
       case Operator.RightParen :: rmn => Right(Expr.Grouping(expr), rmn)
       case _                          => Left(Error.ExpectClosing(rest))
