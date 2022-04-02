@@ -1,6 +1,10 @@
 package grox
 
+import munit.ScalaCheckSuite
+import org.scalacheck.{Arbitrary, Gen, Prop}
+
 import Parser.*
+import ExprGen.*
 
 class ParserTest extends munit.FunSuite:
 
@@ -249,3 +253,13 @@ class ParserTest extends munit.FunSuite:
   }
 
 end ParserTest
+
+class ParserCheck extends ScalaCheckSuite:
+  property("parse successfully") {
+    Prop.forAll(equalityGen)(ts =>
+      parse(ts) match
+        case Left(_)  => false
+        case Right(_) => true
+    )
+  }
+end ParserCheck
