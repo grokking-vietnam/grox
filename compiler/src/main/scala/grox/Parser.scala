@@ -5,14 +5,13 @@ import scala.util.control.NoStackTrace
 import cats.*
 import cats.implicits.*
 
-trait ParserAgl[F[_]] {
+trait Parser[F[_]]:
   def parse(tokens: List[Token]): F[Expr]
-}
 
 object Parser:
-  def apply[F[_]](using F: ParserAgl[F]): ParserAgl[F] = F
+  def apply[F[_]](using F: Parser[F]): Parser[F] = F
 
-  def instance[F[_]: MonadThrow]: ParserAgl[F] =
+  def instance[F[_]: MonadThrow]: Parser[F] =
     tokens => parse(tokens).map { case (exp, _) => exp }.liftTo[F]
 
   enum Error(msg: String, tokens: List[Token]) extends NoStackTrace:

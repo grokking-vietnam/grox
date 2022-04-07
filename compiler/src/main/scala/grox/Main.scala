@@ -8,7 +8,7 @@ import cats.{Functor, Show}
 import com.monovore.decline.*
 import com.monovore.decline.effect.*
 import grox.cli.CLI
-import grox.utils.FileAgl
+import grox.utils.FileReader
 
 object Main
   extends CommandIOApp(
@@ -21,9 +21,9 @@ object Main
     case Scan(file: String)
     case Parse(file: String)
 
-  def convertCommand[F[_]: FileAgl: Functor]: CLI.Command => F[Command] =
-    case CLI.Command.Scan(file)  => FileAgl[F].read(file).map(Command.Scan(_))
-    case CLI.Command.Parse(file) => FileAgl[F].read(file).map(Command.Parse(_))
+  def convertCommand[F[_]: FileReader: Functor]: CLI.Command => F[Command] =
+    case CLI.Command.Scan(file)  => FileReader[F].read(file).map(Command.Scan(_))
+    case CLI.Command.Parse(file) => FileReader[F].read(file).map(Command.Parse(_))
 
   def eval[F[_]: Functor](exec: Executor[F]): Command => F[String] =
     case Command.Scan(str) =>
@@ -32,7 +32,7 @@ object Main
       }
     case Command.Parse(str) => exec.parse(str).map(_.show)
 
-  given FileAgl[IO] = FileAgl.instance[IO]
+  given FileReader[IO] = FileReader.instance[IO]
   val exec = Executor.module[IO]
 
   override def main: Opts[IO[ExitCode]] = CLI.parse.map {

@@ -7,15 +7,15 @@ import cats.data.NonEmptyList
 import cats.implicits.*
 import cats.parse.{LocationMap, Numbers as N, Parser as P, Parser0 as P0, Rfc5234 as R}
 
-trait ScannerAgl[F[_]] {
+trait Scanner[F[_]] {
   def scan(str: String): F[List[Token]]
 }
 
 object Scanner {
 
-  def apply[F[_]](using F: ScannerAgl[F]): ScannerAgl[F] = F
+  def apply[F[_]](using F: Scanner[F]): Scanner[F] = F
 
-  def instance[F[_]: MonadThrow]: ScannerAgl[F] = str => parse(str).liftTo[F]
+  def instance[F[_]: MonadThrow]: Scanner[F] = str => parse(str).liftTo[F]
 
   val endOfLine: P[Unit] = R.cr | R.lf
   val whitespace: P[Unit] = endOfLine | R.wsp
