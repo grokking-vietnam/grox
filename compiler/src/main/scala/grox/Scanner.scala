@@ -1,26 +1,21 @@
 package grox
 
+import scala.util.control.NoStackTrace
+
 import cats.*
 import cats.data.NonEmptyList
+import cats.implicits.*
 import cats.parse.{LocationMap, Numbers as N, Parser as P, Parser0 as P0, Rfc5234 as R}
+
+trait ScannerAgl[F[_]] {
+  def scan(str: String): F[List[Token]]
+}
 
 object Scanner {
 
-  trait ScannerAgl[F[_]] {
-    def scan(str: String): F[List[Token]]
-  }
+  def apply[F[_]](using F: ScannerAgl[F]): ScannerAgl[F] = F
 
-  given scanner[F[_]](
-    using ME: MonadError[F, grox.Error],
-    A: Applicative[F],
-  ): ScannerAgl[F] =
-    new ScannerAgl[F] {
-
-      def scan(
-        str: String
-      ): F[List[Token]] = parse(str).fold(_ => ME.raiseError(grox.Error.ScannerError), A.pure)
-
-    }
+  def instance[F[_]: MonadThrow]: ScannerAgl[F] = str => parse(str).liftTo[F]
 
   val endOfLine: P[Unit] = R.cr | R.lf
   val whitespace: P[Unit] = endOfLine | R.wsp
@@ -119,10 +114,9 @@ object Scanner {
     }
   }
 
-  enum Error {
+  enum Error extends NoStackTrace:
     case PartialParse[A](got: A, position: Int, locations: LocationMap) extends Error
     case ParseFailure(position: Int, locations: LocationMap) extends Error
-  }
 
   extension (o: Operator) def parse = P.string(o.lexeme).as(o)
   extension (k: Keyword) def parse = (P.string(k.lexeme) ~ (whitespace | P.end)).backtrack.as(k)
