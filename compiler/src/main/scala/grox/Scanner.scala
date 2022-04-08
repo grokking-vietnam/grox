@@ -118,6 +118,11 @@ object Scanner {
     case PartialParse[A](got: A, position: Int, locations: LocationMap) extends Error
     case ParseFailure(position: Int, locations: LocationMap) extends Error
 
+    override def toString: String =
+      this match
+        case PartialParse(_, pos, _) => s"PartialParse at $pos"
+        case ParseFailure(pos, _)    => s"ParseFailure at $pos"
+
   extension (o: Operator) def parse = P.string(o.lexeme).as(o)
   extension (k: Keyword) def parse = (P.string(k.lexeme) ~ (whitespace | P.end)).backtrack.as(k)
 }

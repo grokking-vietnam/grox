@@ -18,6 +18,8 @@ object Parser:
     case ExpectExpression(tokens: List[Token]) extends Error("Expect expression", tokens)
     case ExpectClosing(tokens: List[Token]) extends Error("Expect ')' after expression", tokens)
 
+    override def toString: String = msg
+
   type ParseResult = Either[Error, (Expr, List[Token])]
 
   type BinaryOp = Token => Option[(Expr, Expr) => Expr]

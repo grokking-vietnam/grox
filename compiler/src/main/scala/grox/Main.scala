@@ -41,8 +41,8 @@ object Main
         eval(exec)(cmd)
       }
       .flatMap(IO.println)
-      .handleErrorWith { case Error.FileNotFound(file) =>
-        IO.println(s"File not found: $file")
+      .handleErrorWith { err =>
+        IO.println(s"Error: ${err.toString}")
       }
       .as(ExitCode.Success)
   }
