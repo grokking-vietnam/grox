@@ -1,6 +1,5 @@
 package grox
 
-import cats.data.EitherT
 import cats.effect.*
 import cats.implicits.*
 import cats.{Functor, Show}
