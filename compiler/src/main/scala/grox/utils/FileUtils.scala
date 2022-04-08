@@ -23,4 +23,4 @@ object FileReader:
         val content = bufferedSource.getLines.mkString
         bufferedSource.close
         content
-      }.toEither.leftMap(_ => grox.Error.UnexpectedError).liftTo[F]
+      }.toEither.leftMap(_ => grox.Error.FileNotFound(path.toString)).liftTo[F]
