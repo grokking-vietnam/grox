@@ -58,3 +58,6 @@ jobs:
 
       - name: Check Formatting
         run: sbt ++${{ matrix.scala }} check
+
+      - name: Check docs formatting
+        run: sbt ++${{ matrix.scala }} docs/mdoc

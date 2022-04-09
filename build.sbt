@@ -6,7 +6,8 @@ inThisBuild(
     // Github Workflow
     githubWorkflowPublishTargetBranches := Seq(), // Don't publish anywhere
     githubWorkflowBuild ++= Seq(
-      WorkflowStep.Sbt(List("check"), name = Some("Check Formatting"))
+      WorkflowStep.Sbt(List("check"), name = Some("Check Formatting")),
+      WorkflowStep.Sbt(List("docs/mdoc"), name = Some("Check docs formatting")),
     ),
 
     // Scalafix
@@ -28,6 +29,15 @@ lazy val root = project
   .in(file("."))
   .settings(publish := {}, publish / skip := true)
   .aggregate(compiler)
+
+lazy val docs = project // new documentation project
+  .in(file("grox-docs")) // important: it must not be docs/
+  .dependsOn(root)
+  .settings(
+    moduleName := "grox-docs",
+    mdocVariables := Map("VERSION" -> version.value),
+  )
+  .enablePlugins(MdocPlugin, DocusaurusPlugin)
 
 // Commands
 addCommandAlias("build", "prepare; test")
