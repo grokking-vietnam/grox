@@ -45,27 +45,28 @@ object Parser:
       case _                   => statement(tokens)
     }
 
-  def varDeclaration(tokens: List[Token]): StmtParser =
-    consume(Keyword.Var, tokens).flatMap(varCnsm =>
-      varCnsm
-        ._2
-        .headOption
-        .collectFirst { case token: Literal.Identifier =>
-          for {
-            initializer <-
-              consume(Operator.Equal, varCnsm._2.tail) match {
-                case Left(_) => Right((None, varCnsm._2.tail))
-                case Right(afterEqual) =>
-                  expression(afterEqual._2).map { case (value, afterValue) =>
-                    (Option(value), afterValue)
-                  }
-              }
-            (maybeInitializer, afterInitializer) = initializer
-            semicolonCnsm <- consume(Operator.Semicolon, afterInitializer)
-          } yield (Stmt.Var(token, maybeInitializer), semicolonCnsm._2)
-        }
-        .getOrElse(Left(Error.ExpectVarIdentifier(tokens)))
-    )
+  def varDeclaration(
+    tokens: List[Token]
+  ): StmtParser = consume(Keyword.Var, tokens).flatMap(varCnsm =>
+    varCnsm
+      ._2
+      .headOption
+      .collectFirst { case token: Literal.Identifier =>
+        for {
+          initializer <-
+            consume(Operator.Equal, varCnsm._2.tail) match {
+              case Left(_) => Right((None, varCnsm._2.tail))
+              case Right(afterEqual) =>
+                expression(afterEqual._2).map { case (value, afterValue) =>
+                  (Option(value), afterValue)
+                }
+            }
+          (maybeInitializer, afterInitializer) = initializer
+          semicolonCnsm <- consume(Operator.Semicolon, afterInitializer)
+        } yield (Stmt.Var(token, maybeInitializer), semicolonCnsm._2)
+      }
+      .getOrElse(Left(Error.ExpectVarIdentifier(tokens)))
+  )
 
   def statement(tokens: List[Token]): StmtParser =
     tokens.headOption match {
@@ -108,7 +109,7 @@ object Parser:
             case _ =>
               declaration(tokens) match {
                 case Right((dclr, rest)) => block(rest, dclr :: stmts)
-                case left @ Left(_)      => left.asInstanceOf[Left[Error, (List[Stmt], List[Token])]]
+                case left @ Left(_) => left.asInstanceOf[Left[Error, (List[Stmt], List[Token])]]
               }
           }
         case _ => Left(Error.ExpectRightBrace(ts.tail))
