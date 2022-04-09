@@ -25,10 +25,7 @@ object Main
     case CLI.Command.Parse(file) => FileReader[F].read(file).map(Command.Parse(_))
 
   def eval[F[_]: Functor](exec: Executor[F]): Command => F[String] =
-    case Command.Scan(str) =>
-      exec.scan(str).map { tokens =>
-        tokens.mkString("\n")
-      }
+    case Command.Scan(str)  => exec.scan(str).map(tokens => tokens.mkString("\n"))
     case Command.Parse(str) => exec.parse(str).map(_.show)
 
   given FileReader[IO] = FileReader.instance[IO]
@@ -47,3 +44,4 @@ object Main
   }
 
 }
+

@@ -18,7 +18,7 @@ object CLI:
         Opts.argument[Path]("path").map(Command.Scan(_))
       )
 
-    val parse =
+    val parse: Opts[Command] =
       Opts.subcommand[Command]("parse", "Parse file to abstract syntax tree")(
         Opts.argument[Path]("path").map(Command.Parse(_))
       )
