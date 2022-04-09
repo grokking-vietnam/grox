@@ -8,8 +8,8 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 const config = {
   title: 'Grox',
   tagline: 'A programming language written in Scala 3',
-  url: 'https://grokking-vietnam.github.io',
-  baseUrl: '/grox',
+  url: 'https://grokking-vietnam.github.io/',
+  baseUrl: '/grox/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
@@ -42,7 +42,7 @@ const config = {
         title: 'Grox',
         logo: {
           alt: 'Grox Language Logo',
-          src: 'https://lh6.googleusercontent.com/oUZRYCilXlOtk_pmz8ptrsfvgdmgWTrm90W2AZxjVezIi6J8xykxlfNhVugElpzjV24gAgLYoqjl0CW6NzjH5_0=w16383',
+          src: 'https://avatars.githubusercontent.com/u/9639466?s=45&v=4',
         },
         items: [
           {

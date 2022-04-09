@@ -112,3 +112,20 @@ Test một file duy nhất:
 ```
 $ bloop test compiler -o grox.ScannerTest
 ```
+
+## Docusaurus
+
+Trang [Grox](https://grokking-vietnam.github.io/grox/) được build bằng [Docusaurus V2](https://docusaurus.io/)
+
+Để thêm 1 nội dung mới trên trang Grox, bạn sẽ phải tạo 1 nội dung markdown trong thư mục `docs`.
+
+Nếu nội dung mới cần hiển thị ở Sidebar, bạn cần chỉnh sửa file `website/sidebars.js`
+
+Test locally:
+
+```bash
+sbt --client docs/mdoc
+cd website
+yarn install
+yarn start
+```

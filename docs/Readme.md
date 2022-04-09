@@ -1,9 +1,9 @@
 # Mục lục
 
 ## Miscellaneous
-  * [Introduction](/docs/introduction.md)
-  * [Setup](/docs/setup.md)
-  * [Resources](/docs/resources.md)
+  * [Introduction](introduction.md)
+  * [Setup](setup.md)
+  * [Resources](resources.md)
 
 ## Book
   * [Lox Language](book/lox-language.md)
