@@ -1,9 +1,26 @@
 package grox
 
+import cats.*
 import cats.data.NonEmptyList
-import cats.parse.{LocationMap, Numbers => N, Parser => P, Parser0 => P0, Rfc5234 => R}
+import cats.parse.{LocationMap, Numbers as N, Parser as P, Parser0 as P0, Rfc5234 as R}
 
 object Scanner {
+
+  trait ScannerAgl[F[_]] {
+    def scan(str: String): F[List[Token]]
+  }
+
+  given scanner[F[_]](
+    using ME: MonadError[F, grox.Error],
+    A: Applicative[F],
+  ): ScannerAgl[F] =
+    new ScannerAgl[F] {
+
+      def scan(
+        str: String
+      ): F[List[Token]] = parse(str).fold(_ => ME.raiseError(grox.Error.ScannerError), A.pure)
+
+    }
 
   val endOfLine: P[Unit] = R.cr | R.lf
   val whitespace: P[Unit] = endOfLine | R.wsp
