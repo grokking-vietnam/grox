@@ -14,15 +14,15 @@ object Main
     name = "grox",
     header = "grox compiler",
     version = "0.0.1",
-  ) {
+  ):
 
   enum Command:
     case Scan(file: String)
     case Parse(file: String)
 
-  def convertCommand[F[_]: FileReader: Functor]: CLI.Command => F[Command] =
-    case CLI.Command.Scan(file)  => FileReader[F].read(file).map(Command.Scan(_))
-    case CLI.Command.Parse(file) => FileReader[F].read(file).map(Command.Parse(_))
+  def convertCommand[F[_]: Functor](using reader: FileReader[F]): CLI.Command => F[Command] =
+    case CLI.Command.Scan(file)  => reader.read(file).map(Command.Scan(_))
+    case CLI.Command.Parse(file) => reader.read(file).map(Command.Parse(_))
 
   def eval[F[_]: Functor](exec: Executor[F]): Command => F[String] =
     case Command.Scan(str)  => exec.scan(str).map(tokens => tokens.mkString("\n"))
@@ -42,5 +42,3 @@ object Main
       }
       .as(ExitCode.Success)
   }
-
-}

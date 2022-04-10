@@ -14,7 +14,6 @@ trait FileReader[F[_]]:
   def read(path: Path): F[String]
 
 object FileReader:
-  def apply[F[_]](using F: FileReader[F]): FileReader[F] = F
 
   def instance[F[_]: MonadThrow]: FileReader[F] =
     path =>

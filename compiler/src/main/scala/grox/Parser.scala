@@ -9,7 +9,6 @@ trait Parser[F[_]]:
   def parse(tokens: List[Token]): F[Expr]
 
 object Parser:
-  def apply[F[_]](using F: Parser[F]): Parser[F] = F
 
   def instance[F[_]: MonadThrow]: Parser[F] =
     tokens => parse(tokens).map { case (exp, _) => exp }.liftTo[F]

@@ -8,16 +8,18 @@ trait Executor[F[_]]:
   def parse(str: String): F[Expr]
 
 object Executor:
-  def apply[F[_]](using F: Executor[F]): Executor[F] = F
 
-  def instance[F[_]: Scanner: Parser: MonadThrow]: Executor[F] =
+  def instance[F[_]: MonadThrow](
+    using scanner: Scanner[F],
+    parser: Parser[F],
+  ): Executor[F] =
     new Executor[F]:
-      def scan(str: String): F[List[Token]] = Scanner[F].scan(str)
+      def scan(str: String): F[List[Token]] = scanner.scan(str)
 
       def parse(str: String): F[Expr] =
         for
-          tokens <- Scanner[F].scan(str)
-          expr <- Parser[F].parse(tokens)
+          tokens <- scanner.scan(str)
+          expr <- parser.parse(tokens)
         yield expr
 
   def module[F[_]: MonadThrow]: Executor[F] =
