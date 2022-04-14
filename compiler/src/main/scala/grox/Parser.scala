@@ -1,6 +1,27 @@
 package grox
 
+import cats.*
+
 object Parser:
+
+  trait ParserAgl[F[_]] {
+    def parseToken(tokens: List[Token]): F[Expr]
+  }
+
+  given parser[F[_]](
+    using ME: MonadError[F, grox.Error],
+    A: Applicative[F],
+  ): ParserAgl[F] =
+    new ParserAgl {
+
+      def parseToken(
+        tokens: List[Token]
+      ): F[Expr] = parse(tokens).fold(
+        err => ME.raiseError(grox.Error.ParserError),
+        { case (expr, tokens) => A.pure(expr) },
+      )
+
+    }
 
   enum Error(msg: String, tokens: List[Token]):
     case ExpectExpression(tokens: List[Token]) extends Error("Expect expression", tokens)
@@ -96,3 +117,15 @@ object Parser:
       case Operator.RightParen :: rmn => Right(Expr.Grouping(expr), rmn)
       case _                          => Left(Error.ExpectClosing(rest))
   )
+
+  // Discard tokens until a new expression/statement is found
+  def synchronize(tokens: List[Token]): List[Token] =
+    tokens match
+      case t :: rest =>
+        t match
+          case Operator.Semicolon => rest
+          case Keyword.Class | Keyword.Fun | Keyword.Var | Keyword.For | Keyword.If |
+              Keyword.While | Keyword.Print | Keyword.Return =>
+            tokens
+          case _ => synchronize(rest)
+      case Nil => Nil

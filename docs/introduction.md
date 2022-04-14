@@ -31,7 +31,7 @@ Team sẽ sử dụng quyển [Crafting Interpreters](http://craftinginterpreter
 
 ### Nội dung
 
-Quyển [Crafting Interpreters](http://craftinginterpreters.com) sẽ implement 2 interpreters cho ngôn ngữ [Lox](lox-language.md).
+Quyển [Crafting Interpreters](http://craftinginterpreters.com) sẽ implement 2 interpreters cho ngôn ngữ [Lox](book/lox-language.md).
 
 Interpreter đầu tiên
 
