@@ -1,10 +1,14 @@
 package grox
 
-case class Location(val line: Int)
+import cats.parse.Caret
+
+case class Location(val line: Int, val column: Int)
 
 // todo use opaque type for lexeme
 sealed trait Token:
   val lexeme: String
+
+case class TokenInfo(start: Caret, token: Token, end: Caret)
 
 enum Literal(val lexeme: String) extends Token:
 

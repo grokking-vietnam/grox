@@ -6,17 +6,19 @@ import cats.*
 import cats.data.NonEmptyList
 import cats.implicits.*
 import cats.parse.{LocationMap, Numbers as N, Parser as P, Parser0 as P0, Rfc5234 as R}
+import cats.parse.Caret
 
 trait Scanner[F[_]]:
   def scan(str: String): F[List[Token]]
 
 object Scanner:
 
-  def instance[F[_]: MonadThrow]: Scanner[F] = str => parse(str).liftTo[F]
+  def instance[F[_]: MonadThrow]: Scanner[F] = str => parse(str).map(_.map(_.token)).liftTo[F]
 
   val endOfLine: P[Unit] = R.cr | R.lf
   val whitespace: P[Unit] = endOfLine | R.wsp
   val whitespaces: P0[Unit] = P.until0(!whitespace).void
+
 
   // != | !
   val bangEqualOrBang: P[Operator] = Operator.BangEqual.parse | Operator.Bang.parse
@@ -92,18 +94,20 @@ object Scanner:
     )
 
   val token: P[Token] = P.oneOf(allTokens).surroundedBy(whitespaces)
+  val tokenInfo: P[TokenInfo] = (P.caret.with1 ~ token ~ P.caret).map{case ((s, t), e) => TokenInfo(s, t, e)}
 
-  val parser = token.rep.map(_.toList)
+  val parser = tokenInfo.rep.map(_.toList)
 
-  def parse(str: String): Either[Error, List[Token]] =
-    val lm = LocationMap(str)
+  def parse(str: String): Either[Error, List[TokenInfo]] =
     parser.parse(str) match
       case Right(("", ls)) => Right(ls)
       case Right((rest, ls)) =>
         val idx = str.indexOf(rest)
+        val lm = LocationMap(str)
         Left(Error.PartialParse(ls, idx, lm))
       case Left(err) =>
         val idx = err.failedAtOffset
+        val lm = LocationMap(str)
         Left(Error.ParseFailure(idx, lm))
 
   enum Error extends NoStackTrace:
