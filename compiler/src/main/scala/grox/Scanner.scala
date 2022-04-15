@@ -19,7 +19,6 @@ object Scanner:
   val whitespace: P[Unit] = endOfLine | R.wsp
   val whitespaces: P0[Unit] = P.until0(!whitespace).void
 
-
   // != | !
   val bangEqualOrBang: P[Operator] = Operator.BangEqual.parse | Operator.Bang.parse
 
@@ -94,7 +93,10 @@ object Scanner:
     )
 
   val token: P[Token] = P.oneOf(allTokens).surroundedBy(whitespaces)
-  val tokenInfo: P[TokenInfo] = (P.caret.with1 ~ token ~ P.caret).map{case ((s, t), e) => TokenInfo(s, t, e)}
+
+  val tokenInfo: P[TokenInfo] = (P.caret.with1 ~ token ~ P.caret).map { case ((s, t), e) =>
+    TokenInfo(s.toLocation, t, e.toLocation)
+  }
 
   val parser = tokenInfo.rep.map(_.toList)
 
@@ -121,3 +123,4 @@ object Scanner:
 
   extension (o: Operator) def parse = P.string(o.lexeme).as(o)
   extension (k: Keyword) def parse = (P.string(k.lexeme) ~ (whitespace | P.end)).backtrack.as(k)
+  extension (c: Caret) def toLocation: Location = Location(c.line, c.col, c.offset)

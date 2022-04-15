@@ -1,7 +1,5 @@
 package grox
 
-import scala.deriving.Mirror
-
 import cats.*
 import cats.implicits.*
 
@@ -136,8 +134,8 @@ class ScannerTest extends munit.FunSuite:
   test("identifiers.lox simpler") {
     val str = "andy formless"
     val expected: List[TokenInfo] = List(
-      TokenInfo(Caret(0, 0, 0), Literal.Identifier("andy"), Caret(0, 5, 5)),
-      TokenInfo(Caret(0, 5, 5), Literal.Identifier("formless"), Caret(0, 13, 13))
+      TokenInfo(Location(0, 0, 0), Literal.Identifier("andy"), Location(0, 5, 5)),
+      TokenInfo(Location(0, 5, 5), Literal.Identifier("formless"), Location(0, 13, 13)),
     )
     assertEquals(Scanner.parse(str), Right(expected))
   }
@@ -155,7 +153,7 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
       Literal.Identifier("ab123"),
       Literal.Identifier("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"),
     )
-    //assertEquals(Scanner.parse(str), Right(expected))
+    // assertEquals(Scanner.parse(str), Right(expected))
   }
 
   test("keywords.lox") {
@@ -177,7 +175,7 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
       Keyword.Var,
       Keyword.While,
     )
-    //assertEquals(Scanner.parse(str), Right(expected))
+    // assertEquals(Scanner.parse(str), Right(expected))
   }
 
   test("numbers.lox") {
@@ -193,7 +191,7 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
       Literal.Number("123"),
       Operator.Dot,
     )
-    //assertEquals(Scanner.parse(str), Right(expected))
+    // assertEquals(Scanner.parse(str), Right(expected))
   }
 
   test("punctuators.lox") {
@@ -218,7 +216,7 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
       Operator.Slash,
       Operator.Dot,
     )
-    //assertEquals(Scanner.parse(str), Right(expected))
+    // assertEquals(Scanner.parse(str), Right(expected))
   }
 
   test("strings.lox") {
@@ -229,7 +227,7 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
       Literal.Str(""),
       Literal.Str("string"),
     )
-    //assertEquals(Scanner.parse(str), Right(expected))
+    // assertEquals(Scanner.parse(str), Right(expected))
   }
 
   test("spaces.lox") {
@@ -248,7 +246,7 @@ end
       Literal.Identifier("newlines"),
       Literal.Identifier("end"),
     )
-    //assertEquals(Scanner.parse(str), Right(expected))
+    // assertEquals(Scanner.parse(str), Right(expected))
   }
 
   test("multiline.lox") {
@@ -276,7 +274,7 @@ print a;
       Comment.SingleLine("// expect: 2"),
       Comment.SingleLine("// expect: 3"),
     )
-    //assertEquals(Scanner.parse(str), Right(expected))
+    // assertEquals(Scanner.parse(str), Right(expected))
   }
 
   test("return_in_nested_function.lox") {
@@ -323,5 +321,5 @@ print Foo(); // expect: Foo instance"""
       Operator.Semicolon,
       Comment.SingleLine("// expect: Foo instance"),
     )
-    //assertEquals(Scanner.parse(str), Right(expected))
+    // assertEquals(Scanner.parse(str), Right(expected))
   }

@@ -1,21 +1,18 @@
 package grox
 
-import cats.parse.Caret
-
-case class Location(val line: Int, val column: Int)
+case class Location(val line: Int, val col: Int, val offset: Int)
 
 // todo use opaque type for lexeme
 sealed trait Token:
   val lexeme: String
 
-case class TokenInfo(start: Caret, token: Token, end: Caret)
+case class TokenInfo(start: Location, token: Token, end: Location)
 
-enum Literal(val lexeme: String) extends Token:
+enum Literal extends Token:
 
-  // Literals
-  case Identifier(override val lexeme: String) extends Literal(lexeme)
-  case Str(override val lexeme: String) extends Literal(lexeme)
-  case Number(override val lexeme: String) extends Literal(lexeme)
+  case Identifier(val lexeme: String)
+  case Str(val lexeme: String)
+  case Number(val lexeme: String)
 
 enum Operator(val lexeme: String) extends Token:
 
@@ -60,6 +57,6 @@ enum Keyword(val lexeme: String) extends Token:
   case Var extends Keyword("var")
   case While extends Keyword("while")
 
-enum Comment(val lexeme: String) extends Token:
-  case SingleLine(override val lexeme: String) extends Comment(lexeme)
-  case Block(override val lexeme: String) extends Comment(lexeme)
+enum Comment extends Token:
+  case SingleLine(val lexeme: String)
+  case Block(val lexeme: String)
