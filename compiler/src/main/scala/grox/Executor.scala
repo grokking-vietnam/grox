@@ -4,7 +4,7 @@ import cats.MonadThrow
 import cats.implicits.*
 
 trait Executor[F[_]]:
-  def scan(str: String): F[List[Token]]
+  def scan(str: String): F[List[Token[Span]]]
   def parse(str: String): F[Expr]
 
 object Executor:
@@ -14,7 +14,7 @@ object Executor:
     parser: Parser[F],
   ): Executor[F] =
     new Executor[F]:
-      def scan(str: String): F[List[Token]] = scanner.scan(str)
+      def scan(str: String): F[List[Token[Span]]] = scanner.scan(str)
 
       def parse(str: String): F[Expr] =
         for
