@@ -1,31 +1,23 @@
 package grox
 
+import scala.util.control.NoStackTrace
+
 import cats.*
+import cats.implicits.*
+
+trait Parser[F[_]]:
+  def parse(tokens: List[Token]): F[Expr]
 
 object Parser:
 
-  trait ParserAgl[F[_]] {
-    def parseToken(tokens: List[Token]): F[Expr]
-  }
+  def instance[F[_]: MonadThrow]: Parser[F] =
+    tokens => parse(tokens).map { case (exp, _) => exp }.liftTo[F]
 
-  given parser[F[_]](
-    using ME: MonadError[F, grox.Error],
-    A: Applicative[F],
-  ): ParserAgl[F] =
-    new ParserAgl {
-
-      def parseToken(
-        tokens: List[Token]
-      ): F[Expr] = parse(tokens).fold(
-        err => ME.raiseError(grox.Error.ParserError),
-        { case (expr, tokens) => A.pure(expr) },
-      )
-
-    }
-
-  enum Error(msg: String, tokens: List[Token]):
+  enum Error(msg: String, tokens: List[Token]) extends NoStackTrace:
     case ExpectExpression(tokens: List[Token]) extends Error("Expect expression", tokens)
     case ExpectClosing(tokens: List[Token]) extends Error("Expect ')' after expression", tokens)
+
+    override def toString: String = msg
 
   type ParseResult = Either[Error, (Expr, List[Token])]
 
