@@ -7,7 +7,7 @@ enum Stmt:
   case If(cond: Expr, thenStmt: Stmt, elseStmt: Option[Stmt])
   case Print(expr: Expr)
   case Return(keyword: Token, value: Expr)
-  case Var(name: Token, init: Option[Expr])
+  case Var(name: Literal.Identifier, init: Option[Expr])
   case While(cond: Expr, body: Stmt)
 
 object Stmt {}
