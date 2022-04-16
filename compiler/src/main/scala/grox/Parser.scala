@@ -172,7 +172,7 @@ object Parser:
         }
     }
 
-  def expression(tokens: List[Token]): ExprParser = equality(tokens)
+  def expression(tokens: List[Token]): ExprParser = assignment(tokens)
 
   def assignment(tokens: List[Token]): ExprParser =
     equality(tokens) >>= ((expr: Expr, restTokens: List[Token]) =>
