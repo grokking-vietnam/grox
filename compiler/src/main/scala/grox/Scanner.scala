@@ -5,8 +5,7 @@ import scala.util.control.NoStackTrace
 import cats.*
 import cats.data.NonEmptyList
 import cats.implicits.*
-import cats.parse.{LocationMap, Numbers as N, Parser as P, Parser0 as P0, Rfc5234 as R}
-import cats.parse.Caret
+import cats.parse.{Caret, LocationMap, Numbers as N, Parser as P, Parser0 as P0, Rfc5234 as R}
 
 trait Scanner[F[_]]:
   def scan(str: String): F[List[Token]]
@@ -22,6 +21,11 @@ object Scanner:
   // != | !
   val bangEqualOrBang: P[Operator] = Operator.BangEqual.parse | Operator.Bang.parse
 
+  val bangEqualOrBang1: P[Operator] = (P.caret.with1 ~ (Operator.BangEqual | Operator.Bang) ~ P.caret).map { case ((s, t), e) =>
+    Operator(s.toLocation, t, e.toLocation)
+  }
+
+
   // == | =
   val equalEqualOrEqual: P[Operator] = Operator.EqualEqual.parse | Operator.Equal.parse
 
@@ -31,7 +35,7 @@ object Scanner:
   // <= | <
   val lessEqualOrLess: P[Operator] = Operator.LessEqual.parse | Operator.Less.parse
 
-  val keywords: List[P[Keyword]] = Keyword.values.map(_.parse).toList
+  val keywords = Keyword.values.map(_.parse).toList
   // for testing purpose only
   val keyword: P[Keyword] = P.oneOf(keywords)
 

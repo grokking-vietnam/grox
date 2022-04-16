@@ -1,12 +1,15 @@
 package grox
 
 case class Location(val line: Int, val col: Int, val offset: Int)
+case class Span(start: Location, end: Location)
 
 // todo use opaque type for lexeme
 sealed trait Token:
   val lexeme: String
+  //val span: Span
 
 case class TokenInfo(start: Location, token: Token, end: Location)
+case class TokenInfo1(token: Token, span: Span)
 
 enum Literal extends Token:
 
@@ -14,7 +17,7 @@ enum Literal extends Token:
   case Str(val lexeme: String)
   case Number(val lexeme: String)
 
-enum Operator(val lexeme: String) extends Token:
+enum Operator(val lexeme: String, loc: Location = Location(0, 0, 0)) extends Token:
 
   // Single character token
   case LeftParen extends Operator("(")
