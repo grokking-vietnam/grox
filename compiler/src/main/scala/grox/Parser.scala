@@ -1,6 +1,8 @@
 package grox
 
 import cats.*
+import cats.implicits.*
+import cats.effect.kernel.syntax.resource
 
 object Parser:
 
@@ -30,6 +32,8 @@ object Parser:
     case ExpectRightBrace(tokens: List[Token]) extends Error("Expect '}' after statement", tokens)
     case ExpectVarIdentifier(tokens: List[Token])
       extends Error("Expect var identifier after 'var' declaration", tokens)
+    case InvalidAssignmentTartget(token: Token)
+      extends Error("Invalid assignment target.", List(token))
 
   type ExprParser = Either[Error, (Expr, List[Token])]
   type StmtParser = Either[Error, (Stmt, List[Token])]
@@ -104,8 +108,6 @@ object Parser:
       case _ => expressionStmt(tokens)
     }
 
-  def expression(tokens: List[Token]): ExprParser = equality(tokens)
-
   def expressionStmt(tokens: List[Token]): StmtParser =
     for {
       pr <- expression(tokens)
@@ -169,6 +171,24 @@ object Parser:
           case Operator.Semicolon => Left(Error.ExpectSemicolon(tokens.tail))
         }
     }
+
+  def expression(tokens: List[Token]): ExprParser = equality(tokens)
+
+  def assignment(tokens: List[Token]): ExprParser =
+    equality(tokens) >>= ((expr: Expr, restTokens: List[Token]) =>
+      restTokens.headOption match {
+        case Some(equalToken @ Operator.Equal) =>
+          expr match {
+            case Expr.Variable(name) =>
+              assignment(restTokens.tail) >>= ((value, tokens) =>
+                Right((Expr.Assign(name, value), tokens)),
+              )
+            case _ => Left(Error.InvalidAssignmentTartget(equalToken))
+          }
+
+        case _ => Right((expr, restTokens))
+      },
+    )
 
   // Parse binary expressions that share this grammar
   // ```
@@ -234,13 +254,14 @@ object Parser:
 
   def primary(tokens: List[Token]): ExprParser =
     tokens match
-      case Literal.Number(l) :: rest  => Right(Expr.Literal(l.toDouble), rest)
-      case Literal.Str(l) :: rest     => Right(Expr.Literal(l), rest)
-      case Keyword.True :: rest       => Right(Expr.Literal(true), rest)
-      case Keyword.False :: rest      => Right(Expr.Literal(false), rest)
-      case Keyword.Nil :: rest        => Right(Expr.Literal(null), rest)
-      case Operator.LeftParen :: rest => parenBody(rest)
-      case _                          => Left(Error.ExpectExpression(tokens))
+      case Literal.Number(l) :: rest        => Right(Expr.Literal(l.toDouble), rest)
+      case Literal.Str(l) :: rest           => Right(Expr.Literal(l), rest)
+      case Keyword.True :: rest             => Right(Expr.Literal(true), rest)
+      case Keyword.False :: rest            => Right(Expr.Literal(false), rest)
+      case Keyword.Nil :: rest              => Right(Expr.Literal(null), rest)
+      case Literal.Identifier(name) :: rest => Right(Expr.Variable(Literal.Identifier(name)), rest)
+      case Operator.LeftParen :: rest       => parenBody(rest)
+      case _                                => Left(Error.ExpectExpression(tokens))
 
   // Parse the body within a pair of parentheses (the part after "(")
   def parenBody(
