@@ -1,8 +1,8 @@
 package grox
 
 import cats.*
-import cats.implicits.*
 import cats.effect.kernel.syntax.resource
+import cats.implicits.*
 
 object Parser:
 
