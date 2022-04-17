@@ -21,10 +21,9 @@ object Scanner:
   // != | !
   val bangEqualOrBang: P[Operator] = Operator.BangEqual.parse | Operator.Bang.parse
 
-  val bangEqualOrBang1: P[Operator] = (P.caret.with1 ~ (Operator.BangEqual | Operator.Bang) ~ P.caret).map { case ((s, t), e) =>
-    Operator(s.toLocation, t, e.toLocation)
-  }
-
+  // val bangEqualOrBang1: P[Operator] = (P.caret.with1 ~ (Operator.BangEqual | Operator.Bang) ~ P.caret).map { case ((s, t), e) =>
+  // Operator(s.toLocation, t, e.toLocation)
+  // }
 
   // == | =
   val equalEqualOrEqual: P[Operator] = Operator.EqualEqual.parse | Operator.Equal.parse
