@@ -4,7 +4,7 @@ import cats.implicits.*
 
 import Expr.*
 
-class ExprShowTest extends munit.FunSuite {
+class ExprShowTest extends munit.FunSuite:
   test("Show single Add expression right") {
     val add = Expr.Add(Expr.Literal(1.0), Expr.Literal(2.0))
     assertEquals(add.show, "1.0 + 2.0")
@@ -76,4 +76,3 @@ class ExprShowTest extends munit.FunSuite {
     val not = Expr.Not(Expr.Literal(true))
     assertEquals(not.show, "!true")
   }
-}
