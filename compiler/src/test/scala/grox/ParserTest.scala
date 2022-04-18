@@ -293,5 +293,21 @@ class ParserTest extends munit.FunSuite:
 end ParserTest
 
 class ParserCheck extends ScalaCheckSuite:
-// TODO
+  property("parse numerics succesfully") {
+    Prop.forAll(numericGen) { expr =>
+      parse(Expr.flatten(expr)) match
+        case Left(_)  => false
+        case Right(_) => true
+    }
+  }
+
+  property("parse logicals succesfully") {
+    Prop.forAll(logicalGen) { expr =>
+      parse(Expr.flatten(expr)) match
+        case Left(_)  => false
+        case Right(_) => true
+    }
+  }
+
+  // TODO: property: value of original expression and that of parsed expression are equal.
 end ParserCheck

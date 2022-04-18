@@ -71,4 +71,34 @@ object Expr {
     }
 
   given exprShow: Show[Expr] = Show.show(Expr.show)
+
+  def flatten(expr: Expr): List[Token] =
+    def binary(operator: Token, l: Expr, r: Expr) = flatten(l) ::: List(operator) ::: flatten(r)
+
+    expr match
+      case Add(l, r)      => binary(grox.Operator.Plus, l, r)
+      case Subtract(l, r) => binary(grox.Operator.Minus, l, r)
+      case Multiply(l, r) => binary(grox.Operator.Star, l, r)
+      case Divide(l, r)   => binary(grox.Operator.Slash, l, r)
+
+      case Equal(l, r)    => binary(grox.Operator.EqualEqual, l, r)
+      case NotEqual(l, r) => binary(grox.Operator.BangEqual, l, r)
+
+      case Greater(l, r)      => binary(grox.Operator.Greater, l, r)
+      case GreaterEqual(l, r) => binary(grox.Operator.GreaterEqual, l, r)
+      case Less(l, r)         => binary(grox.Operator.Less, l, r)
+      case LessEqual(l, r)    => binary(grox.Operator.LessEqual, l, r)
+
+      case Negate(e) => grox.Operator.Minus :: flatten(e)
+      case Not(e)    => grox.Operator.Bang :: flatten(e)
+
+      case Grouping(e) =>
+        List(grox.Operator.LeftParen) ::: flatten(e) ::: List(grox.Operator.RightParen)
+
+      case Literal(n: Double) => List(grox.Literal.Number(n.toString))
+      case Literal(s: String) => List(grox.Literal.Number(s))
+      case Literal(true)      => List(grox.Keyword.True)
+      case Literal(false)     => List(grox.Keyword.False)
+      case Literal(null)      => List(grox.Keyword.Nil)
+
 }

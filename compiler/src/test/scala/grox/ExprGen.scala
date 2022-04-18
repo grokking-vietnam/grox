@@ -1,6 +1,6 @@
 package grox
 
-import scala.reflect.{Typeable, TypeTest}
+import scala.reflect.Typeable
 import org.scalacheck.{Arbitrary, Prop, Gen}
 
 object ExprGen {
@@ -14,11 +14,17 @@ object ExprGen {
       case _: T => Expr.Grouping(expr)
       case _    => expr
 
-  def binaryGen(op: BinOperator): Gen[Expr] = Gen.sized(size =>
+  def binaryGen(operator: BinOperator)(operand: => Gen[Expr]): Gen[Expr] =
     for {
-      left <- Gen.resize((size - 1) / 2, numericGen)
-      right <- Gen.resize((size - 1) / 2, numericGen)
-    } yield op(left, right)
+      left <- operand
+      right <- operand
+    } yield operator(left, right)
+
+  def chainingGen(operator: BinOperator, operand: => Gen[Expr]): Gen[Expr] = Gen.sized(size =>
+    for {
+      left <- Gen.resize((size - 1) / 2, operand)
+      right <- Gen.resize((size - 1) / 2, operand)
+    } yield operator(left, right)
   )
 
   def addOperator(left: Expr, right: Expr): Expr = Expr.Add(left, right)
@@ -42,10 +48,10 @@ object ExprGen {
       case _: Expr.Literal => Expr.Negate(left)
       case _               => Expr.Negate(Expr.Grouping(left))
 
-  val addGen = binaryGen(addOperator)
-  val subtractGen = binaryGen(subtractOperator)
-  val multiplyGen = binaryGen(multiplyOperator)
-  val divideGen = binaryGen(divideOperator)
+  val addGen = chainingGen(addOperator, numericGen)
+  val subtractGen = chainingGen(subtractOperator, numericGen)
+  val multiplyGen = chainingGen(multiplyOperator, numericGen)
+  val divideGen = chainingGen(divideOperator, numericGen)
 
   val notGen: Gen[Expr] = Gen.sized(size =>
     for {
@@ -57,8 +63,27 @@ object ExprGen {
     if (size == 0)
       Gen.choose(0, 100).map(Expr.Literal(_))
     else
-      Gen.frequency((3, addGen), (3, subtractGen), (2, multiplyGen), (2, divideGen), (1, notGen))
+      Gen.oneOf(addGen, subtractGen, multiplyGen, divideGen, notGen)
   )
 
-  // val logicalGen: Gen[Expr] = ???
+  val comparisonGen: Gen[Expr] =
+    for {
+      left <- numericGen
+      right <- numericGen
+      operator <- Gen.oneOf(
+        Expr.Greater.apply,
+        Expr.GreaterEqual.apply,
+        Expr.Less.apply,
+        Expr.LessEqual.apply,
+      )
+    } yield operator(left, right)
+
+  val equalityGen: Gen[Expr] = Gen.oneOf(
+    binaryGen(Expr.Equal.apply)(numericGen),
+    binaryGen(Expr.NotEqual.apply)(numericGen),
+    binaryGen(Expr.Equal.apply)(comparisonGen),
+    binaryGen(Expr.NotEqual.apply)(comparisonGen),
+  )
+
+  val logicalGen: Gen[Expr] = equalityGen
 }
