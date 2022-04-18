@@ -1,7 +1,8 @@
 package grox
 
 import scala.reflect.Typeable
-import org.scalacheck.{Arbitrary, Prop, Gen}
+
+import org.scalacheck.{Arbitrary, Gen, Prop}
 
 object ExprGen:
   type BinOperator = (Expr, Expr) => Expr
