@@ -3,7 +3,7 @@ package grox
 import scala.reflect.Typeable
 import org.scalacheck.{Arbitrary, Prop, Gen}
 
-object ExprGen {
+object ExprGen:
   type BinOperator = (Expr, Expr) => Expr
 
   type Term = Expr.Add | Expr.Subtract
@@ -86,4 +86,3 @@ object ExprGen {
   )
 
   val logicalGen: Gen[Expr] = equalityGen
-}
