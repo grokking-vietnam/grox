@@ -8,7 +8,7 @@ import cats.implicits.*
 import munit.CatsEffectSuite
 import org.scalacheck.{Arbitrary, Gen}
 
-class ScannerTest extends munit.FunSuite {
+class ScannerTest extends munit.FunSuite:
 
   test("whitespaces empty") {
     assertEquals(Scanner.whitespaces.parseAll(""), Right(()))
@@ -324,5 +324,3 @@ print Foo(); // expect: Foo instance"""
     )
     assertEquals(Scanner.parse(str), Right(expected))
   }
-
-}

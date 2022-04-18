@@ -20,6 +20,8 @@ inThisBuild(
 val commonSettings = Seq(
   scalacOptions -= "-Xfatal-warnings",
   scalacOptions += "-source:future",
+  scalacOptions += "-rewrite",
+  scalacOptions += "-indent",
   libraryDependencies ++= Dependencies.all,
 )
 

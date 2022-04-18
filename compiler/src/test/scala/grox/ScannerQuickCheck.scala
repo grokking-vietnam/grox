@@ -8,7 +8,7 @@ import cats.implicits.*
 import munit.ScalaCheckSuite
 import org.scalacheck.{Arbitrary, Gen, Prop}
 
-class ScannerQuickCheck extends ScalaCheckSuite {
+class ScannerQuickCheck extends ScalaCheckSuite:
 
   // generate random list of tokens
   // and put them together as input
@@ -58,5 +58,3 @@ class ScannerQuickCheck extends ScalaCheckSuite {
       ts <- Gen.listOfN(n, tokenGen)
       if ts.size > 0
     } yield ts
-
-}
