@@ -19,20 +19,32 @@ object Scanner:
   val whitespaces: P0[Unit] = P.until0(!whitespace).void
 
   // != | !
-  val bangEqualOrBang: P[Operator] = Operator.BangEqual.parse | Operator.Bang.parse
+  val bangEqualOrBang: P[Operator] =
+    "!=".operator(Operator.BangEqual.apply) | "!".operator(Operator.Bang.apply)
 
   // == | =
-  val equalEqualOrEqual: P[Operator] = Operator.EqualEqual.parse | Operator.Equal.parse
+  val equalEqualOrEqual: P[Operator] =
+    "==".operator(Operator.EqualEqual.apply) | "=".operator(Operator.Equal.apply)
 
   // >= | >
-  val greaterEqualOrGreater: P[Operator] = Operator.GreaterEqual.parse | Operator.Greater.parse
+  val greaterEqualOrGreater: P[Operator] =
+    ">=".operator(Operator.GreaterEqual.apply) | ">".operator(Operator.Greater.apply)
 
   // <= | <
-  val lessEqualOrLess: P[Operator] = Operator.LessEqual.parse | Operator.Less.parse
+  val lessEqualOrLess: P[Operator] =
+    "<=".operator(Operator.LessEqual.apply) | "<".operator(Operator.Less.apply)
 
-  val keywords = Keyword.values.map(_.parse).toList
+  // val keywords = Keyword.values.map(_.parse).toList
   // for testing purpose only
-  val keyword: P[Keyword] = P.oneOf(keywords)
+  val keyword: P[Keyword] =
+    "and".keyword(Keyword.And.apply) | "class".keyword(Keyword.Class.apply)
+      | "else".keyword(Keyword.Else.apply) | "false".keyword(Keyword.False.apply)
+      | "for".keyword(Keyword.For.apply) | "fun".keyword(Keyword.Fun.apply)
+      | "if".keyword(Keyword.If.apply) | "nil".keyword(Keyword.Nil.apply)
+      | "or".keyword(Keyword.Or.apply) | "print".keyword(Keyword.Print.apply)
+      | "return".keyword(Keyword.Return.apply) | "super".keyword(Keyword.Super.apply)
+      | "this".keyword(Keyword.This.apply) | "true".keyword(Keyword.True.apply)
+      | "var".keyword(Keyword.Var.apply) | "while".keyword(Keyword.While.apply)
 
   val singleLineComment: P[Comment] =
     val start = P.string("//")
@@ -49,7 +61,8 @@ object Scanner:
         <* end).string.span2(Comment.Block.apply)
     }
 
-  val commentOrSlash: P[Token] = blockComment | singleLineComment | Operator.Slash.parse
+  val commentOrSlash: P[Token] =
+    blockComment | singleLineComment | "/".operator(Operator.Slash.apply)
 
   // An identifier can only start with an undercore or a letter
   // and can contain underscore or letter or numeric character
@@ -75,27 +88,27 @@ object Scanner:
       .string
       .span2(Literal.Number.apply)
 
-  val allTokens =
-    keywords ++ List(
-      Operator.LeftParen.parse,
-      Operator.RightParen.parse,
-      Operator.LeftBrace.parse,
-      Operator.RightBrace.parse,
-      Operator.Comma.parse,
-      Operator.Dot.parse,
-      Operator.Minus.parse,
-      Operator.Plus.parse,
-      Operator.Semicolon.parse,
-      Operator.Star.parse,
-      bangEqualOrBang,
-      equalEqualOrEqual,
-      greaterEqualOrGreater,
-      lessEqualOrLess,
-      commentOrSlash,
-      identifier,
-      str,
-      number,
-    )
+  val allTokens = List(
+    keyword,
+    "(".operator(Operator.LeftParen.apply),
+    ")".operator(Operator.RightParen.apply),
+    "{".operator(Operator.LeftBrace.apply),
+    "}".operator(Operator.RightBrace.apply),
+    ",".operator(Operator.Comma.apply),
+    ".".operator(Operator.Dot.apply),
+    "-".operator(Operator.Minus.apply),
+    "+".operator(Operator.Plus.apply),
+    ":".operator(Operator.Semicolon.apply),
+    "*".operator(Operator.Star.apply),
+    bangEqualOrBang,
+    equalEqualOrEqual,
+    greaterEqualOrGreater,
+    lessEqualOrLess,
+    commentOrSlash,
+    identifier,
+    str,
+    number,
+  )
 
   val token: P[Token] = P.oneOf(allTokens).surroundedBy(whitespaces)
 
@@ -126,14 +139,15 @@ object Scanner:
         case PartialParse(_, pos, _) => s"PartialParse at $pos"
         case ParseFailure(pos, _)    => s"ParseFailure at $pos"
 
-  extension (o: Operator) def parse = P.string(o.lexeme).as(o)
+  extension (str: String) def operator(f: Span => Operator) = P.string(str).span(f)
+  extension (str: String) def keyword(f: Span => Keyword) = P.string(str).span(f)
   extension (k: Keyword) def parse = (P.string(k.lexeme) ~ (whitespace | P.end)).backtrack.as(k)
   extension (c: Caret) def toLocation: Location = Location(c.line, c.col, c.offset)
 
-  extension [T](p: P[T])
+  extension [T, U](p: P[T])
 
-    def span: P[(T, Span)] = (P.caret.with1 ~ p ~ P.caret).map { case ((s, t), e) =>
-      (t, Span(s.toLocation, e.toLocation))
+    def span(f: Span => U): P[U] = (P.caret.with1 ~ p ~ P.caret).map { case ((s, t), e) =>
+      f(Span(s.toLocation, e.toLocation))
     }
 
   extension [T, U](p: P[T])
