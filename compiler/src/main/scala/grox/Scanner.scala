@@ -21,10 +21,6 @@ object Scanner:
   // != | !
   val bangEqualOrBang: P[Operator] = Operator.BangEqual.parse | Operator.Bang.parse
 
-  // val bangEqualOrBang1: P[Operator] = (P.caret.with1 ~ (Operator.BangEqual | Operator.Bang) ~ P.caret).map { case ((s, t), e) =>
-  // Operator(s.toLocation, t, e.toLocation)
-  // }
-
   // == | =
   val equalEqualOrEqual: P[Operator] = Operator.EqualEqual.parse | Operator.Equal.parse
 
@@ -41,7 +37,7 @@ object Scanner:
   val singleLineComment: P[Comment] =
     val start = P.string("//")
     val line: P0[String] = P.until0(endOfLine)
-    (start *> line).string.map(Comment.SingleLine(_))
+    (start *> line).string.span2(Comment.SingleLine.apply)
 
   val blockComment: P[Comment] =
     val start = P.string("/*")
@@ -50,7 +46,7 @@ object Scanner:
     P.recursive[Comment.Block] { recurse =>
       (start *>
         (notStartOrEnd | recurse).rep0
-        <* end).string.map(Comment.Block(_))
+        <* end).string.span2(Comment.Block.apply)
     }
 
   val commentOrSlash: P[Token] = blockComment | singleLineComment | Operator.Slash.parse
@@ -63,15 +59,21 @@ object Scanner:
 
     (alphaOrUnderscore ~ alphaNumeric.rep0)
       .string
-      .map(Literal.Identifier(_))
+      .span2(Literal.Identifier.apply)
 
-  val str: P[Literal] = P.until0(R.dquote).with1.surroundedBy(R.dquote).map(Literal.Str(_))
+  val str: P[Literal] = P
+    .until0(R.dquote)
+    .with1
+    .surroundedBy(R.dquote)
+    .span2(Literal.Str.apply)
 
   // valid numbers: 1234 or 12.43
   // invalid numbers: .1234 or 1234.
   val number: P[Literal] =
     val fraction = (P.char('.') *> N.digits).string.backtrack
-    (N.digits ~ fraction.?).string.map(Literal.Number(_))
+    (N.digits ~ fraction.?)
+      .string
+      .span2(Literal.Number.apply)
 
   val allTokens =
     keywords ++ List(
@@ -98,7 +100,7 @@ object Scanner:
   val token: P[Token] = P.oneOf(allTokens).surroundedBy(whitespaces)
 
   val tokenInfo: P[TokenInfo] = (P.caret.with1 ~ token ~ P.caret).map { case ((s, t), e) =>
-    TokenInfo(s.toLocation, t, e.toLocation)
+    TokenInfo(t, Span(s.toLocation, e.toLocation))
   }
 
   val parser = tokenInfo.rep.map(_.toList)
@@ -127,3 +129,15 @@ object Scanner:
   extension (o: Operator) def parse = P.string(o.lexeme).as(o)
   extension (k: Keyword) def parse = (P.string(k.lexeme) ~ (whitespace | P.end)).backtrack.as(k)
   extension (c: Caret) def toLocation: Location = Location(c.line, c.col, c.offset)
+
+  extension [T](p: P[T])
+
+    def span: P[(T, Span)] = (P.caret.with1 ~ p ~ P.caret).map { case ((s, t), e) =>
+      (t, Span(s.toLocation, e.toLocation))
+    }
+
+  extension [T, U](p: P[T])
+
+    def span2(f: (T, Span) => U): P[U] = (P.caret.with1 ~ p ~ P.caret).map { case ((s, t), e) =>
+      f(t, Span(s.toLocation, e.toLocation))
+    }

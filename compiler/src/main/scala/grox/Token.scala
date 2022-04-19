@@ -8,14 +8,13 @@ sealed trait Token:
   val lexeme: String
   // val span: Span
 
-case class TokenInfo(start: Location, token: Token, end: Location)
-case class TokenInfo1(token: Token, span: Span)
+case class TokenInfo(token: Token, span: Span)
 
 enum Literal extends Token:
 
-  case Identifier(val lexeme: String)
-  case Str(val lexeme: String)
-  case Number(val lexeme: String)
+  case Identifier(val lexeme: String, val span: Span)
+  case Str(val lexeme: String, val span: Span)
+  case Number(val lexeme: String, val span: Span)
 
 enum Operator(val lexeme: String) extends Token:
 
@@ -61,5 +60,8 @@ enum Keyword(val lexeme: String) extends Token:
   case While extends Keyword("while")
 
 enum Comment extends Token:
-  case SingleLine(val lexeme: String)
-  case Block(val lexeme: String)
+  case SingleLine(val lexeme: String, val span: Span)
+  case Block(val lexeme: String, val span: Span)
+
+enum Keyword2(val lexeme: String):
+  case And(val span: Span) extends Keyword2("and")
