@@ -52,31 +52,31 @@ object Parser:
     descendant(tokens).flatMap((expr, rest) => matchOp(rest, expr))
 
   val equalityOp: BinaryOp =
-    case Operator.EqualEqual => Some(Expr.Equal.apply)
-    case Operator.BangEqual  => Some(Expr.NotEqual.apply)
-    case _                   => None
+    case Operator.EqualEqual(_) => Some(Expr.Equal.apply)
+    case Operator.BangEqual(_)  => Some(Expr.NotEqual.apply)
+    case _                      => None
 
   val comparisonOp: BinaryOp =
-    case Operator.Less         => Some(Expr.Less.apply)
-    case Operator.LessEqual    => Some(Expr.LessEqual.apply)
-    case Operator.Greater      => Some(Expr.Greater.apply)
-    case Operator.GreaterEqual => Some(Expr.GreaterEqual.apply)
-    case _                     => None
+    case Operator.Less(_)         => Some(Expr.Less.apply)
+    case Operator.LessEqual(_)    => Some(Expr.LessEqual.apply)
+    case Operator.Greater(_)      => Some(Expr.Greater.apply)
+    case Operator.GreaterEqual(_) => Some(Expr.GreaterEqual.apply)
+    case _                        => None
 
   val termOp: BinaryOp =
-    case Operator.Plus  => Some(Expr.Add.apply)
-    case Operator.Minus => Some(Expr.Subtract.apply)
-    case _              => None
+    case Operator.Plus(_)  => Some(Expr.Add.apply)
+    case Operator.Minus(_) => Some(Expr.Subtract.apply)
+    case _                 => None
 
   val factorOp: BinaryOp =
-    case Operator.Star  => Some(Expr.Multiply.apply)
-    case Operator.Slash => Some(Expr.Divide.apply)
-    case _              => None
+    case Operator.Star(_)  => Some(Expr.Multiply.apply)
+    case Operator.Slash(_) => Some(Expr.Divide.apply)
+    case _                 => None
 
   val unaryOp: UnaryOp =
-    case Operator.Minus => Some(Expr.Negate.apply)
-    case Operator.Bang  => Some(Expr.Not.apply)
-    case _              => None
+    case Operator.Minus(_) => Some(Expr.Negate.apply)
+    case Operator.Bang(_)  => Some(Expr.Not.apply)
+    case _                 => None
 
   def equality = binary(equalityOp, comparison)
   def comparison = binary(comparisonOp, term)
@@ -93,21 +93,21 @@ object Parser:
 
   def primary(tokens: List[Token]): ParseResult =
     tokens match
-      case Literal.Number(l) :: rest  => Right(Expr.Literal(l.toDouble), rest)
-      case Literal.Str(l) :: rest     => Right(Expr.Literal(l), rest)
-      case Keyword.True :: rest       => Right(Expr.Literal(true), rest)
-      case Keyword.False :: rest      => Right(Expr.Literal(false), rest)
-      case Keyword.Nil :: rest        => Right(Expr.Literal(null), rest)
-      case Operator.LeftParen :: rest => parenBody(rest)
-      case _                          => Left(Error.ExpectExpression(tokens))
+      case Literal.Number(l, s) :: rest  => Right(Expr.Literal(l.toDouble), rest)
+      case Literal.Str(l, s) :: rest     => Right(Expr.Literal(l), rest)
+      case Keyword.True(_) :: rest       => Right(Expr.Literal(true), rest)
+      case Keyword.False(_) :: rest      => Right(Expr.Literal(false), rest)
+      case Keyword.Nil(_) :: rest        => Right(Expr.Literal(null), rest)
+      case Operator.LeftParen(_) :: rest => parenBody(rest)
+      case _                             => Left(Error.ExpectExpression(tokens))
 
   // Parse the body within a pair of parentheses (the part after "(")
   def parenBody(
     tokens: List[Token]
   ): ParseResult = expression(tokens).flatMap((expr, rest) =>
     rest match
-      case Operator.RightParen :: rmn => Right(Expr.Grouping(expr), rmn)
-      case _                          => Left(Error.ExpectClosing(rest))
+      case Operator.RightParen(_) :: rmn => Right(Expr.Grouping(expr), rmn)
+      case _                             => Left(Error.ExpectClosing(rest))
   )
 
   // Discard tokens until a new expression/statement is found
@@ -115,9 +115,9 @@ object Parser:
     tokens match
       case t :: rest =>
         t match
-          case Operator.Semicolon => rest
-          case Keyword.Class | Keyword.Fun | Keyword.Var | Keyword.For | Keyword.If |
-              Keyword.While | Keyword.Print | Keyword.Return =>
+          case Operator.Semicolon(_) => rest
+          case Keyword.Class(_) | Keyword.Fun(_) | Keyword.Var(_) | Keyword.For(_) | Keyword.If(_) |
+              Keyword.While(_) | Keyword.Print(_) | Keyword.Return(_) =>
             tokens
           case _ => synchronize(rest)
       case Nil => Nil
