@@ -12,7 +12,7 @@ trait Scanner[F[_]]:
 
 object Scanner:
 
-  def instance[F[_]: MonadThrow]: Scanner[F] = str => parse(str).map(_.map(_.token)).liftTo[F]
+  def instance[F[_]: MonadThrow]: Scanner[F] = str => parse(str).liftTo[F]
 
   val endOfLine: P[Unit] = R.cr | R.lf
   val whitespace: P[Unit] = endOfLine | R.wsp
@@ -112,13 +112,9 @@ object Scanner:
 
   val token: P[Token] = P.oneOf(allTokens).surroundedBy(whitespaces)
 
-  val tokenInfo: P[TokenInfo] = (P.caret.with1 ~ token ~ P.caret).map { case ((s, t), e) =>
-    TokenInfo(t, Span(s.toLocation, e.toLocation))
-  }
+  val parser = token.rep.map(_.toList)
 
-  val parser = tokenInfo.rep.map(_.toList)
-
-  def parse(str: String): Either[Error, List[TokenInfo]] =
+  def parse(str: String): Either[Error, List[Token]] =
     parser.parse(str) match
       case Right(("", ls)) => Right(ls)
       case Right((rest, ls)) =>

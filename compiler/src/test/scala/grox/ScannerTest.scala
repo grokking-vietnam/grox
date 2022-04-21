@@ -9,6 +9,10 @@ import cats.parse.Caret
 
 class ScannerTest extends munit.FunSuite:
 
+  import Operator.*
+
+  def parseToLexemes(str: String) = Scanner.parse(str).map(_.map(_.lexeme).mkString)
+
   test("whitespaces empty") {
     assertEquals(Scanner.whitespaces.parseAll(""), Right(()))
   }
@@ -22,98 +26,99 @@ class ScannerTest extends munit.FunSuite:
   }
 
   test("equalOrEqualEqual ==") {
-    assertEquals(Scanner.equalEqualOrEqual.parseAll("="), Right(Operator.Equal))
+    assertEquals(Scanner.equalEqualOrEqual.parseAll("=").map(_.isInstanceOf[Equal]), Right(true))
   }
 
   test("equalOrEqualEqual =") {
-    assertEquals(Scanner.equalEqualOrEqual.parseAll("=="), Right(Operator.EqualEqual))
+    assertEquals(Scanner.equalEqualOrEqual.parseAll("==").map(_.isInstanceOf[EqualEqual]), Right(true))
   }
 
   test("bangEqualOrBang !=") {
-    assertEquals(Scanner.bangEqualOrBang.parseAll("!="), Right(Operator.BangEqual))
+    assertEquals(Scanner.bangEqualOrBang.parseAll("!=").map(_.isInstanceOf[BangEqual]), Right(true))
   }
 
   test("bangEqualOrBang !") {
-    assertEquals(Scanner.bangEqualOrBang.parseAll("!"), Right(Operator.Bang))
+    assertEquals(Scanner.bangEqualOrBang.parseAll("!").map(_.isInstanceOf[Bang]), Right(true))
   }
 
   test("greaterEqualOrGreater >=") {
-    assertEquals(Scanner.greaterEqualOrGreater.parseAll(">="), Right(Operator.GreaterEqual))
+    assertEquals(Scanner.greaterEqualOrGreater.parseAll(">=").map(_.isInstanceOf[GreaterEqual]), Right(true))
   }
 
   test("greaterEqualOrGreater >") {
-    assertEquals(Scanner.greaterEqualOrGreater.parseAll(">"), Right(Operator.Greater))
+    assertEquals(Scanner.greaterEqualOrGreater.parseAll(">").map(_.isInstanceOf[Greater]), Right(true))
   }
 
   test("lessEqualOrLess <=") {
-    assertEquals(Scanner.lessEqualOrLess.parseAll("<="), Right(Operator.LessEqual))
+    assertEquals(Scanner.lessEqualOrLess.parseAll("<=").map(_.isInstanceOf[LessEqual]), Right(true))
   }
 
   test("lessEqualOrLess <") {
-    assertEquals(Scanner.lessEqualOrLess.parseAll("<"), Right(Operator.Less))
+    assertEquals(Scanner.lessEqualOrLess.parseAll("<").map(_.isInstanceOf[Less]), Right(true))
   }
 
   test("single line comment") {
     val comment = "// this is a comment"
-    assertEquals(Scanner.singleLineComment.parseAll(comment), Right((Comment.SingleLine(comment))))
-  }
-
-  test("empty block comment") {
-    val comment = "/**/"
-    assertEquals(Scanner.blockComment.parseAll(comment), Right((Comment.Block(comment))))
-  }
-
-  test("block comment") {
-    val comment = "/* this is a block comment */"
-    assertEquals(Scanner.blockComment.parseAll(comment), Right((Comment.Block(comment))))
-  }
-
-  test("nested block comment") {
-    val comment = "/* this is a /*nested*/ block /*comment*/ */"
-    assertEquals(Scanner.blockComment.parseAll(comment), Right(Comment.Block(comment)))
+    assertEquals(Scanner.singleLineComment.parseAll(comment).map(_.asInstanceOf[Comment.SingleLine].lexeme), Right(comment))
   }
 
   test("single line comment empty") {
     val comment = "//"
-    assertEquals(Scanner.singleLineComment.parseAll(comment), Right((Comment.SingleLine(comment))))
+    assertEquals(Scanner.singleLineComment.parseAll(comment).map(_.asInstanceOf[Comment.SingleLine].lexeme), Right(comment))
+  }
+
+  test("empty block comment") {
+    val comment = "/**/"
+    assertEquals(Scanner.blockComment.parseAll(comment).map(_.asInstanceOf[Comment.Block].lexeme), Right(comment))
+  }
+
+  test("block comment") {
+    val comment = "/* this is a block comment */"
+    assertEquals(Scanner.blockComment.parseAll(comment).map(_.asInstanceOf[Comment.Block].lexeme), Right(comment))
+  }
+
+  test("nested block comment") {
+    val comment = "/* this is a /*nested*/ block /*comment*/ */"
+    assertEquals(Scanner.blockComment.parseAll(comment).map(_.asInstanceOf[Comment.Block].lexeme), Right(comment))
   }
 
   test("singleLineComment orElse Slash /") {
-    assertEquals(Scanner.commentOrSlash.parseAll("/"), Right((Operator.Slash)))
+    assertEquals(Scanner.commentOrSlash.parseAll("/").map(_.isInstanceOf[Slash]), Right(true))
   }
 
   test("singleLineComment orElse Slash //") {
     val comment = "// this is a comment"
     assertEquals(
-      Scanner.commentOrSlash.parseAll(comment),
-      Right((Comment.SingleLine(comment))),
+      Scanner.commentOrSlash.parseAll(comment).map(_.asInstanceOf[Comment.SingleLine].lexeme),
+      Right(comment),
     )
   }
 
   test("keywords") {
-    Keyword.values.foreach { keyword =>
-      assertEquals(Scanner.keyword.parseAll(keyword.lexeme), Right(keyword))
-    }
+    // todo
+    //Keyword.values.foreach { keyword =>
+      //assertEquals(Scanner.keyword.parseAll(keyword.lexeme), Right(keyword))
+    //}
   }
 
   test("identifier") {
     val identifier = "orchi_1231"
-    assertEquals(Scanner.identifier.parseAll(identifier), Right(Literal.Identifier(identifier)))
+    assertEquals(Scanner.identifier.parseAll(identifier).map(_.asInstanceOf[Literal.Identifier].lexeme), Right(identifier))
   }
 
   test("identifier _") {
     val identifier = "_"
-    assertEquals(Scanner.identifier.parseAll(identifier), Right(Literal.Identifier(identifier)))
+    assertEquals(Scanner.identifier.parseAll(identifier).map(_.asInstanceOf[Literal.Identifier].lexeme), Right(identifier))
   }
 
   test("string") {
     val str = """"orchi_1231""""
-    assertEquals(Scanner.str.parseAll(str), Right(Literal.Str("orchi_1231")))
+    assertEquals(Scanner.str.parseAll(str).map(_.asInstanceOf[Literal.Str].lexeme), Right("orchi_1231"))
   }
 
   test("number") {
     val str = "1234"
-    assertEquals(Scanner.number.parseAll(str), Right(Literal.Number(str)))
+    assertEquals(Scanner.number.parseAll(str).map(_.asInstanceOf[Literal.Number].lexeme), Right(str))
   }
 
   test("fraction only failed") {
@@ -123,7 +128,7 @@ class ScannerTest extends munit.FunSuite:
 
   test("number with frac") {
     val str = "1234.2323"
-    assertEquals(Scanner.number.parseAll(str), Right(Literal.Number(str)))
+    assertEquals(Scanner.number.parseAll(str).map(_.asInstanceOf[Literal.Number].lexeme), Right(str))
   }
 
   test("number and dot failed") {
@@ -133,9 +138,9 @@ class ScannerTest extends munit.FunSuite:
 
   test("identifiers.lox simpler") {
     val str = "andy formless"
-    val expected: List[TokenInfo] = List(
-      TokenInfo(Location(0, 0, 0), Literal.Identifier("andy"), Location(0, 5, 5)),
-      TokenInfo(Location(0, 5, 5), Literal.Identifier("formless"), Location(0, 13, 13)),
+    val expected: List[Token] = List(
+      Literal.Identifier("andy", Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Literal.Identifier("formless", Span(Location(0, 5, 5), Location(0, 13, 13))),
     )
     assertEquals(Scanner.parse(str), Right(expected))
   }
@@ -144,38 +149,38 @@ class ScannerTest extends munit.FunSuite:
     val str = """andy formless fo _ _123 _abc ab123
 abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
     val expected: List[Token] = List(
-      Literal.Identifier("andy"),
-      Literal.Identifier("formless"),
-      Literal.Identifier("fo"),
-      Literal.Identifier("_"),
-      Literal.Identifier("_123"),
-      Literal.Identifier("_abc"),
-      Literal.Identifier("ab123"),
-      Literal.Identifier("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"),
+      Literal.Identifier("andy", Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Literal.Identifier("formless", Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Literal.Identifier("fo", Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Literal.Identifier("_", Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Literal.Identifier("_123", Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Literal.Identifier("_abc", Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Literal.Identifier("ab123", Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Literal.Identifier("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_", Span(Location(0, 0, 0), Location(0, 5, 5))),
     )
-    // assertEquals(Scanner.parse(str), Right(expected))
+     assertEquals(Scanner.parse(str), Right(expected))
   }
 
   test("keywords.lox") {
     val str = """and class else false for fun if nil or return super this true var while"""
     val expected: List[Token] = List(
-      Keyword.And,
-      Keyword.Class,
-      Keyword.Else,
-      Keyword.False,
-      Keyword.For,
-      Keyword.Fun,
-      Keyword.If,
-      Keyword.Nil,
-      Keyword.Or,
-      Keyword.Return,
-      Keyword.Super,
-      Keyword.This,
-      Keyword.True,
-      Keyword.Var,
-      Keyword.While,
+      Keyword.And(Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Keyword.Class(Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Keyword.Else(Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Keyword.False(Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Keyword.For(Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Keyword.Fun(Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Keyword.If(Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Keyword.Nil(Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Keyword.Or(Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Keyword.Return(Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Keyword.Super(Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Keyword.This(Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Keyword.True(Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Keyword.Var(Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Keyword.While(Span(Location(0, 0, 0), Location(0, 5, 5))),
     )
-    // assertEquals(Scanner.parse(str), Right(expected))
+     assertEquals(Scanner.parse(str), Right(expected))
   }
 
   test("numbers.lox") {
@@ -184,142 +189,117 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
       .456
       123."""
     val expected: List[Token] = List(
-      Literal.Number("123"),
-      Literal.Number("123.456"),
-      Operator.Dot,
-      Literal.Number("456"),
-      Literal.Number("123"),
-      Operator.Dot,
+      Literal.Number("123", Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Literal.Number("123.456", Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Operator.Dot(Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Literal.Number("456", Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Literal.Number("123", Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Operator.Dot(Span(Location(0, 0, 0), Location(0, 5, 5))),
     )
-    // assertEquals(Scanner.parse(str), Right(expected))
+     assertEquals(Scanner.parse(str), Right(expected))
   }
 
   test("punctuators.lox") {
     val str = """(){};,+-*!===<=>=!=<>/."""
-    val expected: List[Token] = List(
-      Operator.LeftParen,
-      Operator.RightParen,
-      Operator.LeftBrace,
-      Operator.RightBrace,
-      Operator.Semicolon,
-      Operator.Comma,
-      Operator.Plus,
-      Operator.Minus,
-      Operator.Star,
-      Operator.BangEqual,
-      Operator.EqualEqual,
-      Operator.LessEqual,
-      Operator.GreaterEqual,
-      Operator.BangEqual,
-      Operator.Less,
-      Operator.Greater,
-      Operator.Slash,
-      Operator.Dot,
-    )
-    // assertEquals(Scanner.parse(str), Right(expected))
+     assertEquals(parseToLexemes(str), Right(str))
   }
 
-  test("strings.lox") {
-    val str = """""
-"string"
-      """
-    val expected: List[Token] = List(
-      Literal.Str(""),
-      Literal.Str("string"),
-    )
-    // assertEquals(Scanner.parse(str), Right(expected))
-  }
 
-  test("spaces.lox") {
-    val str = """
-    space    tabs				newlines
+  //test("strings.lox") {
+    //val str = """""
+//"string"
+      //"""
+    //val expected: List[Token] = List(
+      //Literal.Str("", Span(Location(0, 0 , 0), Location(0,0,0))),
+      //Literal.Str("string", Span(Location(0, 0 , 0), Location(0,0,0))),
+    //)
+    //assertEquals(Scanner.parse(str), Right(str))
+  //}
+
+  //test("spaces.lox") {
+    //val str = """
+    //space    tabs				newlines
 
 
 
 
-end
+//end
 
-"""
-    val expected: List[Token] = List(
-      Literal.Identifier("space"),
-      Literal.Identifier("tabs"),
-      Literal.Identifier("newlines"),
-      Literal.Identifier("end"),
-    )
-    // assertEquals(Scanner.parse(str), Right(expected))
-  }
+//"""
+     //assertEquals(parseToLexemes(str), Right("spacetabsnewlinesend"))
+  //}
 
-  test("multiline.lox") {
-    val str = """
-var a = "1
-2
-3";
-print a;
-// expect: 1
-// expect: 2
-// expect: 3
-    """
-    val expected: List[Token] = List(
-      Keyword.Var,
-      Literal.Identifier("a"),
-      Operator.Equal,
-      Literal.Str("""1
-2
-3"""),
-      Operator.Semicolon,
-      Keyword.Print,
-      Literal.Identifier("a"),
-      Operator.Semicolon,
-      Comment.SingleLine("// expect: 1"),
-      Comment.SingleLine("// expect: 2"),
-      Comment.SingleLine("// expect: 3"),
-    )
-    // assertEquals(Scanner.parse(str), Right(expected))
-  }
+  //test("multiline.lox") {
+    //val str = """
+//var a = "1
+//2
+//3";
+//print a;
+//// expect: 1
+//// expect: 2
+//// expect: 3
+    //"""
+    //val expected: List[Token] = List(
+      //Keyword.Var,
+      //Literal.Identifier("a"),
+      //Operator.Equal,
+      //Literal.Str("""1
+//2
+//3"""),
+      //Operator.Semicolon,
+      //Keyword.Print,
+      //Literal.Identifier("a"),
+      //Operator.Semicolon,
+      //Comment.SingleLine("// expect: 1"),
+      //Comment.SingleLine("// expect: 2"),
+      //Comment.SingleLine("// expect: 3"),
+    //)
+    //// assertEquals(Scanner.parse(str), Right(expected))
+  //}
 
-  test("return_in_nested_function.lox") {
-    val str = """
-class Foo {
-  init() {
-    fun init() {
-      return "bar";
-    }
-    print init(); // expect: bar
-  }
-}
+  //test("return_in_nested_function.lox") {
+    //val str = """
+//class Foo {
+  //init() {
+    //fun init() {
+      //return "bar";
+    //}
+    //print init(); // expect: bar
+  //}
+//}
 
-print Foo(); // expect: Foo instance"""
-    val expected: List[Token] = List(
-      Keyword.Class,
-      Literal.Identifier("Foo"),
-      Operator.LeftBrace,
-      Literal.Identifier("init"),
-      Operator.LeftParen,
-      Operator.RightParen,
-      Operator.LeftBrace,
-      Keyword.Fun,
-      Literal.Identifier("init"),
-      Operator.LeftParen,
-      Operator.RightParen,
-      Operator.LeftBrace,
-      Keyword.Return,
-      Literal.Str("bar"),
-      Operator.Semicolon,
-      Operator.RightBrace,
-      Keyword.Print,
-      Literal.Identifier("init"),
-      Operator.LeftParen,
-      Operator.RightParen,
-      Operator.Semicolon,
-      Comment.SingleLine("// expect: bar"),
-      Operator.RightBrace,
-      Operator.RightBrace,
-      Keyword.Print,
-      Literal.Identifier("Foo"),
-      Operator.LeftParen,
-      Operator.RightParen,
-      Operator.Semicolon,
-      Comment.SingleLine("// expect: Foo instance"),
-    )
-    // assertEquals(Scanner.parse(str), Right(expected))
-  }
+//print Foo(); // expect: Foo instance"""
+    //val expected: List[Token] = List(
+      //Keyword.Class,
+      //Literal.Identifier("Foo"),
+      //Operator.LeftBrace,
+      //Literal.Identifier("init"),
+      //Operator.LeftParen,
+      //Operator.RightParen,
+      //Operator.LeftBrace,
+      //Keyword.Fun,
+      //Literal.Identifier("init"),
+      //Operator.LeftParen,
+      //Operator.RightParen,
+      //Operator.LeftBrace,
+      //Keyword.Return,
+      //Literal.Str("bar"),
+      //Operator.Semicolon,
+      //Operator.RightBrace,
+      //Keyword.Print,
+      //Literal.Identifier("init"),
+      //Operator.LeftParen,
+      //Operator.RightParen,
+      //Operator.Semicolon,
+      //Comment.SingleLine("// expect: bar"),
+      //Operator.RightBrace,
+      //Operator.RightBrace,
+      //Keyword.Print,
+      //Literal.Identifier("Foo"),
+      //Operator.LeftParen,
+      //Operator.RightParen,
+      //Operator.Semicolon,
+      //Comment.SingleLine("// expect: Foo instance"),
+    //)
+    //// assertEquals(Scanner.parse(str), Right(expected))
+  //}
