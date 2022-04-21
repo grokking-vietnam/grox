@@ -103,22 +103,22 @@ class ScannerTest extends munit.FunSuite:
 
   test("identifier") {
     val identifier = "orchi_1231"
-    assertEquals(Scanner.identifier.parseAll(identifier).map(_.asInstanceOf[Literal.Identifier].lexeme), Right(identifier))
+    assertEquals(Scanner.identifier.parseAll(identifier).map(_.asInstanceOf[Literal.Identifier[Span]].lexeme), Right(identifier))
   }
 
   test("identifier _") {
     val identifier = "_"
-    assertEquals(Scanner.identifier.parseAll(identifier).map(_.asInstanceOf[Literal.Identifier].lexeme), Right(identifier))
+    assertEquals(Scanner.identifier.parseAll(identifier).map(_.asInstanceOf[Literal.Identifier[Span]].lexeme), Right(identifier))
   }
 
   test("string") {
     val str = """"orchi_1231""""
-    assertEquals(Scanner.str.parseAll(str).map(_.asInstanceOf[Literal.Str].lexeme), Right("orchi_1231"))
+    assertEquals(Scanner.str.parseAll(str).map(_.asInstanceOf[Literal.Str[Span]].lexeme), Right("orchi_1231"))
   }
 
   test("number") {
     val str = "1234"
-    assertEquals(Scanner.number.parseAll(str).map(_.asInstanceOf[Literal.Number].lexeme), Right(str))
+    assertEquals(Scanner.number.parseAll(str).map(_.asInstanceOf[Literal.Number[Span]].lexeme), Right(str))
   }
 
   test("fraction only failed") {
@@ -128,7 +128,7 @@ class ScannerTest extends munit.FunSuite:
 
   test("number with frac") {
     val str = "1234.2323"
-    assertEquals(Scanner.number.parseAll(str).map(_.asInstanceOf[Literal.Number].lexeme), Right(str))
+    assertEquals(Scanner.number.parseAll(str).map(_.asInstanceOf[Literal.Number[Span]].lexeme), Right(str))
   }
 
   test("number and dot failed") {

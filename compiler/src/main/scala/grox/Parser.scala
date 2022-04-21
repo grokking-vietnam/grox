@@ -6,12 +6,13 @@ import cats.*
 import cats.implicits.*
 
 trait Parser[F[_]]:
-  def parse(tokens: List[Token]): F[Expr]
+  def parse[T](tokens: List[Token[T]]): F[Expr]
 
 object Parser:
 
   def instance[F[_]: MonadThrow]: Parser[F] =
-    tokens => parse(tokens).map { case (exp, _) => exp }.liftTo[F]
+    def parse[T](tokens: List[Token[T]]): F[Expr] =
+      parse(tokens).map { case (exp, _) => exp }.liftTo[F]
 
   enum Error(msg: String, tokens: List[Token]) extends NoStackTrace:
     case ExpectExpression(tokens: List[Token]) extends Error("Expect expression", tokens)
@@ -19,13 +20,13 @@ object Parser:
 
     override def toString: String = msg
 
-  type ParseResult = Either[Error, (Expr, List[Token])]
+  type ParseResult[T] = Either[Error, (Expr, List[Token[T]])]
 
   type BinaryOp = Token => Option[(Expr, Expr) => Expr]
   type UnaryOp = Token => Option[Expr => Expr]
 
   // Parse a single expression and return remaining tokens
-  def parse(ts: List[Token]): ParseResult = expression(ts)
+  def parse[T](ts: List[Token[T]]): ParseResult[T] = expression(ts)
 
   def expression(tokens: List[Token]): ParseResult = equality(tokens)
 
