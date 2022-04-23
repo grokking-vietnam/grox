@@ -15,7 +15,7 @@ object Scanner:
   import Keyword.*
   import Operator.*
 
-  def instance[F[_]: MonadThrow]: Scanner[F] = ??? //str => parse(str).liftTo[F]
+  def instance[F[_]: MonadThrow]: Scanner[F] = str => parse(str).liftTo[F]
 
   val endOfLine: P[Unit] = R.cr | R.lf
   val whitespace: P[Unit] = endOfLine | R.wsp
@@ -116,10 +116,10 @@ object Scanner:
   )
 
   val token: P[Token[Unit]] = P.oneOf(allTokens).surroundedBy(whitespaces)
-  val tokenWithTag = (P.caret.with1 ~ token ~ P.caret).map { case ((s, t), e) => t.switch(Span(s.toLocation, e.toLocation)) }
-  val parser = token.rep.map(_.toList)
+  val tokenWithTag: P[Token[Span]] = (P.caret.with1 ~ token ~ P.caret).map { case ((s, t), e) => t.switch(Span(s.toLocation, e.toLocation)) }
+  val parser = tokenWithTag.rep.map(_.toList)
 
-  def parse(str: String): Either[Error, List[Token[Unit]]] =
+  def parse(str: String): Either[Error, List[Token[Span]]] =
     parser.parse(str) match
       case Right(("", ls)) => Right(ls)
       case Right((rest, ls)) =>
@@ -143,15 +143,3 @@ object Scanner:
   extension (o: Operator[Unit]) def parse = P.string(str).as(o)
   extension (k: Keyword[Unit]) def parse = (P.string(k.lexeme) ~ (whitespace | P.end)).backtrack.as(k)
   extension (c: Caret) def toLocation: Location = Location(c.line, c.col, c.offset)
-
-  extension [T, U](p: P[T])
-
-    def span(f: Span => U): P[U] = (P.caret.with1 ~ p ~ P.caret).map { case ((s, t), e) =>
-      f(Span(s.toLocation, e.toLocation))
-    }
-
-  extension [T, U](p: P[T])
-
-    def span2(f: (T, Span) => U): P[U] = (P.caret.with1 ~ p ~ P.caret).map { case ((s, t), e) =>
-      f(t, Span(s.toLocation, e.toLocation))
-    }

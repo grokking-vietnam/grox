@@ -12,21 +12,21 @@ object Parser:
 
   def instance[F[_]: MonadThrow]: Parser[F] =
     def parse[T](tokens: List[Token[T]]): F[Expr] =
-      parse(tokens).map { case (exp, _) => exp }.liftTo[F]
+      parset(tokens).map { case (exp, _) => exp }.liftTo[F]
 
-  enum Error(msg: String, tokens: List[Token]) extends NoStackTrace:
-    case ExpectExpression(tokens: List[Token]) extends Error("Expect expression", tokens)
-    case ExpectClosing(tokens: List[Token]) extends Error("Expect ')' after expression", tokens)
+  enum Error[T](msg: String, tokens: List[Token[T]]) extends NoStackTrace:
+    case ExpectExpression(tokens: List[Token[T]]) extends Error("Expect expression", tokens)
+    case ExpectClosing(tokens: List[Token[T]]) extends Error("Expect ')' after expression", tokens)
 
     override def toString: String = msg
 
-  type ParseResult[T] = Either[Error, (Expr, List[Token[T]])]
+  type ParseResult[T] = Either[Error[T], (Expr, List[Token[T]])]
 
-  type BinaryOp = Token => Option[(Expr, Expr) => Expr]
-  type UnaryOp = Token => Option[Expr => Expr]
+  type BinaryOp[T] = Token[T] => Option[(Expr, Expr) => Expr]
+  type UnaryOp[T] = Token[T] => Option[Expr => Expr]
 
   // Parse a single expression and return remaining tokens
-  def parse[T](ts: List[Token[T]]): ParseResult[T] = expression(ts)
+  def parset[T](ts: List[Token[T]]): ParseResult[T] = expression(ts)
 
   def expression(tokens: List[Token]): ParseResult = equality(tokens)
 
