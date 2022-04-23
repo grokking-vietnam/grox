@@ -44,7 +44,7 @@ object ExprGen:
     val gRight = group[Term | Factor](right)
     Expr.Divide(gLeft, gRight)
 
-  def notOperator(left: Expr): Expr =
+  def negateOperator(left: Expr): Expr =
     left match
       case _: Expr.Literal => Expr.Negate(left)
       case _               => Expr.Negate(Expr.Grouping(left))
@@ -54,17 +54,17 @@ object ExprGen:
   val multiplyGen = chainingGen(multiplyOperator, numericGen)
   val divideGen = chainingGen(divideOperator, numericGen)
 
-  val notGen: Gen[Expr] = Gen.sized(size =>
+  val negateGen: Gen[Expr] = Gen.sized(size =>
     for {
       expr <- Gen.resize(size - 1, numericGen)
-    } yield notOperator(expr)
+    } yield negateOperator(expr)
   )
 
   val numericGen: Gen[Expr] = Gen.sized(size =>
     if (size == 0)
       Gen.choose(0, 100).map(Expr.Literal(_))
     else
-      Gen.oneOf(addGen, subtractGen, multiplyGen, divideGen, notGen)
+      Gen.oneOf(addGen, subtractGen, multiplyGen, divideGen, negateGen)
   )
 
   val comparisonGen: Gen[Expr] =
