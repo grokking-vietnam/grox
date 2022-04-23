@@ -19,8 +19,13 @@ operator       -> "==" | "!=" | "<" | "<=" | ">" | ">="
 
 ## Expression (ordered grammar, for parser)
 ```
-expression    -> assignment 
-assignment    -> IDENTIFIER "=" assignment | equality
+expression    -> assignment
+
+assignment    -> IDENTIFER "=" assignment | logic_or;
+logic_or      -> logic_and ("or" logic_and )*
+logic_and     -> equality ("and" equality )* 
+
+
 equality      -> comparison (("!=" | "==") comparison)*
 comparison    -> factor (("<" | "<=" | ">" | ">=") factor)*
 factor        -> term (("+" | "-") term)* 

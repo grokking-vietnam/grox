@@ -3,6 +3,7 @@ package grox
 import cats.*
 import cats.effect.kernel.syntax.resource
 import cats.implicits.*
+import grox.Parser.ExprParser
 
 object Parser:
 
@@ -161,7 +162,14 @@ object Parser:
 
   def forStmt(tokens: List[Token]): StmtParser = ???
 
-  def whileStmt(tokens: List[Token]): StmtParser = ???
+  def whileStmt(tokens: List[Token]): StmtParser =
+    for {
+      (leftParen, afterLeftParenTokens) <- consume(Operator.LeftParen, tokens)
+      (conditionExpr, afterExpressionTokens) <- expression(afterLeftParenTokens)
+      (rightParen, afterRightParenTokens) <- consume(Operator.RightParen, afterExpressionTokens)
+      (stmt, afterStatementTokens) <- statement(afterRightParenTokens)
+      (semicolon, afterSemicolonTokens) <- consume(Operator.Semicolon, afterStatementTokens)
+    } yield (Stmt.While(conditionExpr, stmt), afterSemicolonTokens)
 
   def consume(expect: Token, tokens: List[Token]): Either[Error, (Token, List[Token])] =
     tokens.headOption match {
@@ -172,10 +180,14 @@ object Parser:
         }
     }
 
-  def expression(tokens: List[Token]): ExprParser = assignment(tokens)
+  def expression: List[Token] => ExprParser = assignment
+
+  def or: List[Token] => ExprParser = binary(orOp, and)
+
+  def and: List[Token] => ExprParser = binary(andOp, equality)
 
   def assignment(tokens: List[Token]): ExprParser =
-    equality(tokens) >>= ((expr: Expr, restTokens: List[Token]) =>
+    or(tokens) >>= ((expr: Expr, restTokens: List[Token]) =>
       restTokens.headOption match {
         case Some(equalToken @ Operator.Equal) =>
           expr match {
@@ -202,15 +214,25 @@ object Parser:
   )(
     tokens: List[Token]
   ): ExprParser =
+
     def matchOp(ts: List[Token], l: Expr): ExprParser =
       ts match
         case token :: rest =>
           op(token) match
-            case Some(fn) => descendant(rest).flatMap((r, rmn) => matchOp(rmn, fn(l, r)))
-            case None     => Right(l, ts)
+            case Some(fn) =>
+              descendant(rest).flatMap((r: Expr, rmn: List[Token]) => matchOp(rmn, fn(l, r)))
+            case None => Right(l, ts)
         case _ => Right(l, ts)
 
     descendant(tokens).flatMap((expr, rest) => matchOp(rest, expr))
+
+  val orOp: BinaryOp =
+    case Keyword.Or => Some(Expr.Or.apply)
+    case _          => None
+
+  val andOp: BinaryOp =
+    case Keyword.And => Some(Expr.And.apply)
+    case _           => None
 
   val equalityOp: BinaryOp =
     case Operator.EqualEqual => Some(Expr.Equal.apply)
@@ -239,10 +261,10 @@ object Parser:
     case Operator.Bang  => Some(Expr.Not.apply)
     case _              => None
 
-  def equality = binary(equalityOp, comparison)
-  def comparison = binary(comparisonOp, term)
-  def term = binary(termOp, factor)
-  def factor = binary(factorOp, unary)
+  def equality: List[Token] => ExprParser = binary(equalityOp, comparison)
+  def comparison: List[Token] => ExprParser = binary(comparisonOp, term)
+  def term: List[Token] => ExprParser = binary(termOp, factor)
+  def factor: List[Token] => ExprParser = binary(factorOp, unary)
 
   def unary(tokens: List[Token]): ExprParser =
     tokens match
