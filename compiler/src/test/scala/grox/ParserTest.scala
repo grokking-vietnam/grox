@@ -295,7 +295,7 @@ end ParserTest
 class ParserCheck extends ScalaCheckSuite:
   property("parse numerics succesfully") {
     Prop.forAll(numericGen) { expr =>
-      parse(Expr.flatten(expr)) match
+      parse(expr.flatten) match
         case Left(_)  => false
         case Right(_) => true
     }
@@ -303,7 +303,7 @@ class ParserCheck extends ScalaCheckSuite:
 
   property("parse logicals succesfully") {
     Prop.forAll(logicalGen) { expr =>
-      parse(Expr.flatten(expr)) match
+      parse(expr.flatten) match
         case Left(_)  => false
         case Right(_) => true
     }
