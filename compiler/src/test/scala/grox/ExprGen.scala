@@ -34,16 +34,16 @@ object ExprGen:
       case _    => expr
 
   def binaryGen(operator: BinOperator)(operand: => Gen[Expr]): Gen[Expr] =
-    for {
+    for
       left <- operand
       right <- operand
-    } yield operator(left, right)
+    yield operator(left, right)
 
   def treeGen(operator: BinOperator, operand: => Gen[Expr]): Gen[Expr] = Gen.sized(size =>
-    for {
+    for
       left <- Gen.resize((size - 1) / 2, operand)
       right <- Gen.resize((size - 1) / 2, operand)
-    } yield operator(left, right)
+    yield operator(left, right)
   )
 
   def addOperator(left: Expr, right: Expr): Expr = Expr.Add(left, right)
@@ -73,9 +73,8 @@ object ExprGen:
   val divideGen = treeGen(divideOperator, numericGen)
 
   val negateGen: Gen[Expr] = Gen.sized(size =>
-    for {
-      expr <- Gen.resize(size - 1, numericGen)
-    } yield negateOperator(expr)
+    for expr <- Gen.resize(size - 1, numericGen)
+    yield negateOperator(expr)
   )
 
   val numericGen: Gen[Expr] = Gen.sized(size =>
