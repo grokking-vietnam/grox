@@ -1,3 +1,20 @@
+/*
+Expression generation rules, which always result in a evaluable epxression:
+
+numeric -> NUMBER | negate | binary
+          | ( numeric )
+negate  -> - numeric
+binary  -> numeric (+ | - | * | /) numeric
+
+logical     -> true | false
+            | equality | comparison | not
+            | ( logical )
+equality    -> numeric ( == | != ) numeric
+            / logical ( == | != ) logical
+comparison  -> numeric ( > | >= | < | <= ) numeric
+not         -> ! logical
+
+ */
 package grox
 
 import scala.reflect.Typeable
@@ -9,6 +26,7 @@ object ExprGen:
 
   type Term = Expr.Add | Expr.Subtract
   type Factor = Expr.Multiply | Expr.Divide
+  type Equality = Expr.Equal | Expr.NotEqual
 
   def group[T: Typeable](expr: Expr): Expr =
     expr match
@@ -21,7 +39,7 @@ object ExprGen:
       right <- operand
     } yield operator(left, right)
 
-  def chainingGen(operator: BinOperator, operand: => Gen[Expr]): Gen[Expr] = Gen.sized(size =>
+  def treeGen(operator: BinOperator, operand: => Gen[Expr]): Gen[Expr] = Gen.sized(size =>
     for {
       left <- Gen.resize((size - 1) / 2, operand)
       right <- Gen.resize((size - 1) / 2, operand)
@@ -49,10 +67,10 @@ object ExprGen:
       case _: Expr.Literal => Expr.Negate(left)
       case _               => Expr.Negate(Expr.Grouping(left))
 
-  val addGen = chainingGen(addOperator, numericGen)
-  val subtractGen = chainingGen(subtractOperator, numericGen)
-  val multiplyGen = chainingGen(multiplyOperator, numericGen)
-  val divideGen = chainingGen(divideOperator, numericGen)
+  val addGen = treeGen(addOperator, numericGen)
+  val subtractGen = treeGen(subtractOperator, numericGen)
+  val multiplyGen = treeGen(multiplyOperator, numericGen)
+  val divideGen = treeGen(divideOperator, numericGen)
 
   val negateGen: Gen[Expr] = Gen.sized(size =>
     for {
@@ -67,23 +85,43 @@ object ExprGen:
       Gen.oneOf(addGen, subtractGen, multiplyGen, divideGen, negateGen)
   )
 
-  val comparisonGen: Gen[Expr] =
-    for {
-      left <- numericGen
-      right <- numericGen
-      operator <- Gen.oneOf(
-        Expr.Greater.apply,
-        Expr.GreaterEqual.apply,
-        Expr.Less.apply,
-        Expr.LessEqual.apply,
-      )
-    } yield operator(left, right)
+  def equalOperator(left: Expr, right: Expr): Expr =
+    val gLeft = group[Equality](left)
+    val gRight = group[Equality](right)
+    Expr.Equal(gLeft, gRight)
+
+  def notEqualOperator(left: Expr, right: Expr): Expr =
+    val gLeft = group[Equality](left)
+    val gRight = group[Equality](right)
+    Expr.NotEqual(gLeft, gRight)
+
+  def notOperator(left: Expr): Expr =
+    left match
+      case _: Expr.Literal => Expr.Not(left)
+      case _               => Expr.Not(Expr.Grouping(left))
 
   val equalityGen: Gen[Expr] = Gen.oneOf(
-    binaryGen(Expr.Equal.apply)(numericGen),
-    binaryGen(Expr.NotEqual.apply)(numericGen),
-    binaryGen(Expr.Equal.apply)(comparisonGen),
-    binaryGen(Expr.NotEqual.apply)(comparisonGen),
+    treeGen(equalOperator, numericGen),
+    treeGen(equalOperator, logicalGen),
+    treeGen(notEqualOperator, numericGen),
+    treeGen(notEqualOperator, logicalGen),
   )
 
-  val logicalGen: Gen[Expr] = equalityGen
+  val comparisonGen: Gen[Expr] = Gen.oneOf(
+    treeGen(Expr.Greater.apply, numericGen),
+    treeGen(Expr.GreaterEqual.apply, numericGen),
+    treeGen(Expr.Less.apply, numericGen),
+    treeGen(Expr.LessEqual.apply, numericGen),
+  )
+
+  val notGen = Gen.sized(size =>
+    for expr <- Gen.resize(size - 1, logicalGen)
+    yield notOperator(expr)
+  )
+
+  val logicalGen: Gen[Expr] = Gen.sized(size =>
+    if (size == 0)
+      Gen.oneOf(Expr.Literal(true), Expr.Literal(false))
+    else
+      Gen.oneOf(equalityGen, comparisonGen, notGen)
+  )
