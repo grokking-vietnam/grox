@@ -17,7 +17,7 @@ object Parser:
 
       def parse[T](
         tokens: List[Token[T]]
-      ): F[Expr] = parset(tokens).map { case (exp, _) => exp }.liftTo[F]
+      ): F[Expr] = Parser.parse(tokens).map { case (exp, _) => exp }.liftTo[F]
 
   enum Error[T](msg: String, tokens: List[Token[T]]) extends NoStackTrace:
     case ExpectExpression(tokens: List[Token[T]]) extends Error("Expect expression", tokens)
@@ -31,7 +31,7 @@ object Parser:
   type UnaryOp[A] = Token[A] => Option[Expr => Expr]
 
   // Parse a single expression and return remaining tokens
-  def parset[A](ts: List[Token[A]]): ParseResult[A] = expression[A](ts)
+  def parse[A](ts: List[Token[A]]): ParseResult[A] = expression[A](ts)
 
   def expression[A](tokens: List[Token[A]]): ParseResult[A] = equality(tokens)
 
@@ -72,17 +72,17 @@ object Parser:
   def termOp[A]: BinaryOp[A] =
     case Plus(_)  => Some(Expr.Add.apply)
     case Minus(_) => Some(Expr.Subtract.apply)
-    case _                 => None
+    case _        => None
 
   def factorOp[A]: BinaryOp[A] =
     case Star(_)  => Some(Expr.Multiply.apply)
     case Slash(_) => Some(Expr.Divide.apply)
-    case _                 => None
+    case _        => None
 
   def unaryOp[A]: UnaryOp[A] =
     case Minus(_) => Some(Expr.Negate.apply)
     case Bang(_)  => Some(Expr.Not.apply)
-    case _                 => None
+    case _        => None
 
   def equality[A] = binary[A](equalityOp, comparison)
   def comparison[A] = binary[A](comparisonOp, term)
@@ -99,13 +99,13 @@ object Parser:
 
   def primary[A](tokens: List[Token[A]]): ParseResult[A] =
     tokens match
-      case Number(l, s) :: rest  => Right(Expr.Literal(l.toDouble), rest)
-      case Str(l, s) :: rest     => Right(Expr.Literal(l), rest)
-      case True(_) :: rest       => Right(Expr.Literal(true), rest)
-      case False(_) :: rest      => Right(Expr.Literal(false), rest)
-      case Nil(_) :: rest        => Right(Expr.Literal(null), rest)
+      case Number(l, s) :: rest => Right(Expr.Literal(l.toDouble), rest)
+      case Str(l, s) :: rest    => Right(Expr.Literal(l), rest)
+      case True(_) :: rest      => Right(Expr.Literal(true), rest)
+      case False(_) :: rest     => Right(Expr.Literal(false), rest)
+      case Null(_) :: rest      => Right(Expr.Literal(null), rest)
       case LeftParen(_) :: rest => parenBody[A](rest)
-      case _                             => Left(Error.ExpectExpression(tokens))
+      case _                    => Left(Error.ExpectExpression(tokens))
 
   // Parse the body within a pair of parentheses (the part after "(")
   def parenBody[A](
@@ -113,7 +113,7 @@ object Parser:
   ): ParseResult[A] = expression(tokens).flatMap((expr, rest) =>
     rest match
       case RightParen(_) :: rmn => Right(Expr.Grouping(expr), rmn)
-      case _                             => Left(Error.ExpectClosing(rest))
+      case _                    => Left(Error.ExpectClosing(rest))
   )
 
   // Discard tokens until a new expression/statement is found
@@ -122,8 +122,7 @@ object Parser:
       case t :: rest =>
         t match
           case Semicolon(_) => rest
-          case Class(_) | Fun(_) | Var(_) | For(_) | If(_) |
-              While(_) | Print(_) | Return(_) =>
+          case Class(_) | Fun(_) | Var(_) | For(_) | If(_) | While(_) | Print(_) | Return(_) =>
             tokens
           case _ => synchronize(rest)
       case List() => List()

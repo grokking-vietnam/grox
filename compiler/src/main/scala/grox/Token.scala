@@ -39,7 +39,7 @@ enum Token[+T](val lexeme: String, val span: T):
   case For(override val span: T) extends Token("for", span)
   case Fun(override val span: T) extends Token("fun", span)
   case If(override val span: T) extends Token("if", span)
-  case Nil(override val span: T) extends Token("nil", span)
+  case Null(override val span: T) extends Token("nil", span)
   case Or(override val span: T) extends Token("or", span)
   case Print(override val span: T) extends Token("print", span)
   case Return(override val span: T) extends Token("return", span)
@@ -52,52 +52,96 @@ enum Token[+T](val lexeme: String, val span: T):
   case SingleLine(override val lexeme: String, override val span: T) extends Token(lexeme, span)
   case Block(override val lexeme: String, override val span: T) extends Token(lexeme, span)
 
+object Token:
+
+  val keywords = List(
+    And(()),
+    Class(()),
+    Else(()),
+    False(()),
+    For(()),
+    Fun(()),
+    If(()),
+    Null(()),
+    Or(()),
+    Print(()),
+    Return(()),
+    Super(()),
+    This(()),
+    True(()),
+    Var(()),
+    While(()),
+  )
+
+  val operators = List(
+    LeftParen(()),
+    RightParen(()),
+    LeftBrace(()),
+    RightBrace(()),
+    Comma(()),
+    Dot(()),
+    Minus(()),
+    Plus(()),
+    Semicolon(()),
+    Slash(()),
+    Star(()),
+    Bang(()),
+    BangEqual(()),
+    Equal(()),
+    EqualEqual(()),
+    Greater(()),
+    GreaterEqual(()),
+    Less(()),
+    LessEqual(()),
+  )
+
 import Token.*
-extension[A, B](t: Token[A])
 
-  def switch(b: B): Token[B] = t match
-    case Identifier(l, _) => Identifier(l, b)
-    case Number(l, _) => Number(l, b)
-    case Str(l, _) => Str(l, b)
+extension [A, B](t: Token[A])
 
-    case LeftParen(_) => LeftParen(b)
-    case RightParen(_) => RightParen(b)
-    case LeftBrace(_) => LeftBrace(b)
-    case RightBrace(_) => RightBrace(b)
-    case Comma(_) => Comma(b)
-    case Dot(_) => Dot(b)
-    case Minus(_) => Minus(b)
-    case Plus(_) => Plus(b)
-    case Semicolon(_) => Semicolon(b)
-    case Slash(_) => Slash(b)
-    case Star(_) => Star(b)
+  def switch(b: B): Token[B] =
+    t match
+      case Identifier(l, _) => Identifier(l, b)
+      case Number(l, _)     => Number(l, b)
+      case Str(l, _)        => Str(l, b)
 
-    case Bang(_) => Bang(b)
-    case BangEqual(_) => BangEqual(b)
-    case Equal(_) => Equal(b)
-    case EqualEqual(_) => EqualEqual(b)
-    case Greater(_) => Greater(b)
-    case GreaterEqual(_) => GreaterEqual(b)
-    case Less(_) => Less(b)
-    case LessEqual(_) => LessEqual(b)
+      case LeftParen(_)  => LeftParen(b)
+      case RightParen(_) => RightParen(b)
+      case LeftBrace(_)  => LeftBrace(b)
+      case RightBrace(_) => RightBrace(b)
+      case Comma(_)      => Comma(b)
+      case Dot(_)        => Dot(b)
+      case Minus(_)      => Minus(b)
+      case Plus(_)       => Plus(b)
+      case Semicolon(_)  => Semicolon(b)
+      case Slash(_)      => Slash(b)
+      case Star(_)       => Star(b)
 
-    case And(_) => And(b)
-    case Class(_) => Class(b)
-    case Else(_) => Else(b)
-    case False(_) => False(b)
-    case For(_) => For(b)
-    case Fun(_) => Fun(b)
-    case If(_) => If(b)
-    case Nil(_) => Nil(b)
-    case Or(_) => Or(b)
-    case Print(_) => Print(b)
-    case Return(_) => Return(b)
-    case Super(_) => Super(b)
-    case This(_) => This(b)
-    case True(_) => True(b)
-    case Var(_) => Var(b)
-    case While(_) => While(b)
+      case Bang(_)         => Bang(b)
+      case BangEqual(_)    => BangEqual(b)
+      case Equal(_)        => Equal(b)
+      case EqualEqual(_)   => EqualEqual(b)
+      case Greater(_)      => Greater(b)
+      case GreaterEqual(_) => GreaterEqual(b)
+      case Less(_)         => Less(b)
+      case LessEqual(_)    => LessEqual(b)
 
-    case SingleLine(l, _) => SingleLine(l, b)
-    case Block(l, _) => Block(l, b)
+      case And(_)    => And(b)
+      case Class(_)  => Class(b)
+      case Else(_)   => Else(b)
+      case False(_)  => False(b)
+      case For(_)    => For(b)
+      case Fun(_)    => Fun(b)
+      case If(_)     => If(b)
+      case Null(_)   => Null(b)
+      case Or(_)     => Or(b)
+      case Print(_)  => Print(b)
+      case Return(_) => Return(b)
+      case Super(_)  => Super(b)
+      case This(_)   => This(b)
+      case True(_)   => True(b)
+      case Var(_)    => Var(b)
+      case While(_)  => While(b)
 
+      case SingleLine(l, _) => SingleLine(l, b)
+      case Block(l, _)      => Block(l, b)

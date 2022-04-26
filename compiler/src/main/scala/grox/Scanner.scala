@@ -7,12 +7,12 @@ import cats.data.NonEmptyList
 import cats.implicits.*
 import cats.parse.{Caret, LocationMap, Numbers as N, Parser as P, Parser0 as P0, Rfc5234 as R}
 
+import Token.*
+
 trait Scanner[F[_]]:
   def scan(str: String): F[List[Token[Span]]]
 
 object Scanner:
-
-  import Token.*
 
   def instance[F[_]: MonadThrow]: Scanner[F] = str => parse(str).liftTo[F]
 
@@ -33,24 +33,7 @@ object Scanner:
   // <= | <
   val lessEqualOrLess: P[Token[Unit]] = LessEqual(()).operator | Less(()).operator
 
-  val keywords = List[Token[Unit]](
-    And(()),
-    Class(()),
-    Else(()),
-    False(()),
-    For(()),
-    Fun(()),
-    If(()),
-    Nil(()),
-    Or(()),
-    Print(()),
-    Return(()),
-    Super(()),
-    This(()),
-    True(()),
-    Var(()),
-    While(()),
-    ).map(_.keyword)
+  val keywordParser = keywords.map(_.keyword)
 
   val singleLineComment: P[Token[Unit]] =
     val start = P.string("//")
@@ -67,8 +50,7 @@ object Scanner:
         <* end).string.map(Block(_, ()))
     }
 
-  val commentOrSlash: P[Token[Unit]] =
-    blockComment | singleLineComment | Slash(()).operator
+  val commentOrSlash: P[Token[Unit]] = blockComment | singleLineComment | Slash(()).operator
 
   // An identifier can only start with an undercore or a letter
   // and can contain underscore or letter or numeric character
@@ -94,30 +76,33 @@ object Scanner:
       .string
       .map(Number(_, ()))
 
-  val allTokens: List[P[Token[Unit]]] = keywords ++ List(
-    LeftParen(()).operator,
-    RightParen(()).operator,
-    LeftBrace(()).operator,
-    RightBrace(()).operator,
-    Comma(()).operator,
-    Dot(()).operator,
-    Minus(()).operator,
-    Plus(()).operator,
-    Semicolon(()).operator,
-    Star(()).operator,
-    bangEqualOrBang,
-    equalEqualOrEqual,
-    greaterEqualOrGreater,
-    lessEqualOrLess,
-    commentOrSlash,
-    identifier,
-    str,
-    number,
-  )
+  val allTokens: List[P[Token[Unit]]] =
+    keywordParser ++ List(
+      LeftParen(()).operator,
+      RightParen(()).operator,
+      LeftBrace(()).operator,
+      RightBrace(()).operator,
+      Comma(()).operator,
+      Dot(()).operator,
+      Minus(()).operator,
+      Plus(()).operator,
+      Semicolon(()).operator,
+      Star(()).operator,
+      bangEqualOrBang,
+      equalEqualOrEqual,
+      greaterEqualOrGreater,
+      lessEqualOrLess,
+      commentOrSlash,
+      identifier,
+      str,
+      number,
+    )
 
   val token: P[Token[Unit]] = P.oneOf(allTokens).surroundedBy(whitespaces)
 
-  val tokenWithTag: P[Token[Span]] = (location.with1 ~ token ~ location).map { case ((s, t), e) => t.switch(Span(s, e)) }
+  val tokenWithTag: P[Token[Span]] = (location.with1 ~ token ~ location).map { case ((s, t), e) =>
+    t.switch(Span(s, e))
+  }
 
   val parser = tokenWithTag.rep.map(_.toList)
 
@@ -143,5 +128,5 @@ object Scanner:
         case ParseFailure(pos, _)    => s"ParseFailure at $pos"
 
   extension (t: Token[Unit])
-    def operator = P.string(str).as(t)
+    def operator = P.string(t.lexeme).as(t)
     def keyword = (P.string(t.lexeme) ~ (whitespace | P.end)).backtrack.as(t)
