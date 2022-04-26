@@ -12,28 +12,28 @@ trait Scanner[F[_]]:
 
 object Scanner:
 
-  import Keyword.*
-  import Operator.*
+  import Token.*
 
   def instance[F[_]: MonadThrow]: Scanner[F] = str => parse(str).liftTo[F]
 
   val endOfLine: P[Unit] = R.cr | R.lf
   val whitespace: P[Unit] = endOfLine | R.wsp
   val whitespaces: P0[Unit] = P.until0(!whitespace).void
+  val location = P.caret.map(c => Location(c.line, c.col, c.offset))
 
   // != | !
-  val bangEqualOrBang: P[Operator[Unit]] = BangEqual(()).parse | Bang(()).parse
+  val bangEqualOrBang: P[Token[Unit]] = BangEqual(()).operator | Bang(()).operator
 
   // == | =
-  val equalEqualOrEqual: P[Operator[Unit]] = EqualEqual(()).parse | Equal(()).parse
+  val equalEqualOrEqual: P[Token[Unit]] = EqualEqual(()).operator | Equal(()).operator
 
   // >= | >
-  val greaterEqualOrGreater: P[Operator[Unit]] = GreaterEqual(()).parse | Greater(()).parse
+  val greaterEqualOrGreater: P[Token[Unit]] = GreaterEqual(()).operator | Greater(()).operator
 
   // <= | <
-  val lessEqualOrLess: P[Operator[Unit]] = LessEqual(()).parse | Less(()).parse
+  val lessEqualOrLess: P[Token[Unit]] = LessEqual(()).operator | Less(()).operator
 
-  val keywords = List[Keyword[Unit]](
+  val keywords = List[Token[Unit]](
     And(()),
     Class(()),
     Else(()),
@@ -50,61 +50,61 @@ object Scanner:
     True(()),
     Var(()),
     While(()),
-    ).map(_.parse)
+    ).map(_.keyword)
 
-  val singleLineComment: P[Comment[Unit]] =
+  val singleLineComment: P[Token[Unit]] =
     val start = P.string("//")
     val line: P0[String] = P.until0(endOfLine)
-    (start *> line).string.map(Comment.SingleLine(_, ()))
+    (start *> line).string.map(SingleLine(_, ()))
 
-  val blockComment: P[Comment[Unit]] =
+  val blockComment: P[Token[Unit]] =
     val start = P.string("/*")
     val end = P.string("*/")
     val notStartOrEnd: P[Char] = (!(start | end)).with1 *> P.anyChar
-    P.recursive[Comment.Block[Unit]] { recurse =>
+    P.recursive[Block[Unit]] { recurse =>
       (start *>
         (notStartOrEnd | recurse).rep0
-        <* end).string.map(Comment.Block(_, ()))
+        <* end).string.map(Block(_, ()))
     }
 
   val commentOrSlash: P[Token[Unit]] =
-    blockComment | singleLineComment | Operator.Slash(()).parse
+    blockComment | singleLineComment | Slash(()).operator
 
   // An identifier can only start with an undercore or a letter
   // and can contain underscore or letter or numeric character
-  val identifier: P[Literal[Unit]] =
+  val identifier: P[Token[Unit]] =
     val alphaOrUnderscore = R.alpha | P.char('_')
     val alphaNumeric = alphaOrUnderscore | N.digit
 
     (alphaOrUnderscore ~ alphaNumeric.rep0)
       .string
-      .map(Literal.Identifier(_, ()))
+      .map(Identifier(_, ()))
 
-  val str: P[Literal[Unit]] = P
+  val str: P[Token[Unit]] = P
     .until0(R.dquote)
     .with1
     .surroundedBy(R.dquote)
-    .map(Literal.Str(_, ()))
+    .map(Str(_, ()))
 
   // valid numbers: 1234 or 12.43
   // invalid numbers: .1234 or 1234.
-  val number: P[Literal[Unit]] =
+  val number: P[Token[Unit]] =
     val fraction = (P.char('.') *> N.digits).string.backtrack
     (N.digits ~ fraction.?)
       .string
-      .map(Literal.Number(_, ()))
+      .map(Number(_, ()))
 
-  val allTokens = keywords ++ List(
-    Operator.LeftParen(()).parse,
-    Operator.RightParen(()).parse,
-    Operator.LeftBrace(()).parse,
-    Operator.RightBrace(()).parse,
-    Operator.Comma(()).parse,
-    Operator.Dot(()).parse,
-    Operator.Minus(()).parse,
-    Operator.Plus(()).parse,
-    Operator.Semicolon(()).parse,
-    Operator.Star(()).parse,
+  val allTokens: List[P[Token[Unit]]] = keywords ++ List(
+    LeftParen(()).operator,
+    RightParen(()).operator,
+    LeftBrace(()).operator,
+    RightBrace(()).operator,
+    Comma(()).operator,
+    Dot(()).operator,
+    Minus(()).operator,
+    Plus(()).operator,
+    Semicolon(()).operator,
+    Star(()).operator,
     bangEqualOrBang,
     equalEqualOrEqual,
     greaterEqualOrGreater,
@@ -116,7 +116,9 @@ object Scanner:
   )
 
   val token: P[Token[Unit]] = P.oneOf(allTokens).surroundedBy(whitespaces)
-  val tokenWithTag: P[Token[Span]] = (P.caret.with1 ~ token ~ P.caret).map { case ((s, t), e) => t.switch(Span(s.toLocation, e.toLocation)) }
+
+  val tokenWithTag: P[Token[Span]] = (location.with1 ~ token ~ location).map { case ((s, t), e) => t.switch(Span(s, e)) }
+
   val parser = tokenWithTag.rep.map(_.toList)
 
   def parse(str: String): Either[Error, List[Token[Span]]] =
@@ -140,6 +142,6 @@ object Scanner:
         case PartialParse(_, pos, _) => s"PartialParse at $pos"
         case ParseFailure(pos, _)    => s"ParseFailure at $pos"
 
-  extension (o: Operator[Unit]) def parse = P.string(str).as(o)
-  extension (k: Keyword[Unit]) def parse = (P.string(k.lexeme) ~ (whitespace | P.end)).backtrack.as(k)
-  extension (c: Caret) def toLocation: Location = Location(c.line, c.col, c.offset)
+  extension (t: Token[Unit])
+    def operator = P.string(str).as(t)
+    def keyword = (P.string(t.lexeme) ~ (whitespace | P.end)).backtrack.as(t)

@@ -9,7 +9,7 @@ import cats.parse.Caret
 
 class ScannerTest extends munit.FunSuite:
 
-  import Operator.*
+  import Token.*
 
   def parseToLexemes(str: String) = Scanner.parse(str).map(_.map(_.lexeme).mkString)
 

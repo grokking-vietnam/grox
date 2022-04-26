@@ -3,77 +3,101 @@ package grox
 case class Location(val line: Int, val col: Int, val offset: Int)
 case class Span(start: Location, end: Location)
 
-// todo use opaque type for lexeme
-sealed trait Token[+T]:
-  val lexeme: String
-  val span: T
-
-enum Literal[+T] extends Token[T]:
-
-  case Identifier(val lexeme: String, val span: T)
-  case Str(val lexeme: String, val span: T)
-  case Number(val lexeme: String, val span: T)
-
-enum Operator[+T](val lexeme: String) extends Token[T]:
+enum Token[+T](val lexeme: String, val span: T):
+  case Identifier(override val lexeme: String, override val span: T) extends Token(lexeme, span)
+  case Str(override val lexeme: String, override val span: T) extends Token(lexeme, span)
+  case Number(override val lexeme: String, override val span: T) extends Token(lexeme, span)
 
   // Single character token
-  case LeftParen(val span: T) extends Operator[T]("(")
-  case RightParen(val span: T) extends Operator[T](")")
-  case LeftBrace(val span: T) extends Operator[T]("{")
-  case RightBrace(val span: T) extends Operator[T]("}")
-  case Comma(val span: T) extends Operator[T](",")
-  case Dot(val span: T) extends Operator[T](".")
-  case Minus(val span: T) extends Operator[T]("-")
-  case Plus(val span: T) extends Operator[T]("+")
-  case Semicolon(val span: T) extends Operator[T](";")
-  case Slash(val span: T) extends Operator[T]("/")
-  case Star(val span: T) extends Operator[T]("*")
+  case LeftParen(override val span: T) extends Token("(", span)
+  case RightParen(override val span: T) extends Token(")", span)
+  case LeftBrace(override val span: T) extends Token("{", span)
+  case RightBrace(override val span: T) extends Token("}", span)
+  case Comma(override val span: T) extends Token(",", span)
+  case Dot(override val span: T) extends Token(".", span)
+  case Minus(override val span: T) extends Token("-", span)
+  case Plus(override val span: T) extends Token("+", span)
+  case Semicolon(override val span: T) extends Token(";", span)
+  case Slash(override val span: T) extends Token("/", span)
+  case Star(override val span: T) extends Token("*", span)
 
   // One or two character token
-  case Bang(val span: T) extends Operator[T]("!")
-  case BangEqual(val span: T) extends Operator[T]("!=")
-  case Equal(val span: T) extends Operator[T]("=")
-  case EqualEqual(val span: T) extends Operator[T]("==")
-  case Greater(val span: T) extends Operator[T](">")
-  case GreaterEqual(val span: T) extends Operator[T](">=")
-  case Less(val span: T) extends Operator[T]("<")
-  case LessEqual(val span: T) extends Operator[T]("<=")
+  case Bang(override val span: T) extends Token("!", span)
+  case BangEqual(override val span: T) extends Token("!=", span)
+  case Equal(override val span: T) extends Token("=", span)
+  case EqualEqual(override val span: T) extends Token("==", span)
+  case Greater(override val span: T) extends Token(">", span)
+  case GreaterEqual(override val span: T) extends Token(">=", span)
+  case Less(override val span: T) extends Token("<", span)
+  case LessEqual(override val span: T) extends Token("<=", span)
 
-enum Keyword[+T](val lexeme: String) extends Token[T]:
-  case And(val span: T) extends Keyword[T]("and")
-  case Class(val span: T) extends Keyword[T]("class")
-  case Else(val span: T) extends Keyword[T]("else")
-  case False(val span: T) extends Keyword[T]("false")
-  case For(val span: T) extends Keyword[T]("for")
-  case Fun(val span: T) extends Keyword[T]("fun")
-  case If(val span: T) extends Keyword[T]("if")
-  case Nil(val span: T) extends Keyword[T]("nil")
-  case Or(val span: T) extends Keyword[T]("or")
-  case Print(val span: T) extends Keyword[T]("print")
-  case Return(val span: T) extends Keyword[T]("return")
-  case Super(val span: T) extends Keyword[T]("super")
-  case This(val span: T) extends Keyword[T]("this")
-  case True(val span: T) extends Keyword[T]("true")
-  case Var(val span: T) extends Keyword[T]("var")
-  case While(val span: T) extends Keyword[T]("while")
+  // keywords
+  case And(override val span: T) extends Token("and", span)
+  case Class(override val span: T) extends Token("class", span)
+  case Else(override val span: T) extends Token("else", span)
+  case False(override val span: T) extends Token("false", span)
+  case For(override val span: T) extends Token("for", span)
+  case Fun(override val span: T) extends Token("fun", span)
+  case If(override val span: T) extends Token("if", span)
+  case Nil(override val span: T) extends Token("nil", span)
+  case Or(override val span: T) extends Token("or", span)
+  case Print(override val span: T) extends Token("print", span)
+  case Return(override val span: T) extends Token("return", span)
+  case Super(override val span: T) extends Token("super", span)
+  case This(override val span: T) extends Token("this", span)
+  case True(override val span: T) extends Token("true", span)
+  case Var(override val span: T) extends Token("var", span)
+  case While(override val span: T) extends Token("while", span)
 
-enum Comment[T] extends Token[T]:
-  case SingleLine(val lexeme: String, val span: T)
-  case Block(val lexeme: String, val span: T)
+  case SingleLine(override val lexeme: String, override val span: T) extends Token(lexeme, span)
+  case Block(override val lexeme: String, override val span: T) extends Token(lexeme, span)
 
-enum Keyword2(val lexeme: String):
-  case And(val span: Span) extends Keyword2("and")
+import Token.*
+extension[A, B](t: Token[A])
 
-import Keyword.*
-import Operator.*
-import Comment.*
-import Literal.*
+  def switch(b: B): Token[B] = t match
+    case Identifier(l, _) => Identifier(l, b)
+    case Number(l, _) => Number(l, b)
+    case Str(l, _) => Str(l, b)
 
-extension[T, U](t: Token[T])
+    case LeftParen(_) => LeftParen(b)
+    case RightParen(_) => RightParen(b)
+    case LeftBrace(_) => LeftBrace(b)
+    case RightBrace(_) => RightBrace(b)
+    case Comma(_) => Comma(b)
+    case Dot(_) => Dot(b)
+    case Minus(_) => Minus(b)
+    case Plus(_) => Plus(b)
+    case Semicolon(_) => Semicolon(b)
+    case Slash(_) => Slash(b)
+    case Star(_) => Star(b)
 
-  def switch(u: U): Token[U] = t match
-    case Identifier(l, _) => Identifier(l, u)
-    case Number(l, _) => Number(l, u)
-    case Str(l, _) => Str(l, u)
-    case Or(_) => Or(u)
+    case Bang(_) => Bang(b)
+    case BangEqual(_) => BangEqual(b)
+    case Equal(_) => Equal(b)
+    case EqualEqual(_) => EqualEqual(b)
+    case Greater(_) => Greater(b)
+    case GreaterEqual(_) => GreaterEqual(b)
+    case Less(_) => Less(b)
+    case LessEqual(_) => LessEqual(b)
+
+    case And(_) => And(b)
+    case Class(_) => Class(b)
+    case Else(_) => Else(b)
+    case False(_) => False(b)
+    case For(_) => For(b)
+    case Fun(_) => Fun(b)
+    case If(_) => If(b)
+    case Nil(_) => Nil(b)
+    case Or(_) => Or(b)
+    case Print(_) => Print(b)
+    case Return(_) => Return(b)
+    case Super(_) => Super(b)
+    case This(_) => This(b)
+    case True(_) => True(b)
+    case Var(_) => Var(b)
+    case While(_) => While(b)
+
+    case SingleLine(l, _) => SingleLine(l, b)
+    case Block(l, _) => Block(l, b)
 
