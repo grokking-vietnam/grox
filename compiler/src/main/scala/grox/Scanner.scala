@@ -33,7 +33,8 @@ object Scanner:
   // <= | <
   val lessEqualOrLess: P[Token[Unit]] = LessEqual(()).operator | Less(()).operator
 
-  val keywordParser = keywords.map(_.keyword)
+  val keywordsParser = keywords.map(_.keyword)
+  val keyword = P.oneOf(keywordsParser)
 
   val singleLineComment: P[Token[Unit]] =
     val start = P.string("//")
@@ -77,7 +78,7 @@ object Scanner:
       .map(Number(_, ()))
 
   val allTokens: List[P[Token[Unit]]] =
-    keywordParser ++ List(
+    keywordsParser ++ List(
       LeftParen(()).operator,
       RightParen(()).operator,
       LeftBrace(()).operator,
