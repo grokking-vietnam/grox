@@ -1,5 +1,7 @@
 package grox
 
+import cats.Functor
+
 case class Location(val line: Int, val col: Int, val offset: Int)
 case class Span(start: Location, end: Location)
 
@@ -54,6 +56,8 @@ enum Token[+T](val lexeme: String, val tag: T):
 
 object Token:
 
+  import Token.*
+
   val keywords = List(
     And(()),
     Class(()),
@@ -95,53 +99,51 @@ object Token:
     LessEqual(()),
   )
 
-import Token.*
+  given Functor[Token] with
 
-extension [A, B](t: Token[A])
+    def map[A, B](token: Token[A])(f: A => B): Token[B] =
+      token match
+        case Identifier(l, a) => Identifier(l, f(a))
+        case Number(l, a)     => Number(l, f(a))
+        case Str(l, a)        => Str(l, f(a))
 
-  def switch(b: B): Token[B] =
-    t match
-      case Identifier(l, _) => Identifier(l, b)
-      case Number(l, _)     => Number(l, b)
-      case Str(l, _)        => Str(l, b)
+        case LeftParen(a)  => LeftParen(f(a))
+        case RightParen(a) => RightParen(f(a))
+        case LeftBrace(a)  => LeftBrace(f(a))
+        case RightBrace(a) => RightBrace(f(a))
+        case Comma(a)      => Comma(f(a))
+        case Dot(a)        => Dot(f(a))
+        case Minus(a)      => Minus(f(a))
+        case Plus(a)       => Plus(f(a))
+        case Semicolon(a)  => Semicolon(f(a))
+        case Slash(a)      => Slash(f(a))
+        case Star(a)       => Star(f(a))
 
-      case LeftParen(_)  => LeftParen(b)
-      case RightParen(_) => RightParen(b)
-      case LeftBrace(_)  => LeftBrace(b)
-      case RightBrace(_) => RightBrace(b)
-      case Comma(_)      => Comma(b)
-      case Dot(_)        => Dot(b)
-      case Minus(_)      => Minus(b)
-      case Plus(_)       => Plus(b)
-      case Semicolon(_)  => Semicolon(b)
-      case Slash(_)      => Slash(b)
-      case Star(_)       => Star(b)
+        case Bang(a)         => Bang(f(a))
+        case BangEqual(a)    => BangEqual(f(a))
+        case Equal(a)        => Equal(f(a))
+        case EqualEqual(a)   => EqualEqual(f(a))
+        case Greater(a)      => Greater(f(a))
+        case GreaterEqual(a) => GreaterEqual(f(a))
+        case Less(a)         => Less(f(a))
+        case LessEqual(a)    => LessEqual(f(a))
 
-      case Bang(_)         => Bang(b)
-      case BangEqual(_)    => BangEqual(b)
-      case Equal(_)        => Equal(b)
-      case EqualEqual(_)   => EqualEqual(b)
-      case Greater(_)      => Greater(b)
-      case GreaterEqual(_) => GreaterEqual(b)
-      case Less(_)         => Less(b)
-      case LessEqual(_)    => LessEqual(b)
+        case And(a)    => And(f(a))
+        case Class(a)  => Class(f(a))
+        case Else(a)   => Else(f(a))
+        case False(a)  => False(f(a))
+        case For(a)    => For(f(a))
+        case Fun(a)    => Fun(f(a))
+        case If(a)     => If(f(a))
+        case Null(a)   => Null(f(a))
+        case Or(a)     => Or(f(a))
+        case Print(a)  => Print(f(a))
+        case Return(a) => Return(f(a))
+        case Super(a)  => Super(f(a))
+        case This(a)   => This(f(a))
+        case True(a)   => True(f(a))
+        case Var(a)    => Var(f(a))
+        case While(a)  => While(f(a))
 
-      case And(_)    => And(b)
-      case Class(_)  => Class(b)
-      case Else(_)   => Else(b)
-      case False(_)  => False(b)
-      case For(_)    => For(b)
-      case Fun(_)    => Fun(b)
-      case If(_)     => If(b)
-      case Null(_)   => Null(b)
-      case Or(_)     => Or(b)
-      case Print(_)  => Print(b)
-      case Return(_) => Return(b)
-      case Super(_)  => Super(b)
-      case This(_)   => This(b)
-      case True(_)   => True(b)
-      case Var(_)    => Var(b)
-      case While(_)  => While(b)
-
-      case SingleLine(l, _) => SingleLine(l, b)
-      case Block(l, _)      => Block(l, b)
+        case SingleLine(l, a) => SingleLine(l, f(a))
+        case Block(l, a)      => Block(l, f(a))

@@ -4,8 +4,8 @@ import scala.util.control.NoStackTrace
 
 import cats.*
 import cats.data.NonEmptyList
-import cats.implicits.*
 import cats.parse.{Caret, LocationMap, Numbers as N, Parser as P, Parser0 as P0, Rfc5234 as R}
+import cats.syntax.all.*
 
 import Token.*
 
@@ -102,7 +102,7 @@ object Scanner:
   val token: P[Token[Unit]] = P.oneOf(allTokens).surroundedBy(whitespaces)
 
   val tokenWithTag: P[Token[Span]] = (location.with1 ~ token ~ location).map { case ((s, t), e) =>
-    t.switch(Span(s, e))
+    t.as(Span(s, e))
   }
 
   val parser = tokenWithTag.rep.map(_.toList)
