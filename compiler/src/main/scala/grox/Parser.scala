@@ -4,6 +4,7 @@ import cats.*
 import cats.effect.kernel.syntax.resource
 import cats.implicits.*
 import grox.Parser.ExprParser
+import cats.instances.*
 
 object Parser:
 
@@ -73,15 +74,14 @@ object Parser:
 
   def varDeclaration(
     tokens: List[Token]
-  ): StmtParser = consume(Keyword.Var, tokens).flatMap(varCnsm =>
-    varCnsm
-      ._2
+  ): StmtParser = consume(Keyword.Var, tokens).flatMap((varToken, tokensAfterVar) =>
+    tokensAfterVar
       .headOption
       .collectFirst { case token: Literal.Identifier =>
         for {
           initializer <-
-            consume(Operator.Equal, varCnsm._2.tail) match {
-              case Left(_) => Right((None, varCnsm._2.tail))
+            consume(Operator.Equal, tokensAfterVar.tail) match {
+              case Left(_) => Right((None, tokensAfterVar.tail))
               case Right(afterEqual) =>
                 expression(afterEqual._2).map { case (value, afterValue) =>
                   (Option(value), afterValue)
@@ -160,7 +160,72 @@ object Parser:
 
   def returnStmt(keyword: Token, tokens: List[Token]): StmtParser = ???
 
-  def forStmt(tokens: List[Token]): StmtParser = ???
+  def forStmt(tokens: List[Token]): StmtParser =
+    for {
+      (leftParen, afterLeftParenTokens) <- consume(Operator.LeftParen, tokens)
+
+      (initializerStmtOption, afterInitializerTokens): (Option[Stmt], List[Token]) <-
+        afterLeftParenTokens.headOption match {
+
+          case Some(Operator.Semicolon) => (None, afterLeftParenTokens.tail).asRight
+          case Some(Keyword.Var) =>
+            declaration(afterLeftParenTokens).map((declareStmt, tokens) =>
+              (declareStmt.some, tokens)
+            )
+          case _ =>
+            expressionStmt(afterLeftParenTokens).map((declareStmt, tokens) =>
+              (declareStmt.some, tokens)
+            )
+
+        }
+
+      (conditionalExprOption, afterConditionStmtTokens): (Option[Expr], List[Token]) <-
+        afterInitializerTokens.headOption match {
+          case Some(Operator.Semicolon) => (None, afterInitializerTokens).asRight
+          case _ =>
+            expression(afterLeftParenTokens).map((declareStmt, tokens) =>
+              (declareStmt.some, tokens)
+            )
+        }
+
+      (_, afterConditionStmtAndSemiColonTokens) <- consume(
+        Operator.Semicolon,
+        afterConditionStmtTokens,
+      )
+
+      (incrementExprOption, afterIncrementStmtTokens): (Option[Expr], List[Token]) <-
+        afterConditionStmtAndSemiColonTokens.headOption match {
+          case Some(Operator.RightParen) =>
+            (None, afterConditionStmtAndSemiColonTokens.tail).asRight
+          case _ =>
+            expression(afterConditionStmtAndSemiColonTokens).map((declareStmt, tokens) =>
+              (declareStmt.some, tokens)
+            )
+        }
+
+      (_, afterIncrementStmtAndRightParenTokens) <- consume(
+        Operator.RightParen,
+        afterIncrementStmtTokens,
+      )
+      (body, afterBodyTokens) <- statement(afterLeftParenTokens)
+      desugarIncrement =
+        (
+          if (incrementExprOption.isDefined)
+            new Stmt.Block(List(body, new Stmt.Expression(incrementExprOption.get)))
+          else
+            body
+        )
+      desugarCondition =
+        new Stmt.While(
+          conditionalExprOption.getOrElse(new Expr.Literal(true)),
+          desugarIncrement,
+        )
+
+      desugarInitializer = initializerStmtOption
+        .map(initializer => new Stmt.Block(List(initializer, desugarCondition)))
+        .getOrElse(desugarCondition)
+
+    } yield (desugarInitializer, afterBodyTokens)
 
   def whileStmt(tokens: List[Token]): StmtParser =
     for {
