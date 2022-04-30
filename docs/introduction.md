@@ -61,5 +61,4 @@ Interpreter thứ hai
 
 ### Team
 
-- [Long Tô](https://github.com/m00nb0w)
-- [Thành Lê](https://github.com/lenguyenthanh)
+[![Team](https://contrib.rocks/image?repo=grokking-vietnam/grox)](https://github.com/grokking-vietnam/grox/graphs/contributors)
