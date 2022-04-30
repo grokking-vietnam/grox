@@ -114,19 +114,45 @@ object ExprEvaluation:
 
   enum EvaluationError:
     case Unexpected
+    case DivideByZero
 
   type EvaluationResult = Either[EvaluationError, LiteralType]
 
   type Evaluate = (LiteralType, LiteralType) => EvaluationResult
-  def add(left: LiteralType, right: LiteralType): EvaluationResult = ???
+
+  def add(left: LiteralType, right: LiteralType): EvaluationResult =
+    (left, right) match
+      case (l: Double, r: Double) => Right(l + r)
+      case (l: String, r: String) => Right(l ++ r)
+      case _                      => Left(EvaluationError.Unexpected)
+
+  def subtract(left: LiteralType, right: LiteralType): EvaluationResult =
+    (left, right) match
+      case (l: Double, r: Double) => Right(l - r)
+      case _                      => Left(EvaluationError.Unexpected)
+
+  def multiply(left: LiteralType, right: LiteralType): EvaluationResult =
+    (left, right) match
+      case (l: Double, r: Double) => Right(l * r)
+      case _                      => Left(EvaluationError.Unexpected)
+
+  def devide(left: LiteralType, right: LiteralType): EvaluationResult =
+    (left, right) match
+      case (l: Double, r: Double) =>
+        if (r == 0)
+          Left(EvaluationError.DivideByZero)
+        else
+          Right(l * r)
+      case _ => Left(EvaluationError.Unexpected)
+
   def evaluate(eval: Evaluate)(left: EvaluationResult, right: EvaluationResult): EvaluationResult =
     (left, right).mapN(eval).flatten
 
   val evaluationAlgebra: ExprF[EvaluationResult] => EvaluationResult =
     case AddF(left, right)      => evaluate(add)(left, right)
-    case SubtractF(left, right) => evaluate(add)(left, right)
-    case MultiplyF(left, right) => evaluate(add)(left, right)
-    case DivideF(left, right)   => evaluate(add)(left, right)
+    case SubtractF(left, right) => evaluate(subtract)(left, right)
+    case MultiplyF(left, right) => evaluate(multiply)(left, right)
+    case DivideF(left, right)   => evaluate(devide)(left, right)
 
     case GreaterF(left, right)      => evaluate(add)(left, right)
     case GreaterEqualF(left, right) => evaluate(add)(left, right)
