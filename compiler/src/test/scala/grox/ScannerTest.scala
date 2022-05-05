@@ -325,4 +325,19 @@ print Foo(); // expect: Foo instance"""
     assertEquals(Scanner.parse(str), Right(expected))
   }
 
+  test("assignment.lox") {
+    var assignment =
+    """
+    var breakfast = "bagels";
+    """.stripMargin
+
+    val expected: List[Token] = List(
+      Keyword.Var,
+      Literal.Identifier("breakfast"),
+      Operator.Equal,
+      Literal.Str("bagels"),
+      Operator.Semicolon
+    )
+  }
+
 }

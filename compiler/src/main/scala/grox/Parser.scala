@@ -82,8 +82,8 @@ object Parser:
           initializer <-
             consume(Operator.Equal, tokensAfterVar.tail) match {
               case Left(_) => Right((None, tokensAfterVar.tail))
-              case Right(afterEqual) =>
-                expression(afterEqual._2).map { case (value, afterValue) =>
+              case Right((equalToken, afterEqual)) =>
+                expression(afterEqual).map { case (value, afterValue) =>
                   (Option(value), afterValue)
                 }
             }

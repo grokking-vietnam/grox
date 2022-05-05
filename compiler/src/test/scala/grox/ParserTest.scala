@@ -250,6 +250,52 @@ class ParserTest extends munit.FunSuite:
       assertEquals(parse(ts), Left(Error.ExpectClosing(List(Keyword.True, Keyword.False))))
   }
 
+  test("assignments: expect assignment") {
+    new TestSets:
+      val ts = List(
+        Keyword.Var,
+        Literal.Identifier("breakfast"),
+        Operator.Equal,
+        Literal.Str("bagels"),
+        Operator.Semicolon,
+      )
+
+      val expectedStmt: Stmt = Stmt.Var(
+        Literal.Identifier("breakfast"),
+        Some(Expr.Literal("bagels")),
+      )
+
+      // Inspector(errors: List[Error], stmts: List[Stmt], tokens: List[Token])
+
+      val inspector = Inspector(List.empty[Error], List.empty[Stmt], tokens = ts)
+      val expectedInspector = inspector.copy(stmts = List(expectedStmt), tokens = List.empty[Token])
+
+      assertEquals(parseStmt(inspector), expectedInspector)
+  }
+
+  // TODO: This test will cause infinite recursion, need to fix synchronize
+  // test("assignments: expect missing semicolon error") {
+  //   new TestSets:
+  //     val ts = List(
+  //       Keyword.Var,
+  //       Literal.Identifier("breakfast"),
+  //       Operator.Equal,
+  //       Literal.Str("bagels")
+  //     )
+
+  //     val expectedStmt: Stmt = Stmt.Var(
+  //       Literal.Identifier("breakfast"),
+  //       Some(Expr.Literal("bagels")),
+  //     )
+
+  //     // Inspector(errors: List[Error], stmts: List[Stmt], tokens: List[Token])
+
+  //     val inspector = Inspector(List.empty[Error], List.empty[Stmt], tokens = ts)
+  //     val expectedInspector = inspector.copy(stmts = List(expectedStmt), tokens = List.empty[Token])
+
+  //     assertEquals(parseStmt(inspector), expectedInspector)
+  // }
+
   test("synchronize: until statement") {
     // a = a + 1) { print a; }
     new TestSets:
