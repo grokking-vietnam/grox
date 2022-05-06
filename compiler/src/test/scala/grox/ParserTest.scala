@@ -296,6 +296,64 @@ class ParserTest extends munit.FunSuite:
   //     assertEquals(parseStmt(inspector), expectedInspector)
   // }
 
+  test("control-flow: expect for loop") {
+    new TestSets:
+      val ts: List[Token] = List(
+        Keyword.Var,
+        Literal.Identifier("a"),
+        Operator.Equal,
+        Literal.Number("1"),
+        Operator.Semicolon,
+        Keyword.While,
+        Operator.LeftParen,
+        Literal.Identifier("a"),
+        Operator.Less,
+        Literal.Number("10"),
+        Operator.RightParen,
+        Operator.LeftBrace,
+        Literal.Identifier("a"),
+        Operator.Equal,
+        Literal.Identifier("a"),
+        Operator.Plus,
+        Literal.Number("1"),
+        Operator.Semicolon,
+        Keyword.Print,
+        Literal.Identifier("a"),
+        Operator.Semicolon,
+        Operator.RightBrace,
+      )
+
+      val declareStmt: Stmt = Stmt.Var(
+        Literal.Identifier("a"),
+        Some(Expr.Literal(1)),
+      )
+      val whileStmt: Stmt = Stmt.While(
+        cond = Expr.Less(Expr.Variable(Literal.Identifier("a")), Expr.Literal(10)),
+        body = Stmt.Block(
+          List(
+            Stmt.Print(Expr.Variable(Literal.Identifier("a"))),
+            Stmt.Expression(
+              Expr.Assign(
+                Literal.Identifier("a"),
+                Expr.Add(
+                  Expr.Variable(Literal.Identifier("a")),
+                  Expr.Literal(1),
+                ),
+              )
+            ),
+          )
+        ),
+      )
+
+      val inspector = Inspector(List.empty[Error], List.empty[Stmt], tokens = ts)
+      val expectedInspector = inspector.copy(
+        stmts = List(declareStmt, whileStmt),
+        tokens = List.empty[Token],
+      )
+
+      assertEquals(parseStmt(inspector), expectedInspector)
+  }
+
   test("synchronize: until statement") {
     // a = a + 1) { print a; }
     new TestSets:

@@ -327,7 +327,7 @@ print Foo(); // expect: Foo instance"""
 
   test("assignment.lox") {
     var assignment =
-    """
+      """
     var breakfast = "bagels";
     """.stripMargin
 
@@ -336,8 +336,46 @@ print Foo(); // expect: Foo instance"""
       Literal.Identifier("breakfast"),
       Operator.Equal,
       Literal.Str("bagels"),
-      Operator.Semicolon
+      Operator.Semicolon,
     )
+  }
+
+  test("for_control_flow.lox") {
+    var str =
+      """
+      var a = 1;
+      while (a < 10) {
+        print a;
+        a = a + 1;
+      }
+    """.stripMargin
+
+    val expected: List[Token] = List(
+      Keyword.Var,
+      Literal.Identifier("a"),
+      Operator.Equal,
+      Literal.Number("1"),
+      Operator.Semicolon,
+      Keyword.While,
+      Operator.LeftParen,
+      Literal.Identifier("a"),
+      Operator.Less,
+      Literal.Number("10"),
+      Operator.RightParen,
+      Operator.LeftBrace,
+      Keyword.Print,
+      Literal.Identifier("a"),
+      Operator.Semicolon,
+      Literal.Identifier("a"),
+      Operator.Equal,
+      Literal.Identifier("a"),
+      Operator.Plus,
+      Literal.Number("1"),
+      Operator.Semicolon,
+      Operator.RightBrace,
+    )
+
+    assertEquals(Scanner.parse(str), Right(expected))
   }
 
 }

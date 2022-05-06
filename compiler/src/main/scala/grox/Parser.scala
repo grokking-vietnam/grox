@@ -54,7 +54,7 @@ object Parser:
       case _ =>
         declaration(inspector.tokens) match {
           case Right((stmt, rest)) =>
-            parseStmt(inspector.copy(tokens = rest, stmts = stmt :: inspector.stmts))
+            parseStmt(inspector.copy(tokens = rest, stmts = inspector.stmts.appended(stmt)))
           case Left(err) =>
             parseStmt(
               inspector.copy(
@@ -99,7 +99,7 @@ object Parser:
       case Some(token) =>
         token match {
           case Keyword.Print      => printStmt(tokens.tail)
-          case Operator.LeftParen => blockStmt(tokens.tail)
+          case Operator.LeftBrace => blockStmt(tokens.tail)
           case Keyword.If         => ifStmt(tokens.tail)
           case Keyword.For        => forStmt(tokens.tail)
           case Keyword.Return     => returnStmt(token, tokens.tail)
@@ -131,7 +131,7 @@ object Parser:
           token match {
             case Operator.RightBrace => Right(stmts, ts)
             case _ =>
-              declaration(tokens) match {
+              declaration(ts) match {
                 case Right((dclr, rest)) => block(rest, dclr :: stmts)
                 case left @ Left(_) => left.asInstanceOf[Left[Error, (List[Stmt], List[Token])]]
               }
