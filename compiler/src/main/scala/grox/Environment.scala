@@ -18,8 +18,9 @@ class Environment(
   def define(name: String, value: Token): Environment =
     new Environment(values + (name -> value), enclosing)
 
-  def get(name: Token): Option[Token] =
-    values.get(name.lexeme).orElse(enclosing.flatMap(_.get(name)))
+  def get(
+    name: Token
+  ): Option[Token] = values.get(name.lexeme).orElse(enclosing.flatMap(_.get(name)))
 
   def assign(name: Token, value: Token): Either[EnvironmentError, Environment] = {
     val assignEither =

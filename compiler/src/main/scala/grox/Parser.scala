@@ -51,32 +51,25 @@ object Parser:
 
   def parseStmt(inspector: Inspector): Inspector =
     inspector.tokens match
-      case Nil => {
-        inspector
-      }
-      case _ => {
+      case Nil => inspector
+      case _ =>
         declaration(inspector.tokens) match {
-          case Right((stmt, rest)) => {
+          case Right((stmt, rest)) =>
             parseStmt(inspector.copy(tokens = rest, stmts = inspector.stmts :+ stmt))
-          }
-          case Left(err) => {
+          case Left(err) =>
             parseStmt(
               inspector.copy(
                 tokens = synchronize(inspector.tokens),
                 errors = inspector.errors :+ err,
               )
             )
-          }
         }
-      }
 
   def declaration(tokens: List[Token]): StmtParser =
     tokens.headOption match {
       case Some(Keyword.Class) => ???
       case Some(Keyword.Fun)   => ???
-      case Some(Keyword.Var)   => {
-        varDeclaration(tokens)
-      }
+      case Some(Keyword.Var)   => varDeclaration(tokens)
       case _                   => statement(tokens)
     }
 
@@ -86,24 +79,19 @@ object Parser:
     varCnsm
       ._2
       .headOption
-      .collectFirst {
-      case token: Literal.Identifier => {
+      .collectFirst { case token: Literal.Identifier =>
         for {
           initializer <-
             consume(Operator.Equal, varCnsm._2.tail) match {
-              case Left(_) => {
-                Right((None, varCnsm._2.tail))
-              }
-              case Right(afterEqual) => {
+              case Left(_) => Right((None, varCnsm._2.tail))
+              case Right(afterEqual) =>
                 expression(afterEqual._2).map { case (value, afterValue) =>
                   (Option(value), afterValue)
                 }
-              }
             }
           (maybeInitializer, afterInitializer) = initializer
           semicolonCnsm <- consume(Operator.Semicolon, afterInitializer)
         } yield (Stmt.Var(token, maybeInitializer), semicolonCnsm._2)
-      }
       }
       .getOrElse(Left(Error.ExpectVarIdentifier(tokens)))
   )
@@ -113,9 +101,7 @@ object Parser:
       case Some(token) =>
         token match {
           case Keyword.Print      => printStmt(tokens.tail)
-          case Operator.LeftParen => {
-            blockStmt(tokens.tail)
-          }
+          case Operator.LeftParen => blockStmt(tokens.tail)
           case Keyword.If         => ifStmt(tokens.tail)
           case Keyword.For        => forStmt(tokens.tail)
           case Keyword.Return     => returnStmt(token, tokens.tail)
@@ -184,27 +170,25 @@ object Parser:
 
   def consume(expect: Token, tokens: List[Token]): Either[Error, (Token, List[Token])] =
     tokens.headOption match {
-      case Some(head) => {
-        if (head == expect) { Right (expect, tokens.tail) }
+      case Some(head) =>
+        if (head == expect) { Right(expect, tokens.tail) }
         else {
           expect match {
-            case Operator.Semicolon => Left(Error.ExpectSemicolon(tokens))
-            case Keyword.Var => Left(Error.ExpectVar(tokens))
-            case Operator.Equal => Left(Error.ExpectEqual(tokens))
-            case Operator.LeftParen => Left(Error.ExpectLeftParen(tokens))
+            case Operator.Semicolon  => Left(Error.ExpectSemicolon(tokens))
+            case Keyword.Var         => Left(Error.ExpectVar(tokens))
+            case Operator.Equal      => Left(Error.ExpectEqual(tokens))
+            case Operator.LeftParen  => Left(Error.ExpectLeftParen(tokens))
             case Operator.RightParen => Left(Error.ExpectRightParen(tokens))
           }
         }
-      }
-      case _ => {
+      case _ =>
         expect match {
-          case Operator.Semicolon => Left(Error.ExpectSemicolon(tokens))
-          case Keyword.Var => Left(Error.ExpectVar(tokens))
-          case Operator.Equal => Left(Error.ExpectEqual(tokens))
-          case Operator.LeftParen => Left(Error.ExpectLeftParen(tokens))
+          case Operator.Semicolon  => Left(Error.ExpectSemicolon(tokens))
+          case Keyword.Var         => Left(Error.ExpectVar(tokens))
+          case Operator.Equal      => Left(Error.ExpectEqual(tokens))
+          case Operator.LeftParen  => Left(Error.ExpectLeftParen(tokens))
           case Operator.RightParen => Left(Error.ExpectRightParen(tokens))
         }
-      }
     }
 
   // Parse binary expressions that share this grammar
@@ -269,17 +253,16 @@ object Parser:
           case None     => primary(tokens)
       case _ => primary(tokens)
 
-  def primary(tokens: List[Token]): ExprParser = {
+  def primary(tokens: List[Token]): ExprParser =
     tokens match
-      case Literal.Number(l) :: rest => Right(Expr.Literal(l.toDouble), rest)
-      case Literal.Str(l) :: rest => Right(Expr.Literal(l), rest)
+      case Literal.Number(l) :: rest     => Right(Expr.Literal(l.toDouble), rest)
+      case Literal.Str(l) :: rest        => Right(Expr.Literal(l), rest)
       case Literal.Identifier(l) :: rest => Right(Expr.Literal(l), rest)
-      case Keyword.True :: rest => Right(Expr.Literal(true), rest)
-      case Keyword.False :: rest => Right(Expr.Literal(false), rest)
-      case Keyword.Nil :: rest => Right(Expr.Literal(null), rest)
-      case Operator.LeftParen :: rest => parenBody(rest)
-      case _ => Left(Error.ExpectExpression(tokens))
-  }
+      case Keyword.True :: rest          => Right(Expr.Literal(true), rest)
+      case Keyword.False :: rest         => Right(Expr.Literal(false), rest)
+      case Keyword.Nil :: rest           => Right(Expr.Literal(null), rest)
+      case Operator.LeftParen :: rest    => parenBody(rest)
+      case _                             => Left(Error.ExpectExpression(tokens))
 
   // Parse the body within a pair of parentheses (the part after "(")
   def parenBody(
@@ -297,7 +280,7 @@ object Parser:
         t match
           case Operator.Semicolon => rest
           case Keyword.Class | Keyword.Fun | Keyword.Var | Keyword.For | Keyword.If |
-               Keyword.While | Keyword.Print | Keyword.Return =>
+              Keyword.While | Keyword.Print | Keyword.Return =>
             tokens
           case _ => synchronize(rest)
       case Nil => Nil
