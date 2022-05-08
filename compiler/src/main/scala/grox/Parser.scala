@@ -169,18 +169,8 @@ object Parser:
   def whileStmt(tokens: List[Token]): StmtParser = ???
 
   def consume(expect: Token, tokens: List[Token]): Either[Error, (Token, List[Token])] =
-    tokens.headOption match {
-      case Some(head) =>
-        if (head == expect) { Right(expect, tokens.tail) }
-        else {
-          expect match {
-            case Operator.Semicolon  => Left(Error.ExpectSemicolon(tokens))
-            case Keyword.Var         => Left(Error.ExpectVar(tokens))
-            case Operator.Equal      => Left(Error.ExpectEqual(tokens))
-            case Operator.LeftParen  => Left(Error.ExpectLeftParen(tokens))
-            case Operator.RightParen => Left(Error.ExpectRightParen(tokens))
-          }
-        }
+    tokens match {
+      case `expect` :: tail => Right(expect, tokens.tail)
       case _ =>
         expect match {
           case Operator.Semicolon  => Left(Error.ExpectSemicolon(tokens))
