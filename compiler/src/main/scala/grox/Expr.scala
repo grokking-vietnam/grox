@@ -68,4 +68,4 @@ object Expr:
       case Literal(_) => exprShow
       case _          => s"($exprShow)"
 
-  given exprShow: Show[Expr] = Show.show(Expr.show)
+  given Show[Expr] = Show.show(Expr.show)

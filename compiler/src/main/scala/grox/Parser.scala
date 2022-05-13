@@ -6,28 +6,34 @@ import cats.*
 import cats.implicits.*
 
 trait Parser[F[_]]:
-  def parse(tokens: List[Token]): F[Expr]
+  def parse[T](tokens: List[Token[T]]): F[Expr]
 
 object Parser:
 
-  def instance[F[_]: MonadThrow]: Parser[F] =
-    tokens => parse(tokens).map { case (exp, _) => exp }.liftTo[F]
+  import Token.*
 
-  enum Error(msg: String, tokens: List[Token]) extends NoStackTrace:
-    case ExpectExpression(tokens: List[Token]) extends Error("Expect expression", tokens)
-    case ExpectClosing(tokens: List[Token]) extends Error("Expect ')' after expression", tokens)
+  def instance[F[_]: MonadThrow]: Parser[F] =
+    new Parser[F]:
+
+      def parse[T](
+        tokens: List[Token[T]]
+      ): F[Expr] = Parser.parse(tokens).map { case (exp, _) => exp }.liftTo[F]
+
+  enum Error[T](msg: String, tokens: List[Token[T]]) extends NoStackTrace:
+    case ExpectExpression(tokens: List[Token[T]]) extends Error("Expect expression", tokens)
+    case ExpectClosing(tokens: List[Token[T]]) extends Error("Expect ')' after expression", tokens)
 
     override def toString: String = msg
 
-  type ParseResult = Either[Error, (Expr, List[Token])]
+  type ParseResult[A] = Either[Error[A], (Expr, List[Token[A]])]
 
-  type BinaryOp = Token => Option[(Expr, Expr) => Expr]
-  type UnaryOp = Token => Option[Expr => Expr]
+  type BinaryOp[A] = Token[A] => Option[(Expr, Expr) => Expr]
+  type UnaryOp[A] = Token[A] => Option[Expr => Expr]
 
   // Parse a single expression and return remaining tokens
-  def parse(ts: List[Token]): ParseResult = expression(ts)
+  def parse[A](ts: List[Token[A]]): ParseResult[A] = expression[A](ts)
 
-  def expression(tokens: List[Token]): ParseResult = equality(tokens)
+  def expression[A](tokens: List[Token[A]]): ParseResult[A] = equality(tokens)
 
   // Parse binary expressions that share this grammar
   // ```
@@ -35,13 +41,13 @@ object Parser:
   // ```
   // Consider "equality" expression as an example. Its direct descendant is "comparison"
   // and its OPERATOR is ("==" | "!=").
-  def binary(
-    op: BinaryOp,
-    descendant: List[Token] => ParseResult,
+  def binary[A](
+    op: BinaryOp[A],
+    descendant: List[Token[A]] => ParseResult[A],
   )(
-    tokens: List[Token]
-  ): ParseResult =
-    def matchOp(ts: List[Token], l: Expr): ParseResult =
+    tokens: List[Token[A]]
+  ): ParseResult[A] =
+    def matchOp(ts: List[Token[A]], l: Expr): ParseResult[A] =
       ts match
         case token :: rest =>
           op(token) match
@@ -51,39 +57,39 @@ object Parser:
 
     descendant(tokens).flatMap((expr, rest) => matchOp(rest, expr))
 
-  val equalityOp: BinaryOp =
-    case Operator.EqualEqual => Some(Expr.Equal.apply)
-    case Operator.BangEqual  => Some(Expr.NotEqual.apply)
-    case _                   => None
+  def equalityOp[A]: BinaryOp[A] =
+    case EqualEqual(_) => Some(Expr.Equal.apply)
+    case BangEqual(_)  => Some(Expr.NotEqual.apply)
+    case _             => None
 
-  val comparisonOp: BinaryOp =
-    case Operator.Less         => Some(Expr.Less.apply)
-    case Operator.LessEqual    => Some(Expr.LessEqual.apply)
-    case Operator.Greater      => Some(Expr.Greater.apply)
-    case Operator.GreaterEqual => Some(Expr.GreaterEqual.apply)
-    case _                     => None
+  def comparisonOp[A]: BinaryOp[A] =
+    case Less(_)         => Some(Expr.Less.apply)
+    case LessEqual(_)    => Some(Expr.LessEqual.apply)
+    case Greater(_)      => Some(Expr.Greater.apply)
+    case GreaterEqual(_) => Some(Expr.GreaterEqual.apply)
+    case _               => None
 
-  val termOp: BinaryOp =
-    case Operator.Plus  => Some(Expr.Add.apply)
-    case Operator.Minus => Some(Expr.Subtract.apply)
-    case _              => None
+  def termOp[A]: BinaryOp[A] =
+    case Plus(_)  => Some(Expr.Add.apply)
+    case Minus(_) => Some(Expr.Subtract.apply)
+    case _        => None
 
-  val factorOp: BinaryOp =
-    case Operator.Star  => Some(Expr.Multiply.apply)
-    case Operator.Slash => Some(Expr.Divide.apply)
-    case _              => None
+  def factorOp[A]: BinaryOp[A] =
+    case Star(_)  => Some(Expr.Multiply.apply)
+    case Slash(_) => Some(Expr.Divide.apply)
+    case _        => None
 
-  val unaryOp: UnaryOp =
-    case Operator.Minus => Some(Expr.Negate.apply)
-    case Operator.Bang  => Some(Expr.Not.apply)
-    case _              => None
+  def unaryOp[A]: UnaryOp[A] =
+    case Minus(_) => Some(Expr.Negate.apply)
+    case Bang(_)  => Some(Expr.Not.apply)
+    case _        => None
 
-  def equality = binary(equalityOp, comparison)
-  def comparison = binary(comparisonOp, term)
-  def term = binary(termOp, factor)
-  def factor = binary(factorOp, unary)
+  def equality[A] = binary[A](equalityOp, comparison)
+  def comparison[A] = binary[A](comparisonOp, term)
+  def term[A] = binary[A](termOp, factor)
+  def factor[A] = binary[A](factorOp, unary)
 
-  def unary(tokens: List[Token]): ParseResult =
+  def unary[A](tokens: List[Token[A]]): ParseResult[A] =
     tokens match
       case token :: rest =>
         unaryOp(token) match
@@ -91,33 +97,32 @@ object Parser:
           case None     => primary(tokens)
       case _ => primary(tokens)
 
-  def primary(tokens: List[Token]): ParseResult =
+  def primary[A](tokens: List[Token[A]]): ParseResult[A] =
     tokens match
-      case Literal.Number(l) :: rest  => Right(Expr.Literal(l.toDouble), rest)
-      case Literal.Str(l) :: rest     => Right(Expr.Literal(l), rest)
-      case Keyword.True :: rest       => Right(Expr.Literal(true), rest)
-      case Keyword.False :: rest      => Right(Expr.Literal(false), rest)
-      case Keyword.Nil :: rest        => Right(Expr.Literal(null), rest)
-      case Operator.LeftParen :: rest => parenBody(rest)
-      case _                          => Left(Error.ExpectExpression(tokens))
+      case Number(l, s) :: rest => Right(Expr.Literal(l.toDouble), rest)
+      case Str(l, s) :: rest    => Right(Expr.Literal(l), rest)
+      case True(_) :: rest      => Right(Expr.Literal(true), rest)
+      case False(_) :: rest     => Right(Expr.Literal(false), rest)
+      case Null(_) :: rest      => Right(Expr.Literal(null), rest)
+      case LeftParen(_) :: rest => parenBody[A](rest)
+      case _                    => Left(Error.ExpectExpression(tokens))
 
   // Parse the body within a pair of parentheses (the part after "(")
-  def parenBody(
-    tokens: List[Token]
-  ): ParseResult = expression(tokens).flatMap((expr, rest) =>
+  def parenBody[A](
+    tokens: List[Token[A]]
+  ): ParseResult[A] = expression(tokens).flatMap((expr, rest) =>
     rest match
-      case Operator.RightParen :: rmn => Right(Expr.Grouping(expr), rmn)
-      case _                          => Left(Error.ExpectClosing(rest))
+      case RightParen(_) :: rmn => Right(Expr.Grouping(expr), rmn)
+      case _                    => Left(Error.ExpectClosing(rest))
   )
 
   // Discard tokens until a new expression/statement is found
-  def synchronize(tokens: List[Token]): List[Token] =
+  def synchronize[A](tokens: List[Token[A]]): List[Token[A]] =
     tokens match
       case t :: rest =>
         t match
-          case Operator.Semicolon => rest
-          case Keyword.Class | Keyword.Fun | Keyword.Var | Keyword.For | Keyword.If |
-              Keyword.While | Keyword.Print | Keyword.Return =>
+          case Semicolon(_) => rest
+          case Class(_) | Fun(_) | Var(_) | For(_) | If(_) | While(_) | Print(_) | Return(_) =>
             tokens
           case _ => synchronize(rest)
-      case Nil => Nil
+      case List() => List()
