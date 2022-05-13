@@ -4,11 +4,11 @@ import cats.syntax.apply.*
 
 object Interpreter:
 
-  enum RuntimeError(op: Operator, msg: String):
-    case MustBeNumbers(op: Operator) extends RuntimeError(op, "Operands must be numbers.")
+  enum RuntimeError(op: Token[Unit], msg: String):
+    case MustBeNumbers(op: Token[Unit]) extends RuntimeError(op, "Operands must be numbers.")
     case MustBeNumbersOrStrings
-      extends RuntimeError(Operator.Plus, "Operands must be two numbers or two strings")
-    case DivisionByZero extends RuntimeError(Operator.Slash, "Division by zerro")
+      extends RuntimeError(Token.Plus(()), "Operands must be two numbers or two strings")
+    case DivisionByZero extends RuntimeError(Token.Slash(()), "Division by zerro")
 
   type EvaluationResult = Either[RuntimeError, LiteralType]
   type Evaluate = (LiteralType, LiteralType) => EvaluationResult
@@ -37,12 +37,12 @@ object Interpreter:
   def subtract(left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l - r)
-      case _                      => Left(RuntimeError.MustBeNumbers(Operator.Minus))
+      case _                      => Left(RuntimeError.MustBeNumbers(Token.Minus(())))
 
   def multiply(left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l * r)
-      case _                      => Left(RuntimeError.MustBeNumbers(Operator.Star))
+      case _                      => Left(RuntimeError.MustBeNumbers(Token.Star(())))
 
   def divide(left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
@@ -51,37 +51,37 @@ object Interpreter:
           Right(l / r)
         else
           Left(RuntimeError.DivisionByZero)
-      case _ => Left(RuntimeError.MustBeNumbers(Operator.Slash))
+      case _ => Left(RuntimeError.MustBeNumbers(Token.Slash(())))
 
   def greater(left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l > r)
-      case _                      => Left(RuntimeError.MustBeNumbers(Operator.Greater))
+      case _                      => Left(RuntimeError.MustBeNumbers(Token.Greater(())))
 
   def greaterOrEqual(left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l >= r)
-      case _                      => Left(RuntimeError.MustBeNumbers(Operator.GreaterEqual))
+      case _                      => Left(RuntimeError.MustBeNumbers(Token.GreaterEqual(())))
 
   def less(left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l < r)
-      case _                      => Left(RuntimeError.MustBeNumbers(Operator.Less))
+      case _                      => Left(RuntimeError.MustBeNumbers(Token.Less(())))
 
   def lessOrEqual(left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l <= r)
-      case _                      => Left(RuntimeError.MustBeNumbers(Operator.LessEqual))
+      case _                      => Left(RuntimeError.MustBeNumbers(Token.LessEqual(())))
 
   def equal(left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l == r)
-      case _                      => Left(RuntimeError.MustBeNumbers(Operator.EqualEqual))
+      case _                      => Left(RuntimeError.MustBeNumbers(Token.EqualEqual(())))
 
   def notEqual(left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l != r)
-      case _                      => Left(RuntimeError.MustBeNumbers(Operator.BangEqual))
+      case _                      => Left(RuntimeError.MustBeNumbers(Token.BangEqual(())))
 
   def evaluate(expr: Expr): EvaluationResult =
     expr match
@@ -95,7 +95,7 @@ object Interpreter:
       case Expr.Negate(e) =>
         evaluate(e) match
           case Right(v: Double) => Right(-v)
-          case _                => Left(RuntimeError.MustBeNumbers(Operator.Minus))
+          case _                => Left(RuntimeError.MustBeNumbers(Token.Minus(())))
       case Expr.Not(e)         => evaluate(e).map(isTruthy)
       case Expr.Add(l, r)      => evaluateBinary(add)(evaluate(l), evaluate(r))
       case Expr.Subtract(l, r) => evaluateBinary(subtract)(evaluate(l), evaluate(r))
