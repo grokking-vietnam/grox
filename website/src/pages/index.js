@@ -30,7 +30,7 @@ export default function Home() {
   return (
     <Layout
       title={`Hello from ${siteConfig.title}`}
-      description="Description will go into a meta tag in <head />">
+      description="A fully functional Interpreter for Lox in Scala 3">
       <HomepageHeader />
       <main>
         {/* <HomepageFeatures /> */}
