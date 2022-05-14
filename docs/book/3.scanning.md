@@ -61,7 +61,7 @@ Func fact: Lex was created by Mike Lesk and Eric Schmidt - who was executive cha
 * `Regular expression`: Được sử dụng khi không cần kết quả chính xác 100%. Thông thường các parser sử dụng regex thì không ổn định, hay bị lỗi (cả false positives và false negatives)
 * Parser generator: Một số tool như [Yacc](https://en.wikipedia.org/wiki/Yacc) hay [ANTLR](https://en.wikipedia.org/wiki/ANTLR) có thể generate source code của parser dựa vào lexical grammar. Cái này được sử dụng rộng rãi nhưng việc set up khá là phiền toái.
 * Recursive descent parser (top down parser) style: parser kiểu này sẽ duyệt từ string input từ đầu đến cuối, cố gắng đoán xem chuỗi ký tự hiện tại có phải token hay không? Nếu đúng thì chuỗi ký tự đó sẽ được thêm vào token list sau rồi tiếp tục quá trình đó đến khi gặp EOF. Đây là phương án mà [Crafting Interpreter] chọn để implement. Các bạn có thể xem source của Scanner ở [đây](https://github.com/munificent/craftinginterpreters/blob/master/java/com/craftinginterpreters/lox/Scanner.java).
-* Parser combinators: Cũng là một dạng top down parser nhưng được phổ biến trong giới functional programming. Đây cũng là phương án mà nhóm chọn để implement. Mọi người có thể xem kỹ hơn về nó ở [đây](/docs/parser-combinators.md)
+* Parser combinators: Cũng là một dạng top down parser nhưng được phổ biến trong giới functional programming. Đây cũng là phương án mà nhóm chọn để implement. Mọi người có thể xem kỹ hơn về nó ở [đây](../fp/parser-combinators.md)
 
 
 ## Resources
