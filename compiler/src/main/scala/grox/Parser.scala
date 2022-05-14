@@ -33,7 +33,7 @@ object Parser:
     override def toString: String = msg
 
   type ExprParser[A] = Either[Error[A], (Expr, List[Token[A]])]
-  type StmtParser = Either[Error[A], (Stmt, List[Token[A]])]
+  type StmtParser[A] = Either[Error[A], (Stmt, List[Token[A]])]
 
 
   type BinaryOp[A] = Token[A] => Option[(Expr, Expr) => Expr]
@@ -60,24 +60,24 @@ object Parser:
             )
         }
 
-  def declaration(tokens: List[Token]): StmtParser =
+  def declaration[A](tokens: List[Token[A]]): StmtParser[A] =
     tokens.headOption match {
-      case Some(Keyword.Class) => ???
-      case Some(Keyword.Fun)   => ???
-      case Some(Keyword.Var)   => varDeclaration(tokens)
+      case Some(Class(_)) => ???
+      case Some(Fun(_))   => ???
+      case Some(Var(_))   => varDeclaration(tokens)
       case _                   => statement(tokens)
     }
 
-  def varDeclaration(
-    tokens: List[Token]
-  ): StmtParser = consume(Keyword.Var, tokens).flatMap(varCnsm =>
+  def varDeclaration[A](
+    tokens: List[Token[A]]
+  ): StmtParser[A] = consume(Var(_), tokens).flatMap(varCnsm =>
     varCnsm
       ._2
       .headOption
-      .collectFirst { case token: Literal.Identifier =>
+      .collectFirst { case token: Identifier(_) =>
         for {
           initializer <-
-            consume(Operator.Equal, varCnsm._2.tail) match {
+            consume(Equal(_), varCnsm._2.tail) match {
               case Left(_) => Right((None, varCnsm._2.tail))
               case Right(afterEqual) =>
                 expression(afterEqual._2).map { case (value, afterValue) =>
@@ -97,42 +97,42 @@ object Parser:
     tokens.headOption match {
       case Some(token) =>
         token match {
-          case Keyword.Print      => printStmt[A](tokens.tail)
-          case Operator.LeftParen => blockStmt[A](tokens.tail)
-          case Keyword.If         => ifStmt[A](tokens.tail)
-          case Keyword.For        => forStmt[A](tokens.tail)
-          case Keyword.Return     => returnStmt[A](token, tokens.tail)
-          case Keyword.While      => whileStmt[A](tokens.tail)
+          case Print(_)      => printStmt[A](tokens.tail)
+          case LeftParen(_)  => blockStmt[A](tokens.tail)
+          case If(_)         => ifStmt[A](tokens.tail)
+          case For(_)        => forStmt[A](tokens.tail)
+          case Return(_)     => returnStmt[A](token, tokens.tail)
+          case While(_)      => whileStmt[A](tokens.tail)
           case _                  => expressionStmt[A](tokens)
         }
       case _ => expressionStmt(tokens)
     }
 
-  def expressionStmt(tokens: List[Token]): StmtParser =
+  def expressionStmt[A](tokens: List[Token[A]]): StmtParser[A] =
     for {
       pr <- expression(tokens)
-      cnsm <- consume(Operator.Semicolon, pr._2)
+      cnsm <- consume(Semicolon(_), pr._2)
     } yield (Stmt.Expression(pr._1), cnsm._2)
 
-  def printStmt(tokens: List[Token]): StmtParser =
+  def printStmt[A](tokens: List[Token[A]]): StmtParser[A] =
     for {
       pr <- expression(tokens)
-      cnsm <- consume(Operator.Semicolon, pr._2)
+      cnsm <- consume(Semicolon[_], pr._2)
     } yield (Stmt.Print(pr._1), cnsm._2)
 
-  def blockStmt(tokens: List[Token]): StmtParser =
+  def blockStmt[A](tokens: List[Token[A]]): StmtParser[A] =
     def block(
-      ts: List[Token],
+      ts: List[Token[A]],
       stmts: List[Stmt] = List.empty[Stmt],
-    ): Either[Error, (List[Stmt], List[Token])] =
+    ): Either[Error[A], (List[Stmt], List[Token[A]])] =
       ts.headOption match {
         case Some(token) =>
           token match {
-            case Operator.RightBrace => Right(stmts, ts)
+            case RightBrace(_) => Right(stmts, ts)
             case _ =>
               declaration(tokens) match {
                 case Right((dclr, rest)) => block(rest, dclr :: stmts)
-                case left @ Left(_) => left.asInstanceOf[Left[Error, (List[Stmt], List[Token])]]
+                case left @ Left(_) => left.asInstanceOf[Left[Error[A], (List[Stmt], List[Token[A]])]]
               }
           }
         case _ => Left(Error.ExpectRightBrace(ts))
@@ -140,39 +140,39 @@ object Parser:
 
     block(tokens).map((stmts, rest) => (Stmt.Block(stmts), rest))
 
-  def ifStmt(tokens: List[Token]): StmtParser =
+  def ifStmt[A](tokens: List[Token[A]]): StmtParser[A] =
     for {
-      leftParenCnsm <- consume(Operator.LeftParen, tokens)
+      leftParenCnsm <- consume(LeftParen(_), tokens)
       afterLeftParen <- expression(leftParenCnsm._2)
       (condition, afterCond) = afterLeftParen
-      rightParenCnsm <- consume(Operator.RightParen, afterCond)
+      rightParenCnsm <- consume(RightParen(_), afterCond)
       afterRightParen <- statement(rightParenCnsm._2)
       (thenBranch, afterThen) = afterRightParen
       maybeElseBranch <- afterThen
         .headOption
-        .collectFirst { case Keyword.Else =>
+        .collectFirst { case Else(_) =>
           statement(afterThen.tail).map { case (stmt, rest) => (Option(stmt), rest) }
         }
         .getOrElse(Right(None, afterThen))
       (elseBranch, afterElse) = maybeElseBranch
     } yield (Stmt.If(condition, thenBranch, elseBranch), afterElse)
 
-  def returnStmt(keyword: Token, tokens: List[Token]): StmtParser = ???
+  def returnStmt[A](keyword: Token[A], tokens: List[Token[A]]): StmtParser[A] = ???
 
-  def forStmt(tokens: List[Token]): StmtParser = ???
+  def forStmt[A](tokens: List[Token[A]]): StmtParser[A] = ???
 
-  def whileStmt(tokens: List[Token]): StmtParser = ???
+  def whileStmt[A](tokens: List[Token[A]]): StmtParser[A] = ???
 
-  def consume(expect: Token, tokens: List[Token]): Either[Error, (Token, List[Token])] =
+  def consume[A](expect: Token[A], tokens: List[Token[A]]): Either[Error[A], (Token[A], List[Token[A]])] =
     tokens match {
       case `expect` :: tail => Right(expect, tokens.tail)
       case _ =>
         expect match {
-          case Operator.Semicolon  => Left(Error.ExpectSemicolon(tokens))
-          case Keyword.Var         => Left(Error.ExpectVar(tokens))
-          case Operator.Equal      => Left(Error.ExpectEqual(tokens))
-          case Operator.LeftParen  => Left(Error.ExpectLeftParen(tokens))
-          case Operator.RightParen => Left(Error.ExpectRightParen(tokens))
+          case Semicolon(_)  => Left(Error.ExpectSemicolon(tokens))
+          case Var(_)         => Left(Error.ExpectVar(tokens))
+          case Equal(_)      => Left(Error.ExpectEqual(tokens))
+          case LeftParen(_)  => Left(Error.ExpectLeftParen(tokens))
+          case RightParen(_) => Left(Error.ExpectRightParen(tokens))
         }
     }
 
