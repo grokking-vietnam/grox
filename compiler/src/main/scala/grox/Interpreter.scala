@@ -85,13 +85,8 @@ object Interpreter:
 
   def evaluate(expr: Expr): EvaluationResult =
     expr match
-      case Expr.Literal(value) =>
-        value match
-          case v: Double  => Right(v)
-          case v: String  => Right(v)
-          case v: Boolean => Right(v)
-          case null       => null
-      case Expr.Grouping(e) => evaluate(e)
+      case Expr.Literal(value) => Right(value)
+      case Expr.Grouping(e)    => evaluate(e)
       case Expr.Negate(e) =>
         evaluate(e) match
           case Right(v: Double) => Right(-v)
