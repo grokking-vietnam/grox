@@ -85,7 +85,7 @@ object Parser:
                 }
             }
           (maybeInitializer, afterInitializer) = initializer
-          semicolonCnsm <- consume(Operator.Semicolon, afterInitializer)
+          semicolonCnsm <- consume(Semicolon(_), afterInitializer)
         } yield (Stmt.Var(token, maybeInitializer), semicolonCnsm._2)
       }
       .getOrElse(Left(Error.ExpectVarIdentifier(tokens)))
@@ -117,7 +117,7 @@ object Parser:
   def printStmt[A](tokens: List[Token[A]]): StmtParser[A] =
     for {
       pr <- expression(tokens)
-      cnsm <- consume(Semicolon[_], pr._2)
+      cnsm <- consume(Semicolon(_), pr._2)
     } yield (Stmt.Print(pr._1), cnsm._2)
 
   def blockStmt[A](tokens: List[Token[A]]): StmtParser[A] =
