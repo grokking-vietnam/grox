@@ -4,10 +4,14 @@ import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 object Dependencies {
 
   val declineVersion = "2.2.0"
+  val fs2Version = "3.2.7"
 
   val catsCore = Def.setting("org.typelevel" %%% "cats-core" % "2.7.0")
   val catsEffect = Def.setting("org.typelevel" %%% "cats-effect" % "3.3.12")
   val catsParse = Def.setting("org.typelevel" %%% "cats-parse" % "0.3.7")
+
+  val fs2 = Def.setting("co.fs2" %%% "fs2-core" % fs2Version)
+  val fs2IO = Def.setting("co.fs2" %%% "fs2-io" % fs2Version)
 
   val decline = Def.setting("com.monovore" %%% "decline" % declineVersion)
   val declineEffect = Def.setting("com.monovore" %%% "decline-effect" % declineVersion)

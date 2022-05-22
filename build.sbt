@@ -26,6 +26,8 @@ val commonSettings = Seq(
     Dependencies.catsCore.value,
     Dependencies.catsEffect.value,
     Dependencies.catsParse.value,
+    Dependencies.fs2.value,
+    Dependencies.fs2IO.value,
     Dependencies.decline.value,
     Dependencies.declineEffect.value,
     Dependencies.munit.value,
@@ -37,7 +39,7 @@ val commonSettings = Seq(
 val compiler = crossProject(JSPlatform, JVMPlatform)
   .settings(commonSettings)
   .jsSettings(
-    scalaJSUseMainModuleInitializer := true,
+    scalaJSUseMainModuleInitializer := true
   )
 
 lazy val root = project
