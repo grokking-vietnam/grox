@@ -6,6 +6,7 @@ inThisBuild(
     // Github Workflow
     githubWorkflowPublishTargetBranches := Seq(), // Don't publish anywhere
     githubWorkflowBuild ++= Seq(
+      WorkflowStep.Sbt(List("build"), name = Some("Build")),
       WorkflowStep.Sbt(List("check"), name = Some("Check Formatting")),
       WorkflowStep.Sbt(List("docs/mdoc"), name = Some("Check docs formatting")),
     ),
@@ -57,7 +58,7 @@ lazy val docs = project // new documentation project
   .enablePlugins(MdocPlugin, DocusaurusPlugin)
 
 // Commands
-addCommandAlias("build", "prepare; test; buildJs")
+addCommandAlias("build", "buildJs")
 addCommandAlias("buildJs", ";compilerJS/fullLinkJS")
 addCommandAlias("testAll", "all test")
 addCommandAlias("prepare", "fix; fmt")
