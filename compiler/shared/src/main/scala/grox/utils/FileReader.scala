@@ -1,6 +1,6 @@
 package grox.utils
 
-import cats.MonadThrow
+import cats.effect.Concurrent
 import cats.syntax.all.*
 
 import fs2.io.file.Files
@@ -10,9 +10,7 @@ trait FileReader[F[_]]:
 
 object FileReader:
 
-  // def instance[F[_]: MonadThrow]: FileReader[F] = path => FileUtils.read(path).liftTo[F]
-
-  def instance[F[_]: Files: MonadThrow](using fs2.Compiler[F, F]): FileReader[F] =
+  def instance[F[_]: Files: Concurrent]: FileReader[F] =
     path =>
       Files[F]
         .readAll(fs2.io.file.Path(path))
