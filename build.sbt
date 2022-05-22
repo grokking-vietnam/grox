@@ -34,6 +34,7 @@ val commonSettings = Seq(
 val compiler = crossProject(JSPlatform, JVMPlatform)
   .settings(commonSettings)
   .jsSettings(
+    jsEnv := new org.scalajs.jsenv.nodejs.NodeJSEnv(),
     scalaJSUseMainModuleInitializer := true
   )
 

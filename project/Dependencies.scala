@@ -8,8 +8,8 @@ object Dependencies {
     val declineVersion = "2.2.0"
 
     val catsCore = Def.setting("org.typelevel" %%% "cats-core" % "2.7.0")
-    val catsEffect = Def.setting("org.typelevel" %% "cats-effect" % "3.3.12")
-    val catsParse = Def.setting("org.typelevel" %% "cats-parse" % "0.3.7")
+    val catsEffect = Def.setting("org.typelevel" %%% "cats-effect" % "3.3.12")
+    val catsParse = Def.setting("org.typelevel" %%% "cats-parse" % "0.3.7")
 
     val decline = Def.setting("com.monovore" %%% "decline" % declineVersion)
     val declineEffect = Def.setting("com.monovore" %%% "decline-effect" % declineVersion)
