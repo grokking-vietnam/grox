@@ -40,7 +40,8 @@ val commonSettings = Seq(
 val compiler = crossProject(JSPlatform, JVMPlatform)
   .settings(commonSettings)
   .jsSettings(
-    scalaJSUseMainModuleInitializer := true
+    scalaJSUseMainModuleInitializer := true,
+    scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule))
   )
 
 lazy val root = project
