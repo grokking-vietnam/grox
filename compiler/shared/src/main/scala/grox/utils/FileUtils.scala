@@ -16,10 +16,11 @@ trait FileReader[F[_]]:
 object FileReader:
 
   def instance[F[_]: MonadThrow]: FileReader[F] =
-    path =>
-      Try {
-        val bufferedSource = Source.fromFile(path.toString)
-        val content = bufferedSource.getLines.mkString
-        bufferedSource.close
-        content
-      }.toEither.leftMap(_ => grox.Error.FileNotFound(path.toString)).liftTo[F]
+    grox.Error.FileNotFound(path.toString).liftTo[F]
+    // path =>
+    //   Try {
+    //     val bufferedSource = Source.fromFile(path.toString)
+    //     val content = bufferedSource.getLines.mkString
+    //     bufferedSource.close
+    //     content
+    //   }.toEither.leftMap(_ => grox.Error.FileNotFound(path.toString)).liftTo[F]

@@ -5,6 +5,7 @@ import java.nio.file.Path
 import cats.implicits.*
 
 import com.monovore.decline.Opts
+import grox.Span
 
 object CLI:
 
@@ -15,7 +16,7 @@ object CLI:
   val parse: Opts[Command] =
     val scan =
       Opts.subcommand[Command]("scan", "Scan file to tokens")(
-        Opts.argument[Path]("path").map(Command.Scan(_))
+        Opts.argument[Span]("path").map(Command.Scan(_))
       )
 
     val parse: Opts[Command] =

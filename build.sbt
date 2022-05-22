@@ -22,15 +22,25 @@ val commonSettings = Seq(
   scalacOptions += "-source:future",
   scalacOptions += "-rewrite",
   scalacOptions += "-indent",
-  libraryDependencies ++= Dependencies.all,
+  libraryDependencies ++= Seq(
+    Dependencies.Cats.catsCore.value,
+    Dependencies.Cats.catsEffect.value,
+    Dependencies.Cats.catsParse.value,
+    Dependencies.Cats.decline.value,
+    Dependencies.Cats.declineEffect.value,
+  )
 )
 
-val compiler = project.settings(commonSettings)
+val compiler = crossProject(JSPlatform, JVMPlatform)
+  .settings(commonSettings)
+  .jsSettings(
+    scalaJSUseMainModuleInitializer := true
+  )
 
 lazy val root = project
   .in(file("."))
   .settings(publish := {}, publish / skip := true)
-  .aggregate(compiler)
+  .aggregate(compiler.js, compiler.jvm)
 
 lazy val docs = project // new documentation project
   .in(file("grox-docs")) // important: it must not be docs/

@@ -1,4 +1,5 @@
 import sbt._
+import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 
 object Dependencies {
 
@@ -6,14 +7,14 @@ object Dependencies {
 
     val declineVersion = "2.2.0"
 
-    val catsEffect = "org.typelevel" %% "cats-effect" % "3.3.12"
-    val catsMtl = "org.typelevel" %% "cats-mtl" % "1.2.1"
-    val catsParse = "org.typelevel" %% "cats-parse" % "0.3.7"
+    val catsCore = Def.setting("org.typelevel" %%% "cats-core" % "2.7.0")
+    val catsEffect = Def.setting("org.typelevel" %% "cats-effect" % "3.3.12")
+    val catsParse = Def.setting("org.typelevel" %% "cats-parse" % "0.3.7")
 
-    val decline = "com.monovore" %% "decline" % declineVersion
-    val declineEffect = "com.monovore" %% "decline-effect" % declineVersion
+    val decline = Def.setting("com.monovore" %%% "decline" % declineVersion)
+    val declineEffect = Def.setting("com.monovore" %%% "decline-effect" % declineVersion)
 
-    val all = Seq(catsEffect, catsMtl, catsParse, declineEffect)
+    val all = Seq(catsEffect, catsCore, catsParse, declineEffect)
   }
 
   object Tests {
@@ -25,6 +26,6 @@ object Dependencies {
     val all = Seq(munit, munitScalaCheck, munitCatsEffect, scalaCheck)
   }
 
-  val all = Cats.all ++ Tests.all
+  val all: Seq[Object] = Cats.all ++ Tests.all
 
 }
