@@ -7,8 +7,4 @@ trait FileReader[F[_]]:
   def read(path: String): F[String]
 
 object FileReader:
-  def instance[F[_]: MonadThrow]: FileReader[F] =
-    path =>
-      FileUtils.read(path).liftTo[F]
-
-
+  def instance[F[_]: MonadThrow]: FileReader[F] = path => FileUtils.read(path).liftTo[F]

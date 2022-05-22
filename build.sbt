@@ -28,14 +28,17 @@ val commonSettings = Seq(
     Dependencies.Cats.catsParse.value,
     Dependencies.Cats.decline.value,
     Dependencies.Cats.declineEffect.value,
-  )
+    Dependencies.Tests.munit.value,
+    Dependencies.Tests.munitCatsEffect.value,
+    Dependencies.Tests.munitScalaCheck.value,
+  ),
 )
 
 val compiler = crossProject(JSPlatform, JVMPlatform)
   .settings(commonSettings)
   .jsSettings(
-    jsEnv := new org.scalajs.jsenv.nodejs.NodeJSEnv(),
-    scalaJSUseMainModuleInitializer := true
+    jsEnv := new org.scalajs.jsenv.nodejs.NodeJSEnv,
+    scalaJSUseMainModuleInitializer := true,
   )
 
 lazy val root = project
