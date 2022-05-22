@@ -57,7 +57,8 @@ lazy val docs = project // new documentation project
   .enablePlugins(MdocPlugin, DocusaurusPlugin)
 
 // Commands
-addCommandAlias("build", "prepare; test")
+addCommandAlias("build", "prepare; test; buildJs")
+addCommandAlias("buildJs", ";compilerJS/fullLinkJS")
 addCommandAlias("testAll", "all test")
 addCommandAlias("prepare", "fix; fmt")
 addCommandAlias("fix", "all compile:scalafix test:scalafix")
