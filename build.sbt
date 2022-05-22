@@ -23,14 +23,14 @@ val commonSettings = Seq(
   scalacOptions += "-rewrite",
   scalacOptions += "-indent",
   libraryDependencies ++= Seq(
-    Dependencies.Cats.catsCore.value,
-    Dependencies.Cats.catsEffect.value,
-    Dependencies.Cats.catsParse.value,
-    Dependencies.Cats.decline.value,
-    Dependencies.Cats.declineEffect.value,
-    Dependencies.Tests.munit.value,
-    Dependencies.Tests.munitCatsEffect.value,
-    Dependencies.Tests.munitScalaCheck.value,
+    Dependencies.catsCore.value,
+    Dependencies.catsEffect.value,
+    Dependencies.catsParse.value,
+    Dependencies.decline.value,
+    Dependencies.declineEffect.value,
+    Dependencies.munit.value,
+    Dependencies.munitCatsEffect.value,
+    Dependencies.munitScalaCheck.value,
   ),
 )
 
