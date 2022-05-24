@@ -123,7 +123,7 @@ $ bloop test compilerJVM
 Test một file duy nhất:
 
 ```
-$ bloop test compilerJM -o grox.ScannerTest
+$ bloop test compilerJVM -o grox.ScannerTest
 ```
 
 ## Docusaurus
