@@ -4,6 +4,7 @@ import scala.util.control.NoStackTrace
 
 import cats.*
 import cats.implicits.*
+import scala.reflect.{ TypeTest, ClassTag }
 
 trait Parser[F[_]]:
   def parse[T](tokens: List[Token[T]]): F[Expr]
@@ -19,22 +20,22 @@ object Parser:
         tokens: List[Token[T]]
       ): F[Expr] = Parser.parse(tokens).map { case (exp, _) => exp }.liftTo[F]
 
+  // sealed trait Error[T <: Token[?]]
+  // object Error {
+  //   def apply[T <: Token[?]]: Error[T] = new Error[T] {
+  //     // pattern matching
+  //   }
+  // }
   enum Error[T](msg: String, tokens: List[Token[T]]) extends NoStackTrace:
     case ExpectExpression(tokens: List[Token[T]]) extends Error("Expect expression", tokens)
     case ExpectClosing(tokens: List[Token[T]]) extends Error("Expect ')' after expression", tokens)
     case ExpectSemicolon(tokens: List[Token[T]]) extends Error("Expect ';' after statement", tokens)
     case ExpectRightBrace(tokens: List[Token[T]]) extends Error("Expect '}' after statement", tokens)
     case ExpectVarIdentifier(tokens: List[Token[T]])
-      extends Error("Expect var identifier after 'var' declaration", tokens)
-    case ExpectVar(tokens: List[Token[T]]) extends Error("Expect 'var' declaration", tokens)
-    case ExpectEqual(tokens: List[Token[T]]) extends Error("Expect '=' token", tokens)
-    case ExpectRightParen(tokens: List[Token[T]]) extends Error("Expect ')' token", tokens)
-    case ExpectLeftParen(tokens: List[Token[T]]) extends Error("Expect '(' token", tokens)
-    override def toString: String = msg
+    extends Error("Expect var identifier after 'var' declaration", tokens)
 
   type ExprParser[A] = Either[Error[A], (Expr, List[Token[A]])]
   type StmtParser[A] = Either[Error[A], (Stmt, List[Token[A]])]
-
 
   type BinaryOp[A] = Token[A] => Option[(Expr, Expr) => Expr]
   type UnaryOp[A] = Token[A] => Option[Expr => Expr]
@@ -65,19 +66,19 @@ object Parser:
       case Some(Class(_)) => ???
       case Some(Fun(_))   => ???
       case Some(Var(_))   => varDeclaration(tokens)
-      case _                   => statement(tokens)
+      case _              => statement(tokens)
     }
 
   def varDeclaration[A](
     tokens: List[Token[A]]
-  ): StmtParser[A] = consume(Var(_), tokens).flatMap(varCnsm =>
+  ): StmtParser[A] = consume[Span, Var[Span]](tokens).flatMap(varCnsm =>
     varCnsm
       ._2
       .headOption
-      .collectFirst { case token: Identifier(_) =>
+      .collectFirst { case token: Identifier[Unit] =>
         for {
           initializer <-
-            consume(Equal(_), varCnsm._2.tail) match {
+            consume[Span, Equal[Span]](varCnsm._2.tail) match {
               case Left(_) => Right((None, varCnsm._2.tail))
               case Right(afterEqual) =>
                 expression(afterEqual._2).map { case (value, afterValue) =>
@@ -85,7 +86,7 @@ object Parser:
                 }
             }
           (maybeInitializer, afterInitializer) = initializer
-          semicolonCnsm <- consume(Semicolon(_), afterInitializer)
+          semicolonCnsm <- consume[Span, Semicolon[Span]](afterInitializer)
         } yield (Stmt.Var(token, maybeInitializer), semicolonCnsm._2)
       }
       .getOrElse(Left(Error.ExpectVarIdentifier(tokens)))
@@ -103,7 +104,7 @@ object Parser:
           case For(_)        => forStmt[A](tokens.tail)
           case Return(_)     => returnStmt[A](token, tokens.tail)
           case While(_)      => whileStmt[A](tokens.tail)
-          case _                  => expressionStmt[A](tokens)
+          case _             => expressionStmt[A](tokens)
         }
       case _ => expressionStmt(tokens)
     }
@@ -111,13 +112,13 @@ object Parser:
   def expressionStmt[A](tokens: List[Token[A]]): StmtParser[A] =
     for {
       pr <- expression(tokens)
-      cnsm <- consume(Semicolon(_), pr._2)
+      cnsm <- consume[Span, Semicolon[Span]](pr._2)
     } yield (Stmt.Expression(pr._1), cnsm._2)
 
   def printStmt[A](tokens: List[Token[A]]): StmtParser[A] =
     for {
       pr <- expression(tokens)
-      cnsm <- consume(Semicolon(_), pr._2)
+      cnsm <- consume[Span, Semicolon[Span]](pr._2)
     } yield (Stmt.Print(pr._1), cnsm._2)
 
   def blockStmt[A](tokens: List[Token[A]]): StmtParser[A] =
@@ -142,10 +143,10 @@ object Parser:
 
   def ifStmt[A](tokens: List[Token[A]]): StmtParser[A] =
     for {
-      leftParenCnsm <- consume(LeftParen(_), tokens)
+      leftParenCnsm <- consume[Span, LeftParen[Span]](tokens)
       afterLeftParen <- expression(leftParenCnsm._2)
       (condition, afterCond) = afterLeftParen
-      rightParenCnsm <- consume(RightParen(_), afterCond)
+      rightParenCnsm <- consume[Span, RightParen[Span]](afterCond)
       afterRightParen <- statement(rightParenCnsm._2)
       (thenBranch, afterThen) = afterRightParen
       maybeElseBranch <- afterThen
@@ -163,18 +164,26 @@ object Parser:
 
   def whileStmt[A](tokens: List[Token[A]]): StmtParser[A] = ???
 
-  def consume[A](expect: Token[A], tokens: List[Token[A]]): Either[Error[A], (Token[A], List[Token[A]])] =
+  type TokenType[T] = TypeTest[Token[?], T]
+
+  def consume[A, TokenType <: Token[A]](tokens: List[Token[A]]): Either[TokenType, (Token[A], List[Token[A]])] =
     tokens match {
-      case `expect` :: tail => Right(expect, tokens.tail)
-      case _ =>
-        expect match {
-          case Semicolon(_)  => Left(Error.ExpectSemicolon(tokens))
-          case Var(_)         => Left(Error.ExpectVar(tokens))
-          case Equal(_)      => Left(Error.ExpectEqual(tokens))
-          case LeftParen(_)  => Left(Error.ExpectLeftParen(tokens))
-          case RightParen(_) => Left(Error.ExpectRightParen(tokens))
-        }
+      case (head: TokenType) :: _ => Right(head, tokens.tail)
+      case _ => Left(Error[TokenType])
     }
+
+//   def consume[A](expect: Token[Unit], tokens: List[Token[A]]): Either[Error[A], (Token[A], List[Token[A]])] =
+//     tokens match {
+//       case `expect` :: _ => Right(expect, tokens.tail)
+//       case _ =>
+//         expect match {
+//           case Semicolon(_)  => Left(Error.ExpectSemicolon(tokens))
+//           case Var(_)        => Left(Error.ExpectVar(tokens))
+//           case Equal(_)      => Left(Error.ExpectEqual(tokens))
+//           case LeftParen(_)  => Left(Error.ExpectLeftParen(tokens))
+//           case RightParen(_) => Left(Error.ExpectRightParen(tokens))
+//         }
+//     }
 
   // Parse binary expressions that share this grammar
   // ```
