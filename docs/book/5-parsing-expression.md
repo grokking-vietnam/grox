@@ -1,8 +1,8 @@
-# Parsing Expression 
+# Parsing Expression
 
 ## Grammar rules
 
-Ở [phần trước](/docs/book/4.representing-code.md), chúng ta biết rằng expression trong Lox có thể được generate theo những quy tắc sau 
+Ở [phần trước](4-representing-code.md), chúng ta biết rằng expression trong Lox có thể được generate theo những quy tắc sau
 ```
 expression     → literal
                | unary
@@ -36,7 +36,7 @@ Như vậy quy tắc grammar trên có sự mơ hồ (ambiguity). Trong toán h�
     | +, -
     | *, /
     | not, - (negate)
-    v () 
+    v ()
     ```
 * **Associativity**: quy định toán tử được tính trước trong một biểu thức gồm nhiều toán tử giống nhau.
     * Phép cộng là left-associate. E.g: 1 + 2 + 3 có thể viết dưới dạng (1 + 2) + 3
@@ -67,11 +67,11 @@ primary        → NUMBER | STRING | "true" | "false" | "nil"
 
 Dưới đây, parser sẽ được cài đặt theo ngữ pháp này.
 
-## Expression parser 
+## Expression parser
 
 Trong phần này, ta sử dụng kĩ thuật parsing có tên Recursive Descent Parsing. Kĩ thuật này có cách tiếp cận **top-down**, tức là bắt đầu từ rule trên cùng (expression) và dần dần đi xuống từng tầng cho đến rule cuối cùng (primary).
 
-### Parse function 
+### Parse function
 ```scala
   // Parse a single expression and return remaining tokens
   def parse(ts: List[Token]): ParseResult = expression(ts)
@@ -92,7 +92,7 @@ Biểu thức trên được viết dưới dạng tokens như sau
 | a | * | b | + | c | - | d | ; |
 ```
 
-Rule được sử dụng để parse là 
+Rule được sử dụng để parse là
 ```
 term           → factor ( ( "-" | "+" ) factor )* ;
 ```
@@ -131,17 +131,17 @@ Trong Scala, thuật toán trên được cài đặt như sau:
 ```
 
 sau đó có thể sử dụng hàm này này cho các phép toán nhị phân
-```scala 
+```scala
   def equality = binary(equalityOp, comparison)
   def comparison = binary(comparisonOp, term)
   def term = binary(termOp, factor)
   def factor = binary(factorOp, unary)
 ```
 
-### Unary expression 
+### Unary expression
 
 Lưu ý, unary là right-associate operator, vì thế ta gọi đệ quy hàm `unary` ngay khi gặp dấu `!` hoặc `-`. Nếu không gặp một trong hai dấu trên, ta gọi xuống hàm `primary`.
-```scala 
+```scala
   def unary(tokens: List[Token]): ParseResult =
     tokens match
       case token :: rest =>
@@ -168,7 +168,7 @@ Cài đặt primary expression tương đối rõ ràng
 
 Khi gặp dấu mở ngoặc (left paren), ta tiếp tục chạy rule `expression` cho những tokens tiếp theo, sau đó kiểm tra token kế tiếp có phải dấu đóng ngoặc hay không.
 
-```scala 
+```scala
   def parenBody(
     tokens: List[Token]
   ): ParseResult = expression(tokens).flatMap((expr, rest) =>

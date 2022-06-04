@@ -56,17 +56,17 @@ class ScannerTest extends munit.FunSuite:
 
   test("single line comment") {
     val comment = "// this is a comment"
-    assertEquals(Scanner.singleLineComment.parseAll(comment), Right((SingleLine(comment, ()))))
+    assertEquals(Scanner.singleLineComment.parseAll(comment), Right(SingleLine(comment, ())))
   }
 
   test("empty block comment") {
     val comment = "/**/"
-    assertEquals(Scanner.blockComment.parseAll(comment), Right((Block(comment, ()))))
+    assertEquals(Scanner.blockComment.parseAll(comment), Right(Block(comment, ())))
   }
 
   test("block comment") {
     val comment = "/* this is a block comment */"
-    assertEquals(Scanner.blockComment.parseAll(comment), Right((Block(comment, ()))))
+    assertEquals(Scanner.blockComment.parseAll(comment), Right(Block(comment, ())))
   }
 
   test("nested block comment") {
@@ -76,18 +76,18 @@ class ScannerTest extends munit.FunSuite:
 
   test("single line comment empty") {
     val comment = "//"
-    assertEquals(Scanner.singleLineComment.parseAll(comment), Right((SingleLine(comment, ()))))
+    assertEquals(Scanner.singleLineComment.parseAll(comment), Right(SingleLine(comment, ())))
   }
 
   test("singleLineComment orElse Slash /") {
-    assertEquals(Scanner.commentOrSlash.parseAll("/"), Right((Slash(()))))
+    assertEquals(Scanner.commentOrSlash.parseAll("/"), Right(Slash(())))
   }
 
   test("singleLineComment orElse Slash //") {
     val comment = "// this is a comment"
     assertEquals(
       Scanner.commentOrSlash.parseAll(comment),
-      Right((SingleLine(comment, ()))),
+      Right(SingleLine(comment, ())),
     )
   }
 
