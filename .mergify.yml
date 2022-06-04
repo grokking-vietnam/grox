@@ -1,53 +1,53 @@
 pull_request_rules:
-  - name: automatic merge for scala-steward pull requests affecting build.sbt
+  - name: automatic merge for grokking-steward pull requests affecting build.sbt
     conditions:
-      - author=scala-steward
+      - author=grokking-steward
       - check-success~=Build and Test*
       - "#files=1"
       - files=build.sbt
     actions:
       merge:
         method: rebase
-  - name: automatic merge for scala-steward pull requests affecting project plugins.sbt
+  - name: automatic merge for grokking-steward pull requests affecting project plugins.sbt
     conditions:
-      - author=scala-steward
+      - author=grokking-steward
       - check-success~=Build and Test*
       - "#files=1"
       - files=project/plugins.sbt
     actions:
       merge:
         method: rebase
-  - name: automatic merge for scala-steward pull requests affecting .scalafmt.conf
+  - name: automatic merge for grokking-steward pull requests affecting .scalafmt.conf
     conditions:
-      - author=scala-steward
+      - author=grokking-steward
       - check-success~=Build and Test*
       - "#files=1"
       - files=.scalafmt.conf
     actions:
       merge:
         method: rebase
-  - name: automatic merge for scala-steward pull requests affecting project build.properties
+  - name: automatic merge for grokking-steward pull requests affecting project build.properties
     conditions:
-      - author=scala-steward
+      - author=grokking-steward
       - check-success~=Build and Test*
       - "#files=1"
       - files=project/build.properties
     actions:
       merge:
         method: rebase
-  - name: automatic merge for scala-steward pull requests affecting project Dependencies.scala
+  - name: automatic merge for grokking-steward pull requests affecting project Dependencies.scala
     conditions:
-      - author=scala-steward
+      - author=grokking-steward
       - check-success~=Build and Test*
       - "#files=1"
       - files=project/Dependencies.scala
       - approved-reviews-by>=0
     actions:
       merge:
-        method: rebase        
+        method: rebase
   - name: add label to scala steward PRs
     conditions:
-      - author=scala-steward
+      - author=grokking-steward
     actions:
       label:
         add:
