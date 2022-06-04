@@ -48,7 +48,7 @@ object Parser:
       case Nil => inspector
       case _ =>
         declaration(inspector.tokens) match
-          case Right((stmt, rest)) =>
+          case Right(stmt, rest) =>
             val updatedInspector = inspector.copy(tokens = rest, stmts = inspector.stmts :+ stmt)
             parseStmt(updatedInspector)
           case Left(err) =>
@@ -134,7 +134,7 @@ object Parser:
             case RightBrace(_) => Right(stmts, ts)
             case _ =>
               declaration(tokens) match
-                case Right((dclr, rest)) => block(rest, dclr :: stmts)
+                case Right(dclr, rest) => block(rest, dclr :: stmts)
                 case left @ Left(_) =>
                   left.asInstanceOf[Left[Error[A], (List[Stmt[A]], List[Token[A]])]]
         case _ => Left(Error.ExpectRightBrace(ts))
