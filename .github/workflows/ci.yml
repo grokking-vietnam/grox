@@ -22,7 +22,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.1.1]
+        scala: [3.1.2]
         java: [temurin@11]
     runs-on: ${{ matrix.os }}
     steps:
@@ -56,5 +56,11 @@ jobs:
       - name: Build project
         run: sbt ++${{ matrix.scala }} test
 
+      - name: Build
+        run: sbt ++${{ matrix.scala }} build
+
       - name: Check Formatting
         run: sbt ++${{ matrix.scala }} check
+
+      - name: Check docs formatting
+        run: sbt ++${{ matrix.scala }} docs/mdoc

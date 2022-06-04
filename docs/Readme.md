@@ -1,15 +1,16 @@
 # Mục lục
 
 ## Miscellaneous
-  * [Introduction](/docs/introduction.md)
-  * [Setup](/docs/setup.md)
-  * [Resources](/docs/resources.md)
+  * [Introduction](introduction.md)
+  * [Setup](setup.md)
+  * [Resources](resources.md)
 
 ## Book
-  * [Lox Language](/docs/book/lox-language.md)
-  * [Map of the territory](/docs/book/map-of-the-territory.md)
-  * [Scanning](/docs/book/scanning.md)
-  * [Representing Code](/docs/book/representing-code.md)
+  * [Lox Language](book/1-lox-language.md)
+  * [Map of the territory](book/2-map-of-the-territory.md)
+  * [Scanning](book/3-scanning.md)
+  * [Representing Code](book/4-representing-code.md)
+  * [Parsing Expression](book/5-parsing-expression.md)
 
 ## Functional Programming
-  * [Parser Combinators](/docs/fp/parser-combinators.md)
+  * [Parser Combinators](fp/parser-combinators.md)

@@ -4,7 +4,7 @@
 
 Trong bài này, mình sẽ trình bày về parser combinators một kỹ thuật thường được sử dụng trong Functional Programming khi giải quyết các bài toán parsing. Nếu chúng ta coi Parser là một function có input là String và output là một structured data; thì parser combinator là một higher-order function nhận một hoặc nhiều parser và kết hợp chúng lại thành một parser mới. Ý tưởng ở đây là chúng ta có thể dùng các parser đơn giản và gộp chúng lại bằng các parser combinator để giải quyết các bài toán phức tạp hơn.
 
-Một số ví dụ bài toán về parsing như: compiler cần parse source code thành [Abstract Syntax Tree/AST](https://en.wikipedia.org/wiki/Abstract_syntax_tree) hoặc một chuỗi các token (nếu compiler tách riêng [scanning](/docs/scanning.md)); json parser sẽ parser json string thành các data class.
+Một số ví dụ bài toán về parsing như: compiler cần parse source code thành [Abstract Syntax Tree/AST](https://en.wikipedia.org/wiki/Abstract_syntax_tree) hoặc một chuỗi các token (nếu compiler tách riêng [scanning](../book/3-scanning.md)); json parser sẽ parser json string thành các data class.
 
 Sau đây mình sẽ sử dụng ngôn ngữ [Scala 3](https://docs.scala-lang.org/scala3/getting-started.html) và thư viện [cats-parse](https://github.com/typelevel/cats-parse) để giải thích về parser combinator nhưng trước hết hãy bắt đầu bằng việc khám phá type của parser[^1].
 

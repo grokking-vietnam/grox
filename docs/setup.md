@@ -1,6 +1,6 @@
 # Prerequisites
 * **Java 17 SDK**
-* **sbt v1.6.1**
+* **sbt version >= 1.6.2**
 
 
 Dưới đây là hướng dẫn cài đặt các công cụ trên bằng [sdkman](https://sdkman.io), ngoài ra bạn cũng có thể tự tải xuồng dùng homebrew trên Mac hoặc apt trên Linux.
@@ -21,6 +21,7 @@ $ sdk install sbt 1.6.1
 # Development
 
 ## IDE
+
 Sử dụng `Intelij + Scala plugin` hoặc `VSCode/Vim + Metals`.
 
 ## Linting
@@ -35,15 +36,15 @@ $ sbt prepare
 $ sbt test
 ```
 
-Test 
+Build
 
 ```
-$ sbt test
+$ sbt build
 ```
 
-Test một file duy nhất:
+Test một file duy nhất (ví dụ: ScannerTest.scala):
 ```
-$ sbt testOnly grox.ScannerTest
+$ sbt "testOnly *ScannerTest"
 ```
 
 ## Compile
@@ -54,9 +55,20 @@ $ sbt compile
 
 ## Run
 
+### Jvm
+
 ```
-$ sbt compiler/run  # lưu ý cần chọn project cụ thể để run
+$ sbt compilerJM/run
 ```
+
+### Javascript
+
+```
+$ sbt compilerJS/fastLinkJS
+# Scala version 3.1.2. Có thể phải update Scala version nếu cần.
+$ node ./compiler/js/target/scala-3.1.2/compiler-fastopt/main.js
+```
+
 
 
 ## (Optional) Build faster with `bloop`
@@ -98,17 +110,35 @@ root-test
 Compile:
 
 ```
-$ bloop compile compiler
+$ bloop compile compilerJS
+$ bloop compile compilerJVM
 ```
 
 Test:
 
 ```
-$ bloop test compiler
+$ bloop test compilerJVM
 ```
 
 Test một file duy nhất:
 
 ```
-$ bloop test compiler -o grox.ScannerTest
+$ bloop test compilerJVM -o grox.ScannerTest
+```
+
+## Docusaurus
+
+Trang [Grox](https://grokking-vietnam.github.io/grox/) được build bằng [Docusaurus V2](https://docusaurus.io/)
+
+Để thêm 1 nội dung mới trên trang Grox, bạn sẽ phải tạo 1 nội dung markdown trong thư mục `docs`.
+
+Nếu nội dung mới cần hiển thị ở Sidebar, bạn cần chỉnh sửa file `website/sidebars.js`
+
+Test locally:
+
+```bash
+sbt --client docs/mdoc
+cd website
+yarn install
+yarn start
 ```
