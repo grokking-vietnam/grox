@@ -1,9 +1,9 @@
 package grox
 
+import munit.Clue.generate
+
 import Parser.*
 import Token.*
-
-import munit.Clue.generate
 
 class StmtParserTest extends munit.FunSuite:
 

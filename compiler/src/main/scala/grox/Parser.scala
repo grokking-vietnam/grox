@@ -1,12 +1,11 @@
 package grox
 
-import scala.util.control.NoStackTrace
-import cats.*
-import cats.implicits.*
-
 import scala.annotation.tailrec
 import scala.reflect.{ClassTag, TypeTest}
+import scala.util.control.NoStackTrace
 
+import cats.*
+import cats.implicits.*
 
 trait Parser[F[_]]:
   def parse[T](tokens: List[Token[T]]): F[Expr]
@@ -26,11 +25,11 @@ object Parser:
     case ExpectExpression(tokens: List[Token[T]]) extends Error("Expect expression", tokens)
     case ExpectClosing(tokens: List[Token[T]]) extends Error("Expect ')' after expression", tokens)
     case ExpectSemicolon(tokens: List[Token[T]]) extends Error("Expect ';' after statement", tokens)
-    case ExpectRightBrace(tokens: List[Token[T]]) extends Error("Expect '}' after statement", tokens)
+    case ExpectRightBrace(tokens: List[Token[T]])
+      extends Error("Expect '}' after statement", tokens)
     case ExpectVarIdentifier(tokens: List[Token[T]])
-    extends Error("Expect var identifier after 'var' declaration", tokens)
-    case UnexpectedToken(tokens: List[Token[T]])
-      extends Error("Unexpected token error", tokens)
+      extends Error("Expect var identifier after 'var' declaration", tokens)
+    case UnexpectedToken(tokens: List[Token[T]]) extends Error("Unexpected token error", tokens)
 
   type ExprParser[A] = Either[Error[A], (Expr, List[Token[A]])]
   type StmtParser[A] = Either[Error[A], (Stmt[A], List[Token[A]])]
@@ -52,7 +51,8 @@ object Parser:
           case Right((stmt, rest)) =>
             val updatedInspector = inspector.copy(tokens = rest, stmts = inspector.stmts :+ stmt)
             parseStmt(updatedInspector)
-          case Left(err) => parseStmt(
+          case Left(err) =>
+            parseStmt(
               inspector.copy(
                 tokens = synchronize(inspector.tokens.tail),
                 errors = inspector.errors :+ err,
@@ -95,16 +95,17 @@ object Parser:
     tokens.headOption match
       case Some(token) =>
         token match
-          case Print(_)      => printStmt[A](tokens.tail)
-          case LeftParen(_)  => blockStmt[A](tokens.tail)
-          case If(_)         => ifStmt[A](tokens.tail)
-          case For(_)        => forStmt[A](tokens.tail)
-          case Return(_)     => returnStmt[A](token, tokens.tail)
-          case While(_)      => whileStmt[A](tokens.tail)
-          case _             => expressionStmt[A](tokens)
+          case Print(_)     => printStmt[A](tokens.tail)
+          case LeftParen(_) => blockStmt[A](tokens.tail)
+          case If(_)        => ifStmt[A](tokens.tail)
+          case For(_)       => forStmt[A](tokens.tail)
+          case Return(_)    => returnStmt[A](token, tokens.tail)
+          case While(_)     => whileStmt[A](tokens.tail)
+          case _            => expressionStmt[A](tokens)
       case _ => expressionStmt(tokens)
 
-  def expressionStmt[A](tokens: List[Token[A]]): StmtParser[A] = for {
+  def expressionStmt[A](tokens: List[Token[A]]): StmtParser[A] =
+    for {
       pr <- expression(tokens)
       cnsm <- consume[A, Semicolon[A]](pr._2)
     } yield (Stmt.Expression(pr._1), cnsm._2)
@@ -115,11 +116,12 @@ object Parser:
       cnsm <- consume[A, Semicolon[A]](pr._2)
     } yield (Stmt.Print(pr._1), cnsm._2)
 
-  def consume[A, TokenType <: Token[A] : ClassTag](tokens: List[Token[A]]): Either[Error[A], (Token[A], List[Token[A]])] =
+  def consume[A, TokenType <: Token[A]: ClassTag](
+    tokens: List[Token[A]]
+  ): Either[Error[A], (Token[A], List[Token[A]])] =
     tokens match
       case (head: TokenType) :: _ => Right(head, tokens.tail)
-      case _ => Left(Error.UnexpectedToken(tokens))
-
+      case _                      => Left(Error.UnexpectedToken(tokens))
 
   def blockStmt[A](tokens: List[Token[A]]): StmtParser[A] =
     def block(
@@ -133,12 +135,14 @@ object Parser:
             case _ =>
               declaration(tokens) match
                 case Right((dclr, rest)) => block(rest, dclr :: stmts)
-                case left @ Left(_) => left.asInstanceOf[Left[Error[A], (List[Stmt[A]], List[Token[A]])]]
+                case left @ Left(_) =>
+                  left.asInstanceOf[Left[Error[A], (List[Stmt[A]], List[Token[A]])]]
         case _ => Left(Error.ExpectRightBrace(ts))
 
     block(tokens).map((stmts, rest) => (Stmt.Block(stmts), rest))
 
-  def ifStmt[A](tokens: List[Token[A]]): StmtParser[A] = for {
+  def ifStmt[A](tokens: List[Token[A]]): StmtParser[A] =
+    for {
       leftParenCnsm <- consume[A, LeftParen[A]](tokens)
       afterLeftParen <- expression(leftParenCnsm._2)
       (condition, afterCond) = afterLeftParen
@@ -159,7 +163,6 @@ object Parser:
   def forStmt[A](tokens: List[Token[A]]): StmtParser[A] = ???
 
   def whileStmt[A](tokens: List[Token[A]]): StmtParser[A] = ???
-
 
   // Parse binary expressions that share this grammar
   // ```

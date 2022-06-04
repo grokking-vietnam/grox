@@ -36,4 +36,3 @@ class Environment(
         )
         .getOrElse(Left(EnvironmentError.UndefinedVariableError(name)))
     }
-
