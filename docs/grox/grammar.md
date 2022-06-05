@@ -25,7 +25,31 @@ factor        -> term (("+" | "-") term)*
 term          -> unary (("*" | "/") unary)*
 unary         -> ("-" | "!") unary 
               | primary
-primary       -> NUMBER | STRING | "true" | "false" | "nil" 
-              | grouping
+primary       -> "true" | "false" | "nil"
+              | NUMBER | STRING
+              | "(" expression ")"
+              | IDENTIFIER ;
 grouping     -> "(" expression ")"
+```
+
+## Statements
+```
+statement      → exprStmt
+               | forStmt
+               | ifStmt
+               | printStmt
+               | returnStmt
+               | whileStmt
+               | block ;
+
+exprStmt       → expression ";" ;
+forStmt        → "for" "(" ( varDecl | exprStmt | ";" )
+                           expression? ";"
+                           expression? ")" statement ;
+ifStmt         → "if" "(" expression ")" statement
+                 ( "else" statement )? ;
+printStmt      → "print" expression ";" ;
+returnStmt     → "return" expression? ";" ;
+whileStmt      → "while" "(" expression ")" statement ;
+block          → "{" declaration* "}" ;
 ```
