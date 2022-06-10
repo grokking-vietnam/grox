@@ -1,4 +1,4 @@
-package grox
+package grox.cli
 
 import cats.effect.*
 import cats.implicits.*
@@ -6,8 +6,7 @@ import cats.{Functor, Show}
 
 import com.monovore.decline.*
 import com.monovore.decline.effect.*
-import grox.cli.CLI
-import grox.utils.FileReader
+import grox.Executor
 
 object Main
   extends CommandIOApp(

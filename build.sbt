@@ -6,7 +6,7 @@ inThisBuild(
     // Github Workflow
     githubWorkflowPublishTargetBranches := Seq(), // Don't publish anywhere
     githubWorkflowBuild ++= Seq(
-      WorkflowStep.Sbt(List("build"), name = Some("Build")),
+      WorkflowStep.Sbt(List("build"), name = Some("Build projects")),
       WorkflowStep.Sbt(List("check"), name = Some("Check Formatting")),
       WorkflowStep.Sbt(List("docs/mdoc"), name = Some("Check docs formatting")),
     ),
@@ -25,29 +25,38 @@ val commonSettings = Seq(
   scalacOptions += "-indent",
   libraryDependencies ++= Seq(
     Dependencies.catsCore.value,
-    Dependencies.catsEffect.value,
-    Dependencies.catsParse.value,
-    Dependencies.fs2.value,
-    Dependencies.fs2IO.value,
-    Dependencies.decline.value,
-    Dependencies.declineEffect.value,
     Dependencies.munit.value,
     Dependencies.munitCatsEffect.value,
     Dependencies.munitScalaCheck.value,
   ),
 )
 
-val compiler = crossProject(JSPlatform, JVMPlatform)
-  .settings(commonSettings)
-  .jsSettings(
-    scalaJSUseMainModuleInitializer := true,
-    scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule)),
-  )
+val commonJsSettings = Seq(
+  scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule))
+)
 
-lazy val root = project
-  .in(file("."))
-  .settings(publish := {}, publish / skip := true)
-  .aggregate(compiler.js, compiler.jvm)
+val compiler = crossProject(JSPlatform, JVMPlatform)
+  .settings(
+    commonSettings,
+    libraryDependencies ++= Seq(
+      Dependencies.catsParse.value
+    ),
+  )
+  .jsSettings(commonJsSettings)
+
+val cli = crossProject(JSPlatform, JVMPlatform)
+  .settings(
+    commonSettings,
+    libraryDependencies ++= Seq(
+      Dependencies.catsEffect.value,
+      Dependencies.fs2.value,
+      Dependencies.fs2IO.value,
+      Dependencies.decline.value,
+      Dependencies.declineEffect.value,
+    ),
+  )
+  .dependsOn(compiler)
+  .jsSettings(commonJsSettings, scalaJSUseMainModuleInitializer := true)
 
 lazy val docs = project // new documentation project
   .in(file("grox-docs")) // important: it must not be docs/
@@ -58,9 +67,14 @@ lazy val docs = project // new documentation project
   )
   .enablePlugins(MdocPlugin, DocusaurusPlugin)
 
+lazy val root = project
+  .in(file("."))
+  .settings(publish := {}, publish / skip := true)
+  .aggregate(compiler.js, compiler.jvm, cli.js, cli.jvm)
+
 // Commands
 addCommandAlias("build", "buildJs")
-addCommandAlias("buildJs", ";compilerJS/fullLinkJS")
+addCommandAlias("buildJs", ";root/fullLinkJS")
 addCommandAlias("testAll", "all test")
 addCommandAlias("prepare", "fix; fmt")
 addCommandAlias("fix", "all compile:scalafix test:scalafix")
