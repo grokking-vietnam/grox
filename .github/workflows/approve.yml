@@ -7,7 +7,7 @@ permissions:
 jobs:
   approve:
     if: >-
-      github.event.pull_request.user.login == 'scala-steward'
+      github.event.pull_request.user.login == 'grokking-steward'
 
     runs-on: ubuntu-latest
 
