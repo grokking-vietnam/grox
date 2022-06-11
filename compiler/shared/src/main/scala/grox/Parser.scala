@@ -1,5 +1,7 @@
 package grox
 
+import scala.annotation.tailrec
+import scala.reflect.{ClassTag, TypeTest}
 import scala.util.control.NoStackTrace
 
 import cats.*
@@ -22,18 +24,145 @@ object Parser:
   enum Error[T](msg: String, tokens: List[Token[T]]) extends NoStackTrace:
     case ExpectExpression(tokens: List[Token[T]]) extends Error("Expect expression", tokens)
     case ExpectClosing(tokens: List[Token[T]]) extends Error("Expect ')' after expression", tokens)
+    case ExpectSemicolon(tokens: List[Token[T]]) extends Error("Expect ';' after statement", tokens)
+    case ExpectRightBrace(tokens: List[Token[T]])
+      extends Error("Expect '}' after statement", tokens)
+    case ExpectVarIdentifier(tokens: List[Token[T]])
+      extends Error("Expect var identifier after 'var' declaration", tokens)
+    case UnexpectedToken(tokens: List[Token[T]]) extends Error("Unexpected token error", tokens)
 
-    override def toString: String = msg
-
-  type ParseResult[A] = Either[Error[A], (Expr, List[Token[A]])]
+  type ExprParser[A] = Either[Error[A], (Expr, List[Token[A]])]
+  type StmtParser[A] = Either[Error[A], (Stmt[A], List[Token[A]])]
 
   type BinaryOp[A] = Token[A] => Option[(Expr, Expr) => Expr]
   type UnaryOp[A] = Token[A] => Option[Expr => Expr]
 
-  // Parse a single expression and return remaining tokens
-  def parse[A](ts: List[Token[A]]): ParseResult[A] = expression[A](ts)
+  case class Inspector[A](errors: List[Error[A]], stmts: List[Stmt[A]], tokens: List[Token[A]])
 
-  def expression[A](tokens: List[Token[A]]): ParseResult[A] = equality(tokens)
+  // Parse a single expression and return remaining tokens
+  def parse[A](ts: List[Token[A]]): ExprParser[A] = expression[A](ts)
+
+  @tailrec
+  def parseStmt[A](inspector: Inspector[A]): Inspector[A] =
+    inspector.tokens match
+      case Nil => inspector
+      case _ =>
+        declaration(inspector.tokens) match
+          case Right(stmt, rest) =>
+            val updatedInspector = inspector.copy(tokens = rest, stmts = inspector.stmts :+ stmt)
+            parseStmt(updatedInspector)
+          case Left(err) =>
+            parseStmt(
+              inspector.copy(
+                tokens = synchronize(inspector.tokens.tail),
+                errors = inspector.errors :+ err,
+              )
+            )
+
+  def declaration[A](tokens: List[Token[A]]): StmtParser[A] =
+    tokens.headOption match
+      case Some(Class(_)) => ???
+      case Some(Fun(_))   => ???
+      case Some(Var(_))   => varDeclaration(tokens)
+      case _              => statement(tokens)
+
+  def varDeclaration[A](
+    tokens: List[Token[A]]
+  ): StmtParser[A] = consume[A, Var[A]](tokens).flatMap(varCnsm =>
+    varCnsm
+      ._2
+      .headOption
+      .collectFirst { case token: Identifier[A] =>
+        for {
+          initializer <-
+            consume[A, Equal[A]](varCnsm._2.tail) match {
+              case Left(_) => Right((None, varCnsm._2.tail))
+              case Right(afterEqual) =>
+                expression(afterEqual._2).map { case (value, afterValue) =>
+                  (Option(value), afterValue)
+                }
+            }
+          (maybeInitializer, afterInitializer) = initializer
+          semicolonCnsm <- consume[A, Semicolon[A]](afterInitializer)
+        } yield (Stmt.Var(token, maybeInitializer), semicolonCnsm._2)
+      }
+      .getOrElse(Left(Error.ExpectVarIdentifier(tokens)))
+  )
+
+  def expression[A](tokens: List[Token[A]]): ExprParser[A] = equality(tokens)
+
+  def statement[A](tokens: List[Token[A]]): StmtParser[A] =
+    tokens.headOption match
+      case Some(token) =>
+        token match
+          case Print(_)     => printStmt[A](tokens.tail)
+          case LeftParen(_) => blockStmt[A](tokens.tail)
+          case If(_)        => ifStmt[A](tokens.tail)
+          case For(_)       => forStmt[A](tokens.tail)
+          case Return(_)    => returnStmt[A](token, tokens.tail)
+          case While(_)     => whileStmt[A](tokens.tail)
+          case _            => expressionStmt[A](tokens)
+      case _ => expressionStmt(tokens)
+
+  def expressionStmt[A](tokens: List[Token[A]]): StmtParser[A] =
+    for {
+      pr <- expression(tokens)
+      cnsm <- consume[A, Semicolon[A]](pr._2)
+    } yield (Stmt.Expression(pr._1), cnsm._2)
+
+  def printStmt[A](tokens: List[Token[A]]): StmtParser[A] =
+    for {
+      pr <- expression(tokens)
+      cnsm <- consume[A, Semicolon[A]](pr._2)
+    } yield (Stmt.Print(pr._1), cnsm._2)
+
+  def consume[A, TokenType <: Token[A]: ClassTag](
+    tokens: List[Token[A]]
+  ): Either[Error[A], (Token[A], List[Token[A]])] =
+    tokens match
+      case (head: TokenType) :: _ => Right(head, tokens.tail)
+      case _                      => Left(Error.UnexpectedToken(tokens))
+
+  def blockStmt[A](tokens: List[Token[A]]): StmtParser[A] =
+    def block(
+      ts: List[Token[A]],
+      stmts: List[Stmt[A]] = List.empty[Stmt[A]],
+    ): Either[Error[A], (List[Stmt[A]], List[Token[A]])] =
+      ts.headOption match
+        case Some(token) =>
+          token match
+            case RightBrace(_) => Right(stmts, ts)
+            case _ =>
+              declaration(tokens) match
+                case Right(dclr, rest) => block(rest, dclr :: stmts)
+                case left @ Left(_) =>
+                  left.asInstanceOf[Left[Error[A], (List[Stmt[A]], List[Token[A]])]]
+        case _ => Left(Error.ExpectRightBrace(ts))
+
+    block(tokens).map((stmts, rest) => (Stmt.Block(stmts), rest))
+
+  def ifStmt[A](tokens: List[Token[A]]): StmtParser[A] =
+    for {
+      leftParenCnsm <- consume[A, LeftParen[A]](tokens)
+      afterLeftParen <- expression(leftParenCnsm._2)
+      (condition, afterCond) = afterLeftParen
+      rightParenCnsm <- consume[A, RightParen[A]](afterCond)
+      afterRightParen <- statement(rightParenCnsm._2)
+      (thenBranch, afterThen) = afterRightParen
+      maybeElseBranch <- afterThen
+        .headOption
+        .collectFirst { case Else(_) =>
+          statement(afterThen.tail).map { case (stmt, rest) => (Option(stmt), rest) }
+        }
+        .getOrElse(Right(None, afterThen))
+      (elseBranch, afterElse) = maybeElseBranch
+    } yield (Stmt.If(condition, thenBranch, elseBranch), afterElse)
+
+  def returnStmt[A](keyword: Token[A], tokens: List[Token[A]]): StmtParser[A] = ???
+
+  def forStmt[A](tokens: List[Token[A]]): StmtParser[A] = ???
+
+  def whileStmt[A](tokens: List[Token[A]]): StmtParser[A] = ???
 
   // Parse binary expressions that share this grammar
   // ```
@@ -43,11 +172,11 @@ object Parser:
   // and its OPERATOR is ("==" | "!=").
   def binary[A](
     op: BinaryOp[A],
-    descendant: List[Token[A]] => ParseResult[A],
+    descendant: List[Token[A]] => ExprParser[A],
   )(
     tokens: List[Token[A]]
-  ): ParseResult[A] =
-    def matchOp(ts: List[Token[A]], l: Expr): ParseResult[A] =
+  ): ExprParser[A] =
+    def matchOp(ts: List[Token[A]], l: Expr): ExprParser[A] =
       ts match
         case token :: rest =>
           op(token) match
@@ -89,7 +218,7 @@ object Parser:
   def term[A] = binary[A](termOp, factor)
   def factor[A] = binary[A](factorOp, unary)
 
-  def unary[A](tokens: List[Token[A]]): ParseResult[A] =
+  def unary[A](tokens: List[Token[A]]): ExprParser[A] =
     tokens match
       case token :: rest =>
         unaryOp(token) match
@@ -97,7 +226,7 @@ object Parser:
           case None     => primary(tokens)
       case _ => primary(tokens)
 
-  def primary[A](tokens: List[Token[A]]): ParseResult[A] =
+  def primary[A](tokens: List[Token[A]]): ExprParser[A] =
     tokens match
       case Number(l, s) :: rest => Right(Expr.Literal(l.toDouble), rest)
       case Str(l, s) :: rest    => Right(Expr.Literal(l), rest)
@@ -110,7 +239,7 @@ object Parser:
   // Parse the body within a pair of parentheses (the part after "(")
   def parenBody[A](
     tokens: List[Token[A]]
-  ): ParseResult[A] = expression(tokens).flatMap((expr, rest) =>
+  ): ExprParser[A] = expression(tokens).flatMap((expr, rest) =>
     rest match
       case RightParen(_) :: rmn => Right(Expr.Grouping(expr), rmn)
       case _                    => Left(Error.ExpectClosing(rest))

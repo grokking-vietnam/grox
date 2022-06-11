@@ -4,4 +4,4 @@ Implementation cho ngôn ngữ Lox từ quyển sách [Crafting Interpreters](ht
 
 Đây cũng là một trong các hoạt động của team [fundamental](https://www.grokking.org/labs/fundamental).
 
-Vui lòng vào [docs](/docs/) để tìm hiểu thêm.
+Vui lòng vào [website](https://grokking-vietnam.github.io/grox/) để tìm hiểu thêm.

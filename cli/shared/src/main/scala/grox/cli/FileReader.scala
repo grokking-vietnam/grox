@@ -1,4 +1,4 @@
-package grox.utils
+package grox.cli
 
 import cats.effect.Concurrent
 import cats.syntax.all.*

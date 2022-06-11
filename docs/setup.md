@@ -58,15 +58,15 @@ $ sbt compile
 ### Jvm
 
 ```
-$ sbt compilerJM/run
+$ sbt cliJVM/run
 ```
 
 ### Javascript
 
 ```
-$ sbt compilerJS/fastLinkJS
+$ sbt cliJS/fastLinkJS
 # Scala version 3.1.2. Có thể phải update Scala version nếu cần.
-$ node ./compiler/js/target/scala-3.1.2/compiler-fastopt/main.js
+$ node ./cli/js/target/scala-3.1.2/cli-fastopt/main.js
 ```
 
 
@@ -110,14 +110,13 @@ root-test
 Compile:
 
 ```
-$ bloop compile compilerJS
-$ bloop compile compilerJVM
+$ bloop compile root
 ```
 
 Test:
 
 ```
-$ bloop test compilerJVM
+$ bloop test root
 ```
 
 Test một file duy nhất:
