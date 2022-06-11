@@ -310,5 +310,21 @@ class ParserCheck extends ScalaCheckSuite:
     }
   }
 
-  // TODO: property: value of original expression and that of parsed expression are equal.
+  property("produce equally-evaluated expression") {
+    Prop.forAll(numericGen) { expr =>
+      parse(expr.flatten) match
+        case Left(_) => false
+        case Right(parsedExpr, _) =>
+          (Interpreter.evaluate(expr), Interpreter.evaluate(parsedExpr)) match
+            case (Left(e1), Left(e2))                   => e1 == e2
+            case (Right(v1: Double), Right(v2: Double)) => math.abs(v1 - v2) < 0.01
+            case _                                      => false
+    }
+
+    Prop.forAll(logicalGen) { expr =>
+      parse(expr.flatten) match
+        case Left(_)              => false
+        case Right(parsedExpr, _) => Interpreter.evaluate(expr) == Interpreter.evaluate(parsedExpr)
+    }
+  }
 end ParserCheck
