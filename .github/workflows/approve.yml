@@ -7,7 +7,7 @@ permissions:
 jobs:
   approve:
     if: >-
-      github.event.pull_request.user.login == 'grokking-steward'
+      github.event.pull_request.user.login == 'grokking-steward[bot]'
 
     runs-on: ubuntu-latest
 
