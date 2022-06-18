@@ -45,7 +45,6 @@ object Parser:
   // Parse a single expression and return remaining tokens
   def parse[A](ts: List[Token[A]]): ExprParser[A] = expression[A](ts)
 
-
   @tailrec
   def parseStmt[A](inspector: Inspector[A]): Inspector[A] =
     inspector.tokens match
@@ -95,21 +94,22 @@ object Parser:
 
   def expression[A](tokens: List[Token[A]]): ExprParser[A] = assignment(tokens)
 
-  def assignment[A](tokens: List[Token[A]]): ExprParser[A] =
-    equality(tokens) >>= ((expr: Expr, restTokens: List[Token[A]]) =>
-      restTokens.headOption match {
-        case Some(equalToken @ Equal(_)) =>
-          expr match {
-            case Expr.Variable(name) =>
-              assignment(restTokens.tail) >>= ((value, tokens) =>
-                Right((Expr.Assign(name, value), tokens)),
-                )
-            case _ => Left(Error.InvalidAssignmentTarget(equalToken))
-          }
+  def assignment[A](
+    tokens: List[Token[A]]
+  ): ExprParser[A] = equality(tokens).flatMap((expr: Expr, restTokens: List[Token[A]]) =>
+    restTokens.headOption match {
+      case Some(equalToken @ Equal(_)) =>
+        expr match {
+          case Expr.Variable(name) =>
+            assignment(restTokens.tail).flatMap((value, tokens) =>
+              Right((Expr.Assign(name, value), tokens)),
+            )
+          case _ => Left(Error.InvalidAssignmentTarget(equalToken))
+        }
 
-        case _ => Right((expr, restTokens))
-      },
-      )
+      case _ => Right((expr, restTokens))
+    },
+  )
 
   def statement[A](tokens: List[Token[A]]): StmtParser[A] =
     tokens.headOption match
@@ -246,16 +246,16 @@ object Parser:
           case None     => primary(tokens)
       case _ => primary(tokens)
 
-    def primary[A](tokens: List[Token[A]]): ExprParser[A] =
-      tokens match
-        case Number(l, _) :: rest        => Right(Expr.Literal(l.toDouble), rest)
-        case Str(l, _) :: rest           => Right(Expr.Literal(l), rest)
-        case True(_) :: rest             => Right(Expr.Literal(true), rest)
-        case False(_) :: rest            => Right(Expr.Literal(false), rest)
-        case Null(_) :: rest              => Right(Expr.Literal(null), rest)
-        case Identifier(name, tag:A) :: rest => Right(Expr.Variable[A](Identifier(name, tag)), rest)
-        case LeftParen(_) :: rest       => parenBody(rest)
-        case _                          => Left(Error.ExpectExpression(tokens))
+  def primary[A](tokens: List[Token[A]]): ExprParser[A] =
+    tokens match
+      case Number(l, _) :: rest => Right(Expr.Literal(l.toDouble), rest)
+      case Str(l, _) :: rest    => Right(Expr.Literal(l), rest)
+      case True(_) :: rest      => Right(Expr.Literal(true), rest)
+      case False(_) :: rest     => Right(Expr.Literal(false), rest)
+      case Null(_) :: rest      => Right(Expr.Literal(null), rest)
+      case Identifier(name, tag:A) :: rest => Right(Expr.Variable[A](Identifier(name, tag)), rest)
+      case LeftParen(_) :: rest => parenBody(rest)
+      case _                          => Left(Error.ExpectExpression(tokens))
 
   // Parse the body within a pair of parentheses (the part after "(")
   def parenBody[A](
