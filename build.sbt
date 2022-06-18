@@ -58,6 +58,20 @@ val cli = crossProject(JSPlatform, JVMPlatform)
   .dependsOn(compiler)
   .jsSettings(commonJsSettings, scalaJSUseMainModuleInitializer := true)
 
+val web = project
+  .enablePlugins(ScalaJSPlugin)
+  .settings(
+    commonSettings,
+    commonJsSettings,
+    libraryDependencies ++= Seq(
+      Dependencies.catsEffect.value,
+      Dependencies.fs2.value,
+      Dependencies.fs2IO.value,
+      Dependencies.tyrian.value,
+    ),
+  )
+  .dependsOn(compiler.js)
+
 lazy val docs = project // new documentation project
   .in(file("grox-docs")) // important: it must not be docs/
   .dependsOn(root)
@@ -70,7 +84,7 @@ lazy val docs = project // new documentation project
 lazy val root = project
   .in(file("."))
   .settings(publish := {}, publish / skip := true)
-  .aggregate(compiler.js, compiler.jvm, cli.js, cli.jvm)
+  .aggregate(compiler.js, compiler.jvm, cli.js, cli.jvm, web)
 
 // Commands
 addCommandAlias("build", "buildJs")
