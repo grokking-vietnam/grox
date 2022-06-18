@@ -1,8 +1,8 @@
 package grox.cli
 
+import cats.Functor
 import cats.effect.*
-import cats.implicits.*
-import cats.{Functor, Show}
+import cats.syntax.all.*
 
 import com.monovore.decline.*
 import com.monovore.decline.effect.*

@@ -7,3 +7,6 @@
 **/.vscode/
 project/project/
 project/metals.sbt
+.parcel-cache/
+dist/
+node_modules/
