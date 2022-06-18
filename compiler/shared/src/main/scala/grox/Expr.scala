@@ -26,6 +26,10 @@ enum Expr:
 
   case Assign[A](name: Token[A], value: Expr)
 
+  // logic
+  case Or(left: Expr, right: Expr)
+  case And(left: Expr, right: Expr)
+
   // Unary
   case Negate(expr: Expr)
   case Not(expr: Expr)

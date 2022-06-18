@@ -7,6 +7,8 @@ import scala.util.control.NoStackTrace
 import cats.*
 import cats.effect.kernel.syntax.resource
 import cats.implicits.*
+import grox.Parser.ExprParser
+import cats.instances.*
 
 trait Parser[F[_]]:
   def parse[T](tokens: List[Token[T]]): F[Expr]
@@ -71,17 +73,16 @@ object Parser:
 
   def varDeclaration[A](
     tokens: List[Token[A]]
-  ): StmtParser[A] = consume[A, Var[A]](tokens).flatMap(varCnsm =>
-    varCnsm
-      ._2
+  ): StmtParser[A] = consume[A, Var[A]](tokens).flatMap((varToken, tokensAfterVar) =>
+    tokensAfterVar
       .headOption
       .collectFirst { case token: Identifier[A] =>
         for {
           initializer <-
-            consume[A, Equal[A]](varCnsm._2.tail) match {
-              case Left(_) => Right((None, varCnsm._2.tail))
-              case Right(afterEqual) =>
-                expression(afterEqual._2).map { case (value, afterValue) =>
+            consume[A, Equal[A]](tokensAfterVar.tail) match {
+              case Left(_) => Right((None, tokensAfterVar.tail))
+              case Right((equalToken, afterEqual)) =>
+                expression(afterEqual).map { case (value, afterValue) =>
                   (Option(value), afterValue)
                 }
             }
