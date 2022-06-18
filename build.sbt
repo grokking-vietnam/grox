@@ -33,7 +33,8 @@ val commonSettings = Seq(
 )
 
 val commonJsSettings = Seq(
-  scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule))
+  scalacOptions += "-scalajs",
+  scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule)),
 )
 
 val compiler = crossProject(JSPlatform, JVMPlatform)
