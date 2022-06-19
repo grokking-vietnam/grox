@@ -39,7 +39,7 @@ object Scanner:
   val singleLineComment: P[Token[Unit]] =
     val start = P.string("//")
     val line: P0[String] = P.until0(endOfLine)
-    (start *> line).string.map(SingleLine(_, ()))
+    (start ~ line).string.map(SingleLine(_, ()))
 
   val blockComment: P[Token[Unit]] =
     val start = P.string("/*")
@@ -99,13 +99,10 @@ object Scanner:
       number,
     )
 
-  val token: P[Token[Unit]] = P.oneOf(allTokens).surroundedBy(whitespaces)
 
-  val tokenWithTag: P[Token[Span]] = (location.with1 ~ token ~ location).map { case ((s, t), e) =>
-    t.as(Span(s, e))
-  }
+  val token: P[Token[Span]] = P.oneOf(allTokens).span.surroundedBy(whitespaces)
 
-  val parser = tokenWithTag.rep.map(_.toList)
+  val parser = token.rep.map(_.toList)
 
   def parse(str: String): Either[Error, List[Token[Span]]] =
     parser.parse(str) match
@@ -130,4 +127,8 @@ object Scanner:
 
   extension (t: Token[Unit])
     def operator = P.string(t.lexeme).as(t)
-    def keyword = (P.string(t.lexeme) ~ (whitespace | P.end)).backtrack.as(t)
+
+    def keyword = (P.string(t.lexeme).as(t) <* (whitespace | P.end).peek).backtrack
+
+  extension (p: P[Token[Unit]])
+    def span = (location.with1 ~ p ~ location).map { case ((s, t), e) => t.as(Span(s, e)) }

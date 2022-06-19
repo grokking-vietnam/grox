@@ -135,7 +135,7 @@ class ScannerTest extends munit.FunSuite:
   test("identifiers.lox simpler") {
     val str = "andy formless"
     val expected = List(
-      Identifier("andy", Span(Location(0, 0, 0), Location(0, 5, 5))),
+      Identifier("andy", Span(Location(0, 0, 0), Location(0, 4, 4))),
       Identifier("formless", Span(Location(0, 5, 5), Location(0, 13, 13))),
     )
     assertEquals(Scanner.parse(str), Right(expected))
@@ -146,13 +146,14 @@ class ScannerTest extends munit.FunSuite:
 
 abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
     val expected = List(
-      Identifier("andy", Span(Location(0, 0, 0), Location(0, 5, 5))),
-      Identifier("formless", Span(Location(0, 5, 5), Location(0, 14, 14))),
-      Identifier("fo", Span(Location(0, 14, 14), Location(0, 17, 17))),
-      Identifier("_", Span(Location(0, 17, 17), Location(0, 19, 19))),
-      Identifier("_123", Span(Location(0, 19, 19), Location(0, 24, 24))),
-      Identifier("_abc", Span(Location(0, 24, 24), Location(0, 29, 29))),
-      Identifier("ab123", Span(Location(0, 29, 29), Location(2, 0, 36))),
+
+      Identifier("andy", Span(Location(0, 0, 0), Location(0, 4, 4))),
+      Identifier("formless", Span(Location(0, 5, 5), Location(0, 13, 13))),
+      Identifier("fo", Span(Location(0, 14, 14), Location(0, 16, 16))),
+      Identifier("_", Span(Location(0, 17, 17), Location(0, 18, 18))),
+      Identifier("_123", Span(Location(0, 19, 19), Location(0, 23, 23))),
+      Identifier("_abc", Span(Location(0, 24, 24), Location(0, 28, 28))),
+      Identifier("ab123", Span(Location(0, 29, 29), Location(0, 34, 34))),
       Identifier(
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_",
         Span(Location(2, 0, 36), Location(2, 63, 99)),
@@ -164,20 +165,20 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
   test("keywords.lox") {
     val str = """and class else false for fun if nil or return super this true var while"""
     val expected = List(
-      And(Span(Location(0, 0, 0), Location(0, 4, 4))),
-      Class(Span(Location(0, 4, 4), Location(0, 10, 10))),
-      Else(Span(Location(0, 10, 10), Location(0, 15, 15))),
-      False(Span(Location(0, 15, 15), Location(0, 21, 21))),
-      For(Span(Location(0, 21, 21), Location(0, 25, 25))),
-      Fun(Span(Location(0, 25, 25), Location(0, 29, 29))),
-      If(Span(Location(0, 29, 29), Location(0, 32, 32))),
-      Null(Span(Location(0, 32, 32), Location(0, 36, 36))),
-      Or(Span(Location(0, 36, 36), Location(0, 39, 39))),
-      Return(Span(Location(0, 39, 39), Location(0, 46, 46))),
-      Super(Span(Location(0, 46, 46), Location(0, 52, 52))),
-      This(Span(Location(0, 52, 52), Location(0, 57, 57))),
-      True(Span(Location(0, 57, 57), Location(0, 62, 62))),
-      Var(Span(Location(0, 62, 62), Location(0, 66, 66))),
+      And(Span(Location(0, 0, 0), Location(0, 3, 3))),
+      Class(Span(Location(0, 4, 4), Location(0, 9, 9))),
+      Else(Span(Location(0, 10, 10), Location(0, 14, 14))),
+      False(Span(Location(0, 15, 15), Location(0, 20, 20))),
+      For(Span(Location(0, 21, 21), Location(0, 24, 24))),
+      Fun(Span(Location(0, 25, 25), Location(0, 28, 28))),
+      If(Span(Location(0, 29, 29), Location(0, 31, 31))),
+      Null(Span(Location(0, 32, 32), Location(0, 35, 35))),
+      Or(Span(Location(0, 36, 36), Location(0, 38, 38))),
+      Return(Span(Location(0, 39, 39), Location(0, 45, 45))),
+      Super(Span(Location(0, 46, 46), Location(0, 51, 51))),
+      This(Span(Location(0, 52, 52), Location(0, 56, 56))),
+      True(Span(Location(0, 57, 57), Location(0, 61, 61))),
+      Var(Span(Location(0, 62, 62), Location(0, 65, 65))),
       While(Span(Location(0, 66, 66), Location(0, 71, 71))),
     )
     assertEquals(Scanner.parse(str), Right(expected))
@@ -189,10 +190,10 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
   .456
   123."""
     val expected = List(
-      Number("123", Span(Location(0, 0, 0), Location(1, 2, 6))),
-      Number("123.456", Span(Location(1, 2, 6), Location(2, 2, 16))),
+      Number("123", Span(Location(0, 0, 0), Location(0, 3, 3))),
+      Number("123.456", Span(Location(1, 2, 6), Location(1, 9, 13))),
       Dot(Span(Location(2, 2, 16), Location(2, 3, 17))),
-      Number("456", Span(Location(2, 3, 17), Location(3, 2, 23))),
+      Number("456", Span(Location(2, 3, 17), Location(2, 6, 20))),
       Number("123", Span(Location(3, 2, 23), Location(3, 5, 26))),
       Dot(Span(Location(3, 5, 26), Location(3, 6, 27))),
     )
@@ -229,8 +230,8 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
   "string"
   """
     val expected = List(
-      Str("", Span(Location(0, 0, 0), Location(1, 2, 5))),
-      Str("string", Span(Location(1, 2, 5), Location(2, 2, 16))),
+      Str("", Span(Location(0, 0, 0), Location(0, 2, 2))),
+      Str("string", Span(Location(1, 2, 5), Location(1, 10, 13))),
     )
     assertEquals(Scanner.parse(str), Right(expected))
   }
@@ -243,10 +244,10 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
 
   """
     val expected = List(
-      Identifier("space", Span(Location(0, 0, 0), Location(1, 11, 12))),
-      Identifier("tabs", Span(Location(1, 11, 12), Location(1, 19, 20))),
-      Identifier("newlines", Span(Location(1, 19, 20), Location(3, 2, 32))),
-      Identifier("end", Span(Location(3, 2, 32), Location(5, 2, 39))),
+      Identifier("space", Span(Location(1, 2, 3), Location(1, 7, 8))),
+      Identifier("tabs", Span(Location(1, 11, 12), Location(1, 15, 16))),
+      Identifier("newlines", Span(Location(1, 19, 20), Location(1, 27, 28))),
+      Identifier("end", Span(Location(3, 2, 32), Location(3, 5, 35))),
     )
     assertEquals(Scanner.parse(str), Right(expected))
   }
@@ -262,22 +263,23 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
   // expect: 3
   """
     val expected = List(
-      Var(Span(Location(0, 0, 0), Location(1, 6, 7))),
-      Identifier("a", Span(Location(1, 6, 7), Location(1, 8, 9))),
-      Equal(Span(Location(1, 8, 9), Location(1, 10, 11))),
+      Var(Span(Location(1, 2, 3), Location(1, 5, 6))),
+      Identifier("a", Span(Location(1, 6, 7), Location(1, 7, 8))),
+      Equal(Span(Location(1, 8, 9), Location(1, 9, 10))),
       Str(
         """1
   2
   3""",
         Span(Location(1, 10, 11), Location(3, 4, 22)),
       ),
-      Semicolon(Span(Location(3, 4, 22), Location(4, 2, 26))),
-      Print(Span(Location(4, 2, 26), Location(4, 8, 32))),
+
+      Semicolon(Span(Location(3, 4, 22), Location(3, 5, 23))),
+      Print(Span(Location(4, 2, 26), Location(4, 7, 31))),
       Identifier("a", Span(Location(4, 8, 32), Location(4, 9, 33))),
-      Semicolon(Span(Location(4, 9, 33), Location(5, 2, 37))),
-      SingleLine("// expect: 1", Span(Location(5, 2, 37), Location(6, 2, 52))),
-      SingleLine("// expect: 2", Span(Location(6, 2, 52), Location(7, 2, 67))),
-      SingleLine("// expect: 3", Span(Location(7, 2, 67), Location(8, 2, 82))),
+      Semicolon(Span(Location(4, 9, 33), Location(4, 10, 34))),
+      SingleLine("// expect: 1", Span(Location(5, 2, 37), Location(5, 14, 49))),
+      SingleLine("// expect: 2", Span(Location(6, 2, 52), Location(6, 14, 64))),
+      SingleLine("// expect: 3", Span(Location(7, 2, 67), Location(7, 14, 79))),
     )
     assertEquals(Scanner.parse(str), Right(expected))
   }
@@ -295,35 +297,35 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
 
   print Foo(); // expect: Foo instance"""
     val expected = List(
-      Class(Span(Location(0, 0, 0), Location(1, 8, 9))),
-      Identifier("Foo", Span(Location(1, 8, 9), Location(1, 12, 13))),
-      LeftBrace(Span(Location(1, 12, 13), Location(2, 2, 17))),
+      Class(Span(Location(1, 2, 3), Location(1, 7, 8))),
+      Identifier("Foo", Span(Location(1, 8, 9), Location(1, 11, 12))),
+      LeftBrace(Span(Location(1, 12, 13), Location(1, 13, 14))),
       Identifier("init", Span(Location(2, 2, 17), Location(2, 6, 21))),
       LeftParen(Span(Location(2, 6, 21), Location(2, 7, 22))),
-      RightParen(Span(Location(2, 7, 22), Location(2, 9, 24))),
-      LeftBrace(Span(Location(2, 9, 24), Location(3, 2, 28))),
-      Fun(Span(Location(3, 2, 28), Location(3, 6, 32))),
+      RightParen(Span(Location(2, 7, 22), Location(2, 8, 23))),
+      LeftBrace(Span(Location(2, 9, 24), Location(2, 10, 25))),
+      Fun(Span(Location(3, 2, 28), Location(3, 5, 31))),
       Identifier("init", Span(Location(3, 6, 32), Location(3, 10, 36))),
       LeftParen(Span(Location(3, 10, 36), Location(3, 11, 37))),
-      RightParen(Span(Location(3, 11, 37), Location(3, 13, 39))),
-      LeftBrace(Span(Location(3, 13, 39), Location(4, 2, 43))),
-      Return(Span(Location(4, 2, 43), Location(4, 9, 50))),
+      RightParen(Span(Location(3, 11, 37), Location(3, 12, 38))),
+      LeftBrace(Span(Location(3, 13, 39), Location(3, 14, 40))),
+      Return(Span(Location(4, 2, 43), Location(4, 8, 49))),
       Str("bar", Span(Location(4, 9, 50), Location(4, 14, 55))),
-      Semicolon(Span(Location(4, 14, 55), Location(5, 2, 59))),
-      RightBrace(Span(Location(5, 2, 59), Location(6, 2, 63))),
-      Print(Span(Location(6, 2, 63), Location(6, 8, 69))),
+      Semicolon(Span(Location(4, 14, 55), Location(4, 15, 56))),
+      RightBrace(Span(Location(5, 2, 59), Location(5, 3, 60))),
+      Print(Span(Location(6, 2, 63), Location(6, 7, 68))),
       Identifier("init", Span(Location(6, 8, 69), Location(6, 12, 73))),
       LeftParen(Span(Location(6, 12, 73), Location(6, 13, 74))),
       RightParen(Span(Location(6, 13, 74), Location(6, 14, 75))),
-      Semicolon(Span(Location(6, 14, 75), Location(6, 16, 77))),
-      SingleLine("// expect: bar", Span(Location(6, 16, 77), Location(7, 2, 94))),
-      RightBrace(Span(Location(7, 2, 94), Location(8, 2, 98))),
-      RightBrace(Span(Location(8, 2, 98), Location(10, 2, 103))),
-      Print(Span(Location(10, 2, 103), Location(10, 8, 109))),
+      Semicolon(Span(Location(6, 14, 75), Location(6, 15, 76))),
+      SingleLine("// expect: bar", Span(Location(6, 16, 77), Location(6, 30, 91))),
+      RightBrace(Span(Location(7, 2, 94), Location(7, 3, 95))),
+      RightBrace(Span(Location(8, 2, 98), Location(8, 3, 99))),
+      Print(Span(Location(10, 2, 103), Location(10, 7, 108))),
       Identifier("Foo", Span(Location(10, 8, 109), Location(10, 11, 112))),
       LeftParen(Span(Location(10, 11, 112), Location(10, 12, 113))),
       RightParen(Span(Location(10, 12, 113), Location(10, 13, 114))),
-      Semicolon(Span(Location(10, 13, 114), Location(10, 15, 116))),
+      Semicolon(Span(Location(10, 13, 114), Location(10, 14, 115))),
       SingleLine("// expect: Foo instance", Span(Location(10, 15, 116), Location(10, 38, 139))),
     )
     assertEquals(Scanner.parse(str), Right(expected))

@@ -25,7 +25,6 @@ class ParserTest extends munit.FunSuite:
     val expr5 = Expr.Literal(5)
     val expr6 = Expr.Literal(6)
     val expr42 = Expr.Literal(42)
-
     val avar: Identifier[Unit] = Identifier("a", ())
 
   test("empty") {

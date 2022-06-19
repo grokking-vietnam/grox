@@ -56,7 +56,7 @@ jobs:
       - name: Build project
         run: sbt ++${{ matrix.scala }} test
 
-      - name: Build
+      - name: Build projects
         run: sbt ++${{ matrix.scala }} build
 
       - name: Check Formatting
