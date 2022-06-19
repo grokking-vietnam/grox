@@ -10,7 +10,6 @@ import cats.implicits.*
 import grox.Parser.ExprParser
 import cats.instances.*
 
-
 trait Parser[F[_]]:
   def parse[T](tokens: List[Token[T]]): F[Expr]
 
@@ -117,7 +116,6 @@ object Parser:
     },
   )
 
-
   def statement[A](tokens: List[Token[A]]): StmtParser[A] =
     tokens.headOption match
       case Some(token) =>
@@ -201,7 +199,6 @@ object Parser:
       // (semicolon, afterSemicolonTokens) <- consume[A, Semicolon[A]](afterStatementTokens)
     } yield (Stmt.While(conditionExpr, stmt), afterStatementTokens)
 
-
   // Parse binary expressions that share this grammar
   // ```
   //    expr   -> descendant (OPERATOR descendant)  *
@@ -282,7 +279,6 @@ object Parser:
       case Identifier(name, tag: A) :: rest => Right(Expr.Variable[A](Identifier(name, tag)), rest)
       case LeftParen(_) :: rest             => parenBody(rest)
       case _                                => Left(Error.ExpectExpression(tokens))
-
 
   // Parse the body within a pair of parentheses (the part after "(")
   def parenBody[A](

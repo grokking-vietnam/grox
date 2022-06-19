@@ -146,7 +146,6 @@ class ScannerTest extends munit.FunSuite:
 
 abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
     val expected = List(
-
       Identifier("andy", Span(Location(0, 0, 0), Location(0, 4, 4))),
       Identifier("formless", Span(Location(0, 5, 5), Location(0, 13, 13))),
       Identifier("fo", Span(Location(0, 14, 14), Location(0, 16, 16))),
@@ -272,7 +271,6 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
   3""",
         Span(Location(1, 10, 11), Location(3, 4, 22)),
       ),
-
       Semicolon(Span(Location(3, 4, 22), Location(3, 5, 23))),
       Print(Span(Location(4, 2, 26), Location(4, 7, 31))),
       Identifier("a", Span(Location(4, 8, 32), Location(4, 9, 33))),

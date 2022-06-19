@@ -99,7 +99,6 @@ object Scanner:
       number,
     )
 
-
   val token: P[Token[Span]] = P.oneOf(allTokens).span.surroundedBy(whitespaces)
 
   val parser = token.rep.map(_.toList)

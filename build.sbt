@@ -31,7 +31,6 @@ val commonSettings = Seq(
   ),
 )
 
-
 val commonJsSettings = Seq(
   scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule))
 )
