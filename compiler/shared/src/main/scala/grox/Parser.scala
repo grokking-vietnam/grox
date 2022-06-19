@@ -5,7 +5,6 @@ import scala.reflect.{ClassTag, TypeTest}
 import scala.util.control.NoStackTrace
 
 import cats.*
-import cats.effect.kernel.syntax.resource
 import cats.implicits.*
 import grox.Parser.ExprParser
 import cats.instances.*
