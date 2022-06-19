@@ -191,11 +191,7 @@ object Parser:
       (leftParen, afterLeftParenTokens) <- consume[A, LeftParen[A]](tokens)
       (conditionExpr, afterExpressionTokens) <- expression(afterLeftParenTokens)
       (rightParen, afterRightParenTokens) <- consume[A, RightParen[A]](afterExpressionTokens)
-      (stmt, afterStatementTokens) <-
-        val stmt = statement(afterRightParenTokens)
-        println(s"stmt = $stmt")
-        stmt
-      // (semicolon, afterSemicolonTokens) <- consume[A, Semicolon[A]](afterStatementTokens)
+      (stmt, afterStatementTokens) <- statement(afterRightParenTokens)
     } yield (Stmt.While(conditionExpr, stmt), afterStatementTokens)
 
   // Parse binary expressions that share this grammar
