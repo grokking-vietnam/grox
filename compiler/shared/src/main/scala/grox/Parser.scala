@@ -81,7 +81,7 @@ object Parser:
           initializer <-
             consume[A, Equal[A]](tokensAfterVar.tail) match {
               case Left(_) => Right((None, tokensAfterVar.tail))
-              case Right((equalToken, afterEqual)) =>
+              case Right(equalToken, afterEqual) =>
                 expression(afterEqual).map { case (value, afterValue) =>
                   (Option(value), afterValue)
                 }
@@ -95,9 +95,13 @@ object Parser:
 
   def expression[A](tokens: List[Token[A]]): ExprParser[A] = assignment(tokens)
 
+  def or[A]: List[Token[A]] => ExprParser[A] = binary(orOp, and)
+
+  def and[A]: List[Token[A]] => ExprParser[A] = binary(andOp, equality)
+
   def assignment[A](
     tokens: List[Token[A]]
-  ): ExprParser[A] = equality(tokens).flatMap((expr: Expr, restTokens: List[Token[A]]) =>
+  ): ExprParser[A] = or(tokens).flatMap((expr: Expr, restTokens: List[Token[A]]) =>
     restTokens.headOption match {
       case Some(equalToken @ Equal(_)) =>
         expr match {
@@ -183,7 +187,14 @@ object Parser:
 
   def forStmt[A](tokens: List[Token[A]]): StmtParser[A] = ???
 
-  def whileStmt[A](tokens: List[Token[A]]): StmtParser[A] = ???
+  def whileStmt[A](tokens: List[Token[A]]): StmtParser[A] =
+    for {
+      (leftParen, afterLeftParenTokens) <- consume[A, LeftParen[A]](tokens)
+      (conditionExpr, afterExpressionTokens) <- expression(afterLeftParenTokens)
+      (rightParen, afterRightParenTokens) <- consume[A, RightParen[A]](afterExpressionTokens)
+      (stmt, afterStatementTokens) <- statement(afterRightParenTokens)
+      (semicolon, afterSemicolonTokens) <- consume[A, Semicolon[A]](afterStatementTokens)
+    } yield (Stmt.While(conditionExpr, stmt), afterSemicolonTokens)
 
   // Parse binary expressions that share this grammar
   // ```
@@ -206,6 +217,14 @@ object Parser:
         case _ => Right(l, ts)
 
     descendant(tokens).flatMap((expr, rest) => matchOp(rest, expr))
+
+  def orOp[A]: BinaryOp[A] =
+    case Or(_) => Some(Expr.Or.apply)
+    case _     => None
+
+  def andOp[A]: BinaryOp[A] =
+    case And(_) => Some(Expr.And.apply)
+    case _      => None
 
   def equalityOp[A]: BinaryOp[A] =
     case EqualEqual(_) => Some(Expr.Equal.apply)
@@ -249,14 +268,14 @@ object Parser:
 
   def primary[A](tokens: List[Token[A]]): ExprParser[A] =
     tokens match
-      case Number(l, _) :: rest => Right(Expr.Literal(l.toDouble), rest)
-      case Str(l, _) :: rest    => Right(Expr.Literal(l), rest)
-      case True(_) :: rest      => Right(Expr.Literal(true), rest)
-      case False(_) :: rest     => Right(Expr.Literal(false), rest)
-      case Null(_) :: rest      => Right(Expr.Literal(null), rest)
-      case Identifier(name, tag:A) :: rest => Right(Expr.Variable[A](Identifier(name, tag)), rest)
-      case LeftParen(_) :: rest => parenBody(rest)
-      case _                          => Left(Error.ExpectExpression(tokens))
+      case Number(l, _) :: rest             => Right(Expr.Literal(l.toDouble), rest)
+      case Str(l, _) :: rest                => Right(Expr.Literal(l), rest)
+      case True(_) :: rest                  => Right(Expr.Literal(true), rest)
+      case False(_) :: rest                 => Right(Expr.Literal(false), rest)
+      case Null(_) :: rest                  => Right(Expr.Literal(null), rest)
+      case Identifier(name, tag: A) :: rest => Right(Expr.Variable[A](Identifier(name, tag)), rest)
+      case LeftParen(_) :: rest             => parenBody(rest)
+      case _                                => Left(Error.ExpectExpression(tokens))
 
   // Parse the body within a pair of parentheses (the part after "(")
   def parenBody[A](
