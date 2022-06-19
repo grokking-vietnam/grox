@@ -121,7 +121,7 @@ object Parser:
       case Some(token) =>
         token match
           case Print(_)     => printStmt[A](tokens.tail)
-          case LeftParen(_) => blockStmt[A](tokens.tail)
+          case LeftBrace(_) => blockStmt[A](tokens.tail)
           case If(_)        => ifStmt[A](tokens.tail)
           case For(_)       => forStmt[A](tokens.tail)
           case Return(_)    => returnStmt[A](token, tokens.tail)
@@ -156,10 +156,10 @@ object Parser:
       ts.headOption match
         case Some(token) =>
           token match
-            case RightBrace(_) => Right(stmts, ts)
+            case RightBrace(_) => Right(stmts, ts.tail)
             case _ =>
-              declaration(tokens) match
-                case Right(dclr, rest) => block(rest, dclr :: stmts)
+              declaration(ts) match
+                case Right(dclr, rest) => block(rest, stmts :+ dclr)
                 case left @ Left(_) =>
                   left.asInstanceOf[Left[Error[A], (List[Stmt[A]], List[Token[A]])]]
         case _ => Left(Error.ExpectRightBrace(ts))
@@ -192,9 +192,12 @@ object Parser:
       (leftParen, afterLeftParenTokens) <- consume[A, LeftParen[A]](tokens)
       (conditionExpr, afterExpressionTokens) <- expression(afterLeftParenTokens)
       (rightParen, afterRightParenTokens) <- consume[A, RightParen[A]](afterExpressionTokens)
-      (stmt, afterStatementTokens) <- statement(afterRightParenTokens)
-      (semicolon, afterSemicolonTokens) <- consume[A, Semicolon[A]](afterStatementTokens)
-    } yield (Stmt.While(conditionExpr, stmt), afterSemicolonTokens)
+      (stmt, afterStatementTokens) <-
+        val stmt = statement(afterRightParenTokens)
+        println(s"stmt = $stmt")
+        stmt
+      // (semicolon, afterSemicolonTokens) <- consume[A, Semicolon[A]](afterStatementTokens)
+    } yield (Stmt.While(conditionExpr, stmt), afterStatementTokens)
 
   // Parse binary expressions that share this grammar
   // ```
