@@ -1,9 +1,10 @@
 package grox
 
-import cats.syntax.apply.*
+import scala.util.control.NoStackTrace
+
 import cats.*
 import cats.syntax.all.*
-import scala.util.control.NoStackTrace
+import cats.syntax.apply.*
 
 trait Interpreter[F[_]]:
   def evaluate(expr: Expr): F[LiteralType]
