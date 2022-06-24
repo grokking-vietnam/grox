@@ -5,6 +5,9 @@ import scala.util.control.NoStackTrace
 import cats.*
 import cats.syntax.all.*
 import cats.syntax.apply.*
+import cats.*
+import cats.syntax.all.*
+import scala.util.control.NoStackTrace
 
 trait Interpreter[F[_]]:
   def evaluate(expr: Expr): F[LiteralType]
