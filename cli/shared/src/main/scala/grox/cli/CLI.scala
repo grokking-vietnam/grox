@@ -9,6 +9,7 @@ object CLI:
   enum Command:
     case Scan(file: String)
     case Parse(file: String)
+    case Evaluate(file: String)
 
   val parse: Opts[Command] =
     val scan =
@@ -21,4 +22,8 @@ object CLI:
         Opts.argument[String]("path").map(Command.Parse(_))
       )
 
-    scan <+> parse
+    val evaluate: Opts[Command] =
+      Opts.subcommand[Command]("evaluate", "Evaluate file to grox object")(
+        Opts.argument[String]("path").map(Command.Evaluate(_))
+      )
+    scan <+> parse <+> evaluate

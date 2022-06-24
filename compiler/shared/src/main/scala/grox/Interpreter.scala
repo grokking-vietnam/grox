@@ -1,10 +1,17 @@
 package grox
 
 import cats.syntax.apply.*
+import cats.*
+import cats.syntax.all.*
+import scala.util.control.NoStackTrace
+
+trait Interpreter[F[_]]:
+  def evaluate(expr: Expr): F[LiteralType]
 
 object Interpreter:
+  def instance[F[_]: MonadThrow]: Interpreter[F] = expr => evaluate(expr).liftTo[F]
 
-  enum RuntimeError(op: Token[Unit], msg: String):
+  enum RuntimeError(op: Token[Unit], msg: String) extends NoStackTrace:
     case MustBeNumbers(op: Token[Unit]) extends RuntimeError(op, "Operands must be numbers.")
     case MustBeNumbersOrStrings
       extends RuntimeError(Token.Plus(()), "Operands must be two numbers or two strings")
