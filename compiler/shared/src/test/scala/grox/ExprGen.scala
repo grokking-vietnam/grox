@@ -79,7 +79,7 @@ object ExprGen:
 
   val numericGen: Gen[Expr] = Gen.sized(size =>
     if (size == 0)
-      Gen.choose(0, 100).map(Expr.Literal(_))
+      Gen.choose(0, 10).map(Expr.Literal(_))
     else
       Gen.oneOf(addGen, subtractGen, multiplyGen, divideGen, negateGen)
   )
