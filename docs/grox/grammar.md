@@ -3,22 +3,27 @@
 ## Expression
 
 ```
-expression     → literal
+expression     -> literal
                | unary
                | binary
                | grouping ;
 
-literal        → NUMBER | STRING | "true" | "false" | "nil" ;
-grouping       → "(" expression ")" ;
-unary          → ( "-" | "!" ) expression ;
-binary         → expression operator expression ;
-operator       → "==" | "!=" | "<" | "<=" | ">" | ">="
+literal        -> NUMBER | STRING | "true" | "false" | "nil" ;
+logical        
+grouping       -> "(" expression ")" ;
+unary          -> ( "-" | "!" ) expression ;
+binary         -> expression operator expression ;
+operator       -> "==" | "!=" | "<" | "<=" | ">" | ">="
                | "+"  | "-"  | "*" | "/" ;
 ```
 
 ## Expression (ordered grammar, for parser)
 ```
-expression    -> equality
+expression    -> IDENTIFIER "=" assignment
+               | logic_or ;
+logic_or      -> logic_and ( "or" logic_and )* ;
+logic_and     -> equality ( "and" equality )* ; 
+assignment    -> IDENTIFIER "=" assignment | equality
 equality      -> comparison (("!=" | "==") comparison)*
 comparison    -> factor (("<" | "<=" | ">" | ">=") factor)*
 factor        -> term (("+" | "-") term)* 

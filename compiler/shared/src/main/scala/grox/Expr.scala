@@ -22,6 +22,14 @@ enum Expr:
   case Equal(left: Expr, right: Expr)
   case NotEqual(left: Expr, right: Expr)
 
+  // assignment
+
+  case Assign[A](name: Token[A], value: Expr)
+
+  // logic
+  case Or(left: Expr, right: Expr)
+  case And(left: Expr, right: Expr)
+
   // Unary
   case Negate(expr: Expr)
   case Not(expr: Expr)
@@ -29,6 +37,8 @@ enum Expr:
   case Literal(value: LiteralType)
 
   case Grouping(expr: Expr)
+
+  case Variable[A](name: Token[A])
 
 object Expr:
 
