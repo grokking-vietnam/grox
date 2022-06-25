@@ -16,6 +16,7 @@ object Interpreter:
   def instance[F[_]: MonadThrow]: Interpreter[F] = expr => evaluate(expr).liftTo[F]
 
   enum RuntimeError(op: Token[Unit], msg: String) extends NoStackTrace:
+    override def toString = msg
     case MustBeNumbers(op: Token[Unit]) extends RuntimeError(op, "Operands must be numbers.")
     case MustBeNumbersOrStrings
       extends RuntimeError(Token.Plus(()), "Operands must be two numbers or two strings")
