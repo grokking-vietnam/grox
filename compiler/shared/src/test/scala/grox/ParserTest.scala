@@ -310,7 +310,7 @@ class ParserCheck extends ScalaCheckSuite:
     }
   }
 
-  property("produce equally-evaluated expression") {
+  property("produce an equal numeric expression") {
     Prop.forAll(numericGen) { expr =>
       parse(expr.flatten) match
         case Left(_) => false
@@ -320,7 +320,9 @@ class ParserCheck extends ScalaCheckSuite:
             case (Right(v1: Double), Right(v2: Double)) => math.abs(v1 - v2) < 0.01
             case _                                      => false
     }
+  }
 
+  property("produce an equal logical expression") {
     Prop.forAll(logicalGen) { expr =>
       parse(expr.flatten) match
         case Left(_)              => false
