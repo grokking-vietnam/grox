@@ -99,6 +99,14 @@ class InterpreterTest extends ScalaCheckSuite:
     )
   }
 
+  test("Two nulls should be equal") {
+    assertEquals(evaluate(Expr.Equal(Expr.Literal(null), Expr.Literal(null))), Right(true))
+  }
+
+  test("Two operators which are different in type should not be equal") {
+    assertEquals(evaluate(Expr.Equal(Expr.Literal(1), Expr.Literal("string"))), Right(false))
+  }
+
   test("must be numbers runtime error") {
     assertEquals(
       evaluate(Expr.Subtract(Expr.Literal(1), Expr.Literal("string"))),
@@ -127,13 +135,5 @@ class InterpreterTest extends ScalaCheckSuite:
     assertEquals(
       evaluate(Expr.LessEqual(Expr.Literal(1), Expr.Literal("string"))),
       Left(RuntimeError.MustBeNumbers(Token.LessEqual(()))),
-    )
-    assertEquals(
-      evaluate(Expr.NotEqual(Expr.Literal(1), Expr.Literal("string"))),
-      Left(RuntimeError.MustBeNumbers(Token.BangEqual(()))),
-    )
-    assertEquals(
-      evaluate(Expr.Equal(Expr.Literal(1), Expr.Literal("string"))),
-      Left(RuntimeError.MustBeNumbers(Token.EqualEqual(()))),
     )
   }
