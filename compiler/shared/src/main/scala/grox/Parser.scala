@@ -6,8 +6,9 @@ import scala.util.control.NoStackTrace
 
 import cats.*
 import cats.implicits.*
-import grox.Parser.ExprParser
 import cats.instances.*
+
+import grox.Parser.ExprParser
 
 trait Parser[F[_]]:
   def parse[T](tokens: List[Token[T]]): F[Expr]
