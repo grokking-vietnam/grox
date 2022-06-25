@@ -5,6 +5,7 @@ import cats.syntax.apply.*
 object Interpreter:
 
   enum RuntimeError(op: Token[Unit], msg: String):
+    override def toString = msg
     case MustBeNumbers(op: Token[Unit]) extends RuntimeError(op, "Operands must be numbers.")
     case MustBeNumbersOrStrings
       extends RuntimeError(Token.Plus(()), "Operands must be two numbers or two strings")
@@ -15,18 +16,25 @@ object Interpreter:
 
   extension (value: LiteralType)
 
-    def isTruthy: LiteralType =
+    def `unary_-` : EvaluationResult =
+      value match
+        case v: Double => Right(-v)
+        case _         => Left(RuntimeError.MustBeNumbers(Token.Minus(())))
+
+    def isTruthy: Boolean =
       value match
         case null       => false
         case v: Boolean => v
         case _          => true
 
+    def `unary_!` : EvaluationResult = Right(!value.isTruthy)
+
   def evaluateBinary(
     eval: Evaluate
   )(
-    left: EvaluationResult,
-    right: EvaluationResult,
-  ): EvaluationResult = (left, right).mapN(eval).flatten
+    left: Expr,
+    right: Expr,
+  ): EvaluationResult = (evaluate(left), evaluate(right)).mapN(eval).flatten
 
   def add(left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
@@ -75,31 +83,29 @@ object Interpreter:
 
   def equal(left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
-      case (l: Double, r: Double) => Right(l == r)
-      case _                      => Left(RuntimeError.MustBeNumbers(Token.EqualEqual(())))
+      case (null, null) => Right(true)
+      case (null, _)    => Right(false)
+      case _            => Right(left.equals(right))
 
-  def notEqual(left: LiteralType, right: LiteralType): EvaluationResult =
-    (left, right) match
-      case (l: Double, r: Double) => Right(l != r)
-      case _                      => Left(RuntimeError.MustBeNumbers(Token.BangEqual(())))
+  def notEqual(
+    left: LiteralType,
+    right: LiteralType,
+  ): EvaluationResult = equal(left, right).flatMap(r => !r)
 
   def evaluate(expr: Expr): EvaluationResult =
     expr match
       case Expr.Literal(value) => Right(value)
       case Expr.Grouping(e)    => evaluate(e)
-      case Expr.Negate(e) =>
-        evaluate(e) match
-          case Right(v: Double) => Right(-v)
-          case _                => Left(RuntimeError.MustBeNumbers(Token.Minus(())))
-      case Expr.Not(e)         => evaluate(e).map(isTruthy)
-      case Expr.Add(l, r)      => evaluateBinary(add)(evaluate(l), evaluate(r))
-      case Expr.Subtract(l, r) => evaluateBinary(subtract)(evaluate(l), evaluate(r))
-      case Expr.Multiply(l, r) => evaluateBinary(multiply)(evaluate(l), evaluate(r))
-      case Expr.Divide(l, r)   => evaluateBinary(divide)(evaluate(l), evaluate(r))
+      case Expr.Negate(e)      => evaluate(e).flatMap(res => -res)
+      case Expr.Not(e)         => evaluate(e).flatMap(`unary_!`)
+      case Expr.Add(l, r)      => evaluateBinary(add)(l, r)
+      case Expr.Subtract(l, r) => evaluateBinary(subtract)(l, r)
+      case Expr.Multiply(l, r) => evaluateBinary(multiply)(l, r)
+      case Expr.Divide(l, r)   => evaluateBinary(divide)(l, r)
 
-      case Expr.Greater(l, r)      => evaluateBinary(greater)(evaluate(l), evaluate(r))
-      case Expr.GreaterEqual(l, r) => evaluateBinary(greaterOrEqual)(evaluate(l), evaluate(r))
-      case Expr.Less(l, r)         => evaluateBinary(less)(evaluate(l), evaluate(r))
-      case Expr.LessEqual(l, r)    => evaluateBinary(lessOrEqual)(evaluate(l), evaluate(r))
-      case Expr.Equal(l, r)        => evaluateBinary(equal)(evaluate(l), evaluate(r))
-      case Expr.NotEqual(l, r)     => evaluateBinary(notEqual)(evaluate(l), evaluate(r))
+      case Expr.Greater(l, r)      => evaluateBinary(greater)(l, r)
+      case Expr.GreaterEqual(l, r) => evaluateBinary(greaterOrEqual)(l, r)
+      case Expr.Less(l, r)         => evaluateBinary(less)(l, r)
+      case Expr.LessEqual(l, r)    => evaluateBinary(lessOrEqual)(l, r)
+      case Expr.Equal(l, r)        => evaluateBinary(equal)(l, r)
+      case Expr.NotEqual(l, r)     => evaluateBinary(notEqual)(l, r)
