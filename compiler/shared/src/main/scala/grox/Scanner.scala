@@ -126,7 +126,6 @@ object Scanner:
 
   extension (t: Token[Unit])
     def operator = P.string(t.lexeme).as(t)
-
     def keyword = (P.string(t.lexeme).as(t) <* (whitespace | P.end).peek).backtrack
 
   extension (p: P[Token[Unit]])

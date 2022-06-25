@@ -333,7 +333,7 @@ class ParserTest extends munit.FunSuite:
       assertEquals(synchronize(ts), remaining)
   }
 
-  test("assignments: expect assignment") {
+  test("Val declaration") {
     new TestSets:
       val ts = List(
         Var(()),

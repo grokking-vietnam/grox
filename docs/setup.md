@@ -58,14 +58,12 @@ $ sbt compile
 ### Jvm
 
 ```
-
 $ sbt cliJVM/run
 ```
 
 ### Javascript
 
 ```
-
 $ sbt cliJS/fastLinkJS
 # Scala version 3.1.2. Có thể phải update Scala version nếu cần.
 $ node ./cli/js/target/scala-3.1.2/cli-fastopt/main.js
@@ -118,7 +116,6 @@ $ bloop compile root
 Test:
 
 ```
-
 $ bloop test root
 ```
 
