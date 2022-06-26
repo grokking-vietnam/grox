@@ -271,7 +271,7 @@ object Parser:
       case Str(l, _) :: rest                => Right(Expr.Literal(l), rest)
       case True(_) :: rest                  => Right(Expr.Literal(true), rest)
       case False(_) :: rest                 => Right(Expr.Literal(false), rest)
-      case Null(_) :: rest                  => Right(Expr.Literal(null), rest)
+      case Null(_) :: rest                  => Right(Expr.Literal(()), rest)
       case Identifier(name, tag: A) :: rest => Right(Expr.Variable[A](Identifier(name, tag)), rest)
       case LeftParen(_) :: rest             => parenBody(rest)
       case _                                => Left(Error.ExpectExpression(tokens))

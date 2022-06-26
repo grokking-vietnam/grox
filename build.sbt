@@ -23,6 +23,7 @@ val commonSettings = Seq(
   scalacOptions += "-source:future",
   scalacOptions += "-rewrite",
   scalacOptions += "-indent",
+  scalacOptions += "-Yexplicit-nulls",
   libraryDependencies ++= Seq(
     Dependencies.catsCore.value,
     Dependencies.munit.value,

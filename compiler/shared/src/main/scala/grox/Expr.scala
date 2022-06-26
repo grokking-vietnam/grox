@@ -2,7 +2,8 @@ package grox
 
 import cats.Show
 
-type LiteralType = Double | String | Boolean | Null
+// We use Unit to represent the absence of a value or nil in the language.
+type LiteralType = Double | String | Boolean | Unit
 
 enum Expr:
 
