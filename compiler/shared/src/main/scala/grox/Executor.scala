@@ -5,7 +5,7 @@ import cats.implicits.*
 
 trait Executor[F[_]]:
   def scan(str: String): F[List[Token[Span]]]
-  def parse(str: String): F[Expr]
+  def parse(str: String): F[Expr[Span]]
   def evaluate(str: String): F[LiteralType]
 
 object Executor:
@@ -18,7 +18,7 @@ object Executor:
     new Executor[F]:
       def scan(str: String): F[List[Token[Span]]] = scanner.scan(str)
 
-      def parse(str: String): F[Expr] =
+      def parse(str: String): F[Expr[Span]] =
         for
           tokens <- scanner.scan(str)
           expr <- parser.parse(tokens)

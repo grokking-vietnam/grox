@@ -15,8 +15,8 @@ object Interpreter:
   enum RuntimeError(op: Token[Unit], msg: String) extends NoStackTrace:
     override def toString = msg
     case MustBeNumbers(op: Token[Unit]) extends RuntimeError(op, "Operands must be numbers.")
-    case MustBeNumbersOrStrings
-      extends RuntimeError(Token.Plus(()), "Operands must be two numbers or two strings")
+    case MustBeNumbersOrStrings(op: Token[Unit])
+      extends RuntimeError(op, "Operands must be numbers or strings.")
     case DivisionByZero extends RuntimeError(Token.Slash(()), "Division by zerro")
 
   type EvaluationResult = Either[RuntimeError, LiteralType]
@@ -24,10 +24,10 @@ object Interpreter:
 
   extension (value: LiteralType)
 
-    def `unary_-` : EvaluationResult =
+    def `unary_-`: EvaluationResult =
       value match
         case v: Double => Right(-v)
-        case _         => Left(RuntimeError.MustBeNumbers(Token.Minus(())))
+        case _         => ??? // Left(RuntimeError.MustBeNumbers(Token.Minus(())))
 
     def isTruthy: Boolean =
       value match
@@ -35,32 +35,32 @@ object Interpreter:
         case v: Boolean => v
         case _          => true
 
-    def `unary_!` : EvaluationResult = Right(!value.isTruthy)
+    def `unary_!`: EvaluationResult = Right(!value.isTruthy)
 
-  def evaluateBinary(
+  def evaluateBinary[A](
     eval: Evaluate
   )(
-    left: Expr,
-    right: Expr,
+    left: Expr[A],
+    right: Expr[A],
   ): EvaluationResult = (evaluate(left), evaluate(right)).mapN(eval).flatten
 
-  def add(left: LiteralType, right: LiteralType): EvaluationResult =
+  def add[A](left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l + r)
       case (l: String, r: String) => Right(l + r)
-      case _                      => Left(RuntimeError.MustBeNumbersOrStrings)
+      case _                      => ??? // Left(RuntimeError.MustBeNumbersOrStrings)
 
-  def subtract(left: LiteralType, right: LiteralType): EvaluationResult =
+  def subtract[A](left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l - r)
       case _                      => Left(RuntimeError.MustBeNumbers(Token.Minus(())))
 
-  def multiply(left: LiteralType, right: LiteralType): EvaluationResult =
+  def multiply[A](left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l * r)
       case _                      => Left(RuntimeError.MustBeNumbers(Token.Star(())))
 
-  def divide(left: LiteralType, right: LiteralType): EvaluationResult =
+  def divide[A](left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) =>
         if (r != 0)
@@ -69,53 +69,53 @@ object Interpreter:
           Left(RuntimeError.DivisionByZero)
       case _ => Left(RuntimeError.MustBeNumbers(Token.Slash(())))
 
-  def greater(left: LiteralType, right: LiteralType): EvaluationResult =
+  def greater[A](left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l > r)
       case _                      => Left(RuntimeError.MustBeNumbers(Token.Greater(())))
 
-  def greaterOrEqual(left: LiteralType, right: LiteralType): EvaluationResult =
+  def greaterOrEqual[A](left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l >= r)
       case _                      => Left(RuntimeError.MustBeNumbers(Token.GreaterEqual(())))
 
-  def less(left: LiteralType, right: LiteralType): EvaluationResult =
+  def less[A](left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l < r)
       case _                      => Left(RuntimeError.MustBeNumbers(Token.Less(())))
 
-  def lessOrEqual(left: LiteralType, right: LiteralType): EvaluationResult =
+  def lessOrEqual[A](left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l <= r)
       case _                      => Left(RuntimeError.MustBeNumbers(Token.LessEqual(())))
 
-  def equal(left: LiteralType, right: LiteralType): EvaluationResult = Right(left == right)
+  def equal[A](left: LiteralType, right: LiteralType): EvaluationResult = Right(left == right)
 
-  def notEqual(
+  def notEqual[A](
     left: LiteralType,
     right: LiteralType,
   ): EvaluationResult = equal(left, right).flatMap(r => !r)
 
-  def evaluate(expr: Expr): EvaluationResult =
+  def evaluate[A](expr: Expr[A]): EvaluationResult =
     expr match
-      case Expr.Literal(value) => Right(value)
-      case Expr.Grouping(e)    => evaluate(e)
-      case Expr.Negate(e)      => evaluate(e).flatMap(res => -res)
-      case Expr.Not(e)         => evaluate(e).flatMap(`unary_!`)
-      case Expr.Add(l, r)      => evaluateBinary(add)(l, r)
-      case Expr.Subtract(l, r) => evaluateBinary(subtract)(l, r)
-      case Expr.Multiply(l, r) => evaluateBinary(multiply)(l, r)
-      case Expr.Divide(l, r)   => evaluateBinary(divide)(l, r)
+      case Expr.Literal(_, value) => Right(value)
+      case Expr.Grouping(_, e)    => evaluate(e)
+      case Expr.Negate(_, e)      => evaluate(e).flatMap(res => -res)
+      case Expr.Not(_, e)         => evaluate(e).flatMap(`unary_!`)
+      case Expr.Add(_, l, r)      => evaluateBinary(add)(l, r)
+      case Expr.Subtract(_, l, r) => evaluateBinary(subtract)(l, r)
+      case Expr.Multiply(_, l, r) => evaluateBinary(multiply)(l, r)
+      case Expr.Divide(_, l, r)   => evaluateBinary(divide)(l, r)
 
-      case Expr.Greater(l, r)      => evaluateBinary(greater)(l, r)
-      case Expr.GreaterEqual(l, r) => evaluateBinary(greaterOrEqual)(l, r)
-      case Expr.Less(l, r)         => evaluateBinary(less)(l, r)
-      case Expr.LessEqual(l, r)    => evaluateBinary(lessOrEqual)(l, r)
-      case Expr.Equal(l, r)        => evaluateBinary(equal)(l, r)
-      case Expr.NotEqual(l, r)     => evaluateBinary(notEqual)(l, r)
-      case Expr.And(l, r) =>
+      case Expr.Greater(_, l, r)      => evaluateBinary(greater)(l, r)
+      case Expr.GreaterEqual(_, l, r) => evaluateBinary(greaterOrEqual)(l, r)
+      case Expr.Less(_, l, r)         => evaluateBinary(less)(l, r)
+      case Expr.LessEqual(_, l, r)    => evaluateBinary(lessOrEqual)(l, r)
+      case Expr.Equal(_, l, r)        => evaluateBinary(equal)(l, r)
+      case Expr.NotEqual(_, l, r)     => evaluateBinary(notEqual)(l, r)
+      case Expr.And(_, l, r) =>
         evaluate(l).flatMap(lres => if !lres.isTruthy then Right(lres) else evaluate(r))
-      case Expr.Or(l, r) =>
+      case Expr.Or(_, l, r) =>
         evaluate(l).flatMap(lres => if lres.isTruthy then Right(lres) else evaluate(r))
       case Expr.Assign(name, value) => ???
       case Expr.Variable(name)      => ???
