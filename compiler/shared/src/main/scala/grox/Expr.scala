@@ -72,7 +72,10 @@ object Expr:
 
       case Grouping(expr) => s"${formatNestedExpr(expr, show(expr))})"
 
-      case Literal(value) => value.toString
+      case Literal(value) =>
+        value match
+          case _: Unit => "nil"
+          case v => v.toString
 
   private def formatNestedExpr(expr: Expr, exprShow: String): String =
     expr match
