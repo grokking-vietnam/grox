@@ -75,7 +75,7 @@ object Expr:
       case Literal(value) =>
         value match
           case _: Unit => "nil"
-          case v => v.toString
+          case v       => v.toString
 
   private def formatNestedExpr(expr: Expr, exprShow: String): String =
     expr match
