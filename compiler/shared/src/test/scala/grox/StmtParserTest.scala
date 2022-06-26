@@ -8,7 +8,8 @@ class StmtParserTest extends munit.FunSuite:
 
   trait TestSets:
     val identifierX = Identifier("x", ())
-    val identifierXSpan = Identifier("x", span)
+    val identifierXSpan = Identifier("x", Span(Location(0, 0, 0), Location(0, 1, 0)))
+    val avar: Identifier[Unit] = Identifier("a", ())
     val exprX = Expr.Literal("x")
 
     val num1 = Number("1", ())
@@ -56,7 +57,7 @@ class StmtParserTest extends munit.FunSuite:
     )
   }
 
-  test("Parse variable declaration without var identifier") {
+  test("Parse variable declaration without initializer") {
     val ts = List(Var(()), Identifier("x", ()), Semicolon(()))
     val want = Stmt.Var(Identifier("x", ()), None)
     assertEquals(
@@ -270,4 +271,177 @@ class StmtParserTest extends munit.FunSuite:
         printStmt(ts),
         want,
       )
+  }
+
+  test("Val declaration") {
+    new TestSets:
+      val ts = List(
+        Var(()),
+        avar,
+        Equal(()),
+        num1,
+        Semicolon(()),
+      )
+
+      val expectedStmt: Stmt[Unit] = Stmt.Var(
+        avar,
+        Some(Expr.Literal(1)),
+      )
+
+      val inspector: Inspector[Unit] = Inspector(
+        List.empty[Error[Unit]],
+        List.empty[Stmt[Unit]],
+        tokens = ts,
+      )
+      val expectedInspector = inspector.copy(
+        stmts = List(expectedStmt),
+        tokens = List.empty[Token[Unit]],
+      )
+
+      assertEquals(parseStmt(inspector), expectedInspector)
+  }
+
+  test("While: statement ") {
+    // while (true) { var a = 1;  a = a + a; }
+    new TestSets:
+      val ts = List(
+        While(()),
+        LeftParen(()),
+        True(()),
+        RightParen(()),
+        LeftBrace(()),
+
+        // val a = 1
+        Var(()),
+        avar,
+        Equal(()),
+        num1,
+        Semicolon(()),
+        // a = a + a
+        avar,
+        Equal(()),
+        avar,
+        Plus(()),
+        avar,
+        Semicolon(()),
+        RightBrace(()),
+      )
+
+      val expectedStmt: Stmt[Unit] = Stmt.While(
+        Expr.Literal(true),
+        Stmt.Block(
+          List(
+            Stmt.Var(
+              avar,
+              Some(Expr.Literal(1)),
+            ),
+            Stmt.Expression(
+              Expr.Assign(
+                Identifier("a", ()),
+                Expr.Add(
+                  Expr.Variable(
+                    Identifier("a", ())
+                  ),
+                  Expr.Variable(
+                    Identifier("a", ())
+                  ),
+                ),
+              )
+            ),
+          )
+        ),
+      )
+
+      val inspector: Inspector[Unit] = Inspector(
+        List.empty[Error[Unit]],
+        List.empty[Stmt[Unit]],
+        tokens = ts,
+      )
+      val expectedInspector = inspector.copy(
+        stmts = List(expectedStmt),
+        tokens = List.empty[Token[Unit]],
+      )
+
+      assertEquals(parseStmt(inspector), expectedInspector)
+
+  }
+
+  test("For loop statement") {
+    // for (var i = 0; i < 10; i = i + 1) print i;
+    new TestSets:
+      val ivar = Identifier("i", ())
+      val ts = List(
+        For(()),
+        LeftParen(()),
+        Var(()),
+        ivar,
+        Equal(()),
+        Number("0", ()),
+        Semicolon(()),
+        ivar,
+        Less(()),
+        Number("10", ()),
+        Semicolon(()),
+        ivar,
+        Equal(()),
+        ivar,
+        Plus(()),
+        num1,
+        RightParen(()),
+        LeftBrace(()),
+        Print(()),
+        LeftParen(()),
+        ivar,
+        RightParen(()),
+        Semicolon(()),
+        RightBrace(()),
+        Print(()),
+        ivar,
+        Semicolon(()),
+      )
+
+      val varStmt: Stmt[Unit] = Stmt.Var(
+        avar,
+        Some(Expr.Literal(1)),
+      )
+
+      val whileStmts: Stmt[Unit] = Stmt.While(
+        Expr.Less(
+          Expr.Variable(ivar),
+          Expr.Literal(10),
+        ),
+        Stmt.Block(
+          List(
+            Stmt.Print(
+              Expr.Variable(ivar)
+            ),
+            Stmt.Expression(
+              Expr.Assign(
+                Identifier("i", ()),
+                Expr.Add(
+                  Expr.Variable(
+                    Identifier("i", ())
+                  ),
+                  Expr.Literal(1),
+                ),
+              )
+            ),
+          )
+        ),
+      )
+
+      val expectedStmts = List(varStmt, whileStmts)
+
+      val inspector: Inspector[Unit] = Inspector(
+        List.empty[Error[Unit]],
+        List.empty[Stmt[Unit]],
+        tokens = ts,
+      )
+      val expectedInspector = inspector.copy(
+        stmts = expectedStmts,
+        tokens = List.empty[Token[Unit]],
+      )
+
+      assertEquals(parseStmt(inspector), expectedInspector)
+
   }
