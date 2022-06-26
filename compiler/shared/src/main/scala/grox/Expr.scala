@@ -5,91 +5,91 @@ import cats.Show
 // We use Unit to represent the absence of a value or nil in the language.
 type LiteralType = Double | String | Boolean | Unit
 
-enum Expr:
+enum Expr[+A](val token: Token[A]):
 
   // Binary
 
   // arithmetic
-  case Add(left: Expr, right: Expr)
-  case Subtract(left: Expr, right: Expr)
-  case Multiply(left: Expr, right: Expr)
-  case Divide(left: Expr, right: Expr)
+  case Add(override val token: Token[A], left: Expr[A], right: Expr[A]) extends Expr(token)
+  case Subtract(override val token: Token[A], left: Expr[A], right: Expr[A]) extends Expr(token)
+  case Multiply(override val token: Token[A], left: Expr[A], right: Expr[A]) extends Expr(token)
+  case Divide(override val token: Token[A], left: Expr[A], right: Expr[A]) extends Expr(token)
 
   // comparison
-  case Greater(left: Expr, right: Expr)
-  case GreaterEqual(left: Expr, right: Expr)
-  case Less(left: Expr, right: Expr)
-  case LessEqual(left: Expr, right: Expr)
-  case Equal(left: Expr, right: Expr)
-  case NotEqual(left: Expr, right: Expr)
+  case Greater(override val token: Token[A], left: Expr[A], right: Expr[A]) extends Expr(token)
+  case GreaterEqual(override val token: Token[A], left: Expr[A], right: Expr[A]) extends Expr(token)
+  case Less(override val token: Token[A], left: Expr[A], right: Expr[A]) extends Expr(token)
+  case LessEqual(override val token: Token[A], left: Expr[A], right: Expr[A]) extends Expr(token)
+  case Equal(override val token: Token[A], left: Expr[A], right: Expr[A]) extends Expr(token)
+  case NotEqual(override val token: Token[A], left: Expr[A], right: Expr[A]) extends Expr(token)
 
   // assignment
-
-  case Assign[A](name: Token[A], value: Expr)
+  case Assign(override val token: Token.Identifier[A], value: Expr[A]) extends Expr(token)
 
   // logic
-  case Or(left: Expr, right: Expr)
-  case And(left: Expr, right: Expr)
+  case Or(override val token: Token[A], left: Expr[A], right: Expr[A]) extends Expr(token)
+  case And(override val token: Token[A], left: Expr[A], right: Expr[A]) extends Expr(token)
 
   // Unary
-  case Negate(expr: Expr)
-  case Not(expr: Expr)
+  case Negate(override val token: Token[A], expr: Expr[A]) extends Expr(token)
+  case Not(override val token: Token[A], expr: Expr[A]) extends Expr(token)
 
-  case Literal(value: LiteralType)
+  case Literal(override val token: Token[A], value: LiteralType) extends Expr(token)
 
-  case Grouping(expr: Expr)
+  case Grouping(override val token: Token[A], expr: Expr[A]) extends Expr(token)
 
-  case Variable[A](name: Token[A])
+  case Variable(override val token: Token.Identifier[A]) extends Expr(token)
 
 object Expr:
 
-  def show(expr: Expr): String =
-    expr match
-      case Add(left, right) =>
-        s"${formatNestedExpr(left, show(left))} + ${formatNestedExpr(right, show(right))}"
-      case Subtract(left, right) =>
-        s"${formatNestedExpr(left, show(left))} - ${formatNestedExpr(right, show(right))}"
-      case Multiply(left, right) =>
-        s"${formatNestedExpr(left, show(left))} × ${formatNestedExpr(right, show(right))}"
-      case Divide(left, right) =>
-        s"${formatNestedExpr(left, show(left))} ÷ ${formatNestedExpr(right, show(right))}"
+  def show[A](expr: Expr[A]): String = expr.toString
+    // expr match
+    //   case Add(left, right) =>
+    //     s"${formatNestedExpr(left, show(left))} + ${formatNestedExpr(right, show(right))}"
+    //   case Subtract(left, right) =>
+    //     s"${formatNestedExpr(left, show(left))} - ${formatNestedExpr(right, show(right))}"
+    //   case Multiply(left, right) =>
+    //     s"${formatNestedExpr(left, show(left))} × ${formatNestedExpr(right, show(right))}"
+    //   case Divide(left, right) =>
+    //     s"${formatNestedExpr(left, show(left))} ÷ ${formatNestedExpr(right, show(right))}"
+    //
+    //   case Negate(expr) => s"-${formatNestedExpr(expr, show(expr))}"
+    //   case Not(expr)    => s"!${formatNestedExpr(expr, show(expr))}"
+    //
+    //   case Greater(left, right) =>
+    //     s"${formatNestedExpr(left, show(left))} > ${formatNestedExpr(right, show(right))}"
+    //   case GreaterEqual(left, right) =>
+    //     s"${formatNestedExpr(left, show(left))} ≥ ${formatNestedExpr(right, show(right))}"
+    //   case Less(left, right) =>
+    //     s"${formatNestedExpr(left, show(left))} < ${formatNestedExpr(right, show(right))}"
+    //   case LessEqual(left, right) =>
+    //     s"${formatNestedExpr(left, show(left))} ≤ ${formatNestedExpr(right, show(right))}"
+    //   case Equal(left, right) =>
+    //     s"${formatNestedExpr(left, show(left))} == ${formatNestedExpr(right, show(right))}"
+    //   case NotEqual(left, right) =>
+    //     s"${formatNestedExpr(left, show(left))} ≠ ${formatNestedExpr(right, show(right))}"
+    //
+    //   case Grouping(expr) => s"${formatNestedExpr(expr, show(expr))})"
+    //
+      // case Literal(value) =>
+        // value match
+          // case _: Unit => "nil"
+          // case v       => v.toString
 
-      case Negate(expr) => s"-${formatNestedExpr(expr, show(expr))}"
-      case Not(expr)    => s"!${formatNestedExpr(expr, show(expr))}"
+      // case And(left, right) =>
+      //   s"${formatNestedExpr(left, show(left))} and ${formatNestedExpr(right, show(right))}"
+      //
+      // case Or(left, right) =>
+      //   s"${formatNestedExpr(left, show(left))} or ${formatNestedExpr(right, show(right))}"
+      //
+      // case Assign(name, value) => s"${name.lexeme} = ${formatNestedExpr(value, show(value))}"
+      //
+      // case Variable(name) => name.lexeme
 
-      case Greater(left, right) =>
-        s"${formatNestedExpr(left, show(left))} > ${formatNestedExpr(right, show(right))}"
-      case GreaterEqual(left, right) =>
-        s"${formatNestedExpr(left, show(left))} ≥ ${formatNestedExpr(right, show(right))}"
-      case Less(left, right) =>
-        s"${formatNestedExpr(left, show(left))} < ${formatNestedExpr(right, show(right))}"
-      case LessEqual(left, right) =>
-        s"${formatNestedExpr(left, show(left))} ≤ ${formatNestedExpr(right, show(right))}"
-      case Equal(left, right) =>
-        s"${formatNestedExpr(left, show(left))} == ${formatNestedExpr(right, show(right))}"
-      case NotEqual(left, right) =>
-        s"${formatNestedExpr(left, show(left))} ≠ ${formatNestedExpr(right, show(right))}"
+  // private def formatNestedExpr(expr: Expr, exprShow: String): String =
+  //   expr match
+  //     case Literal(_) => exprShow
+  //     case _          => s"($exprShow)"
 
-      case Grouping(expr) => s"${formatNestedExpr(expr, show(expr))})"
 
-      case Literal(value) =>
-        value match
-          case _: Unit => "nil"
-          case v       => v.toString
-
-      case And(left, right) =>
-        s"${formatNestedExpr(left, show(left))} and ${formatNestedExpr(right, show(right))}"
-
-      case Or(left, right) =>
-        s"${formatNestedExpr(left, show(left))} or ${formatNestedExpr(right, show(right))}"
-
-      case Assign(name, value) => s"${name.lexeme} = ${formatNestedExpr(value, show(value))}"
-
-      case Variable(name) => name.lexeme
-
-  private def formatNestedExpr(expr: Expr, exprShow: String): String =
-    expr match
-      case Literal(_) => exprShow
-      case _          => s"($exprShow)"
-
-  given Show[Expr] = Show.show(Expr.show)
+  given [A: Show]: Show[Expr[A]] = Show.show(Expr.show)
