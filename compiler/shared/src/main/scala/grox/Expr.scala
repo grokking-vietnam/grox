@@ -73,6 +73,16 @@ object Expr:
 
       case Literal(value) => value.toString
 
+      case And(left, right) =>
+        s"${formatNestedExpr(left, show(left))} and ${formatNestedExpr(right, show(right))}"
+
+      case Or(left, right) =>
+        s"${formatNestedExpr(left, show(left))} or ${formatNestedExpr(right, show(right))}"
+
+      case Assign(name, value) => s"${name.lexeme} = ${formatNestedExpr(value, show(value))}"
+
+      case Variable(name) => name.lexeme
+
   private def formatNestedExpr(expr: Expr, exprShow: String): String =
     expr match
       case Literal(_) => exprShow

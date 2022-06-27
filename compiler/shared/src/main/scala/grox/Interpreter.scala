@@ -109,3 +109,9 @@ object Interpreter:
       case Expr.LessEqual(l, r)    => evaluateBinary(lessOrEqual)(l, r)
       case Expr.Equal(l, r)        => evaluateBinary(equal)(l, r)
       case Expr.NotEqual(l, r)     => evaluateBinary(notEqual)(l, r)
+      case Expr.And(l, r) =>
+        evaluate(l).flatMap(lres => if !lres.isTruthy then Right(lres) else evaluate(r))
+      case Expr.Or(l, r) =>
+        evaluate(l).flatMap(lres => if lres.isTruthy then Right(lres) else evaluate(r))
+      case Expr.Assign(name, value) => ???
+      case Expr.Variable(name)      => ???

@@ -92,6 +92,28 @@ class InterpreterTest extends ScalaCheckSuite:
     )
   }
 
+  test("logical or") {
+    assertEquals(
+      evaluate(Expr.Or(Expr.Literal(true), Expr.Literal(false))),
+      Right(true),
+    )
+    assertEquals(
+      evaluate(Expr.Or(Expr.Literal(false), Expr.Literal(false))),
+      Right(false),
+    )
+  }
+
+  test("logical and") {
+    assertEquals(
+      evaluate(Expr.And(Expr.Literal(true), Expr.Literal(false))),
+      Right(false),
+    )
+    assertEquals(
+      evaluate(Expr.And(Expr.Literal(false), Expr.Literal(false))),
+      Right(false),
+    )
+  }
+
   test("must be numbers or strings runtime error") {
     assertEquals(
       evaluate(Expr.Add(Expr.Literal(1), Expr.Literal("string"))),

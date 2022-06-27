@@ -76,3 +76,13 @@ class ExprShowTest extends munit.FunSuite:
     val not = Expr.Not(Expr.Literal(true))
     assertEquals(not.show, "!true")
   }
+
+  test("logical or") {
+    val or = Expr.Or(Expr.Literal(true), Expr.Literal(false))
+    assertEquals(or.show, "true or false")
+  }
+
+  test("logical and") {
+    val and = Expr.And(Expr.Literal(true), Expr.Literal(false))
+    assertEquals(and.show, "true and false")
+  }
