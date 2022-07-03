@@ -189,7 +189,6 @@ object Parser:
     for {
 
       (leftParen, afterLeftParenTokens) <-
-        println(tokens)
         consume[A, LeftParen[A]](tokens)
 
       (initializerStmtOption, afterInitializerTokens): (Option[Stmt[A]], List[Token[A]]) <-
