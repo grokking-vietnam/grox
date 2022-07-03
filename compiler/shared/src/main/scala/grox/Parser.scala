@@ -191,7 +191,6 @@ object Parser:
       (leftParen, afterLeftParenTokens) <- consume[A, LeftParen[A]](tokens)
 
       (initializerStmtOption, afterInitializerTokens): (Option[Stmt[A]], List[Token[A]]) <-
-        println(afterLeftParenTokens)
         afterLeftParenTokens.headOption match
 
           case Some(_: Semicolon[A]) => (None, afterLeftParenTokens.tail).asRight
