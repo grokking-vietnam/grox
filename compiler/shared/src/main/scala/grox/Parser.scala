@@ -187,49 +187,49 @@ object Parser:
 
   def forStmt[A](tokens: List[Token[A]]): StmtParser[A] =
     for {
-      (leftParen, afterLeftParenTokens) <- consume[A, LeftParen[A]](tokens)
+
+      (leftParen, afterLeftParenTokens) <-
+        println(tokens)
+        consume[A, LeftParen[A]](tokens)
+
       (initializerStmtOption, afterInitializerTokens): (Option[Stmt[A]], List[Token[A]]) <-
-        afterLeftParenTokens.headOption match {
+        println(afterLeftParenTokens)
+        afterLeftParenTokens.headOption match
 
           case Some(_: Semicolon[A]) => (None, afterLeftParenTokens.tail).asRight
           case Some(_: Var[A]) =>
-            declaration(afterLeftParenTokens).map((declareStmt, tokens) =>
-              (declareStmt.some, tokens)
-            )
+            declaration(afterLeftParenTokens).map((declareStmt, toks) => (declareStmt.some, toks))
           case _ =>
-            expressionStmt(afterLeftParenTokens).map((declareStmt, tokens) =>
-              (declareStmt.some, tokens)
+            expressionStmt(afterLeftParenTokens).map((declareStmt, toks) =>
+              (declareStmt.some, toks)
             )
-        }
 
       (conditionalExprOption, afterConditionStmtTokens): (Option[Expr], List[Token[A]]) <-
-        afterInitializerTokens.headOption match {
+        afterInitializerTokens.headOption match
           case Some(_: Semicolon[A]) => (None, afterInitializerTokens).asRight
           case _ =>
-            expression(afterLeftParenTokens).map((declareStmt, tokens) =>
+            expression(afterInitializerTokens).map((declareStmt, tokens) =>
               (declareStmt.some, tokens)
             )
-        }
 
       (_, afterConditionStmtAndSemiColonTokens) <- consume[A, Semicolon[A]](
         afterConditionStmtTokens
       )
 
-      (incrementExprOption, afterIncrementStmtTokens): (Option[Expr], List[Token]) <-
-        afterConditionStmtAndSemiColonTokens.headOption match {
-          case Some(Operator.RightParen) =>
-            (None, afterConditionStmtAndSemiColonTokens.tail).asRight
+      (incrementExprOption, afterIncrementStmtTokens): (Option[Expr], List[Token[A]]) <-
+        afterConditionStmtAndSemiColonTokens.headOption match
+          case Some(_: RightParen[A]) => (None, afterConditionStmtAndSemiColonTokens.tail).asRight
           case _ =>
             expression(afterConditionStmtAndSemiColonTokens).map((declareStmt, tokens) =>
               (declareStmt.some, tokens)
             )
-        }
 
       (_, afterIncrementStmtAndRightParenTokens) <- consume[A, RightParen[A]](
         afterIncrementStmtTokens
       )
 
-      (body, afterBodyTokens) <- statement(afterLeftParenTokens)
+      (body, afterBodyTokens) <- statement(afterIncrementStmtAndRightParenTokens)
+
       desugarIncrement =
         if (incrementExprOption.isDefined)
           new Stmt.Block(List(body, new Stmt.Expression(incrementExprOption.get)))

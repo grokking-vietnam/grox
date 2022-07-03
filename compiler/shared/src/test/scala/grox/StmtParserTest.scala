@@ -10,6 +10,7 @@ class StmtParserTest extends munit.FunSuite:
     val identifierX = Identifier("x", ())
     val identifierXSpan = Identifier("x", Span(Location(0, 0, 0), Location(0, 1, 0)))
     val avar: Identifier[Unit] = Identifier("a", ())
+
     val exprX = Expr.Literal("x")
 
     val num1 = Number("1", ())
@@ -367,11 +368,14 @@ class StmtParserTest extends munit.FunSuite:
   }
 
   test("For loop statement") {
-    // for (var i = 0; i < 10; i = i + 1) print i;
+    // for (var i = 0; i < 10; i = i + 1) print i
     new TestSets:
-      val ivar = Identifier("i", ())
+      val ivar: Identifier[Unit] = Identifier("i", ())
+
       val ts = List(
         For(()),
+
+        // (var i = 0; i < 10; i = i + 1)
         LeftParen(()),
         Var(()),
         ivar,
@@ -388,21 +392,16 @@ class StmtParserTest extends munit.FunSuite:
         Plus(()),
         num1,
         RightParen(()),
-        LeftBrace(()),
-        Print(()),
-        LeftParen(()),
-        ivar,
-        RightParen(()),
-        Semicolon(()),
-        RightBrace(()),
+
+        // print i;
         Print(()),
         ivar,
         Semicolon(()),
       )
 
       val varStmt: Stmt[Unit] = Stmt.Var(
-        avar,
-        Some(Expr.Literal(1)),
+        ivar,
+        Some(Expr.Literal(0)),
       )
 
       val whileStmts: Stmt[Unit] = Stmt.While(
@@ -417,10 +416,10 @@ class StmtParserTest extends munit.FunSuite:
             ),
             Stmt.Expression(
               Expr.Assign(
-                Identifier("i", ()),
+                ivar,
                 Expr.Add(
                   Expr.Variable(
-                    Identifier("i", ())
+                    ivar
                   ),
                   Expr.Literal(1),
                 ),
@@ -430,7 +429,7 @@ class StmtParserTest extends munit.FunSuite:
         ),
       )
 
-      val expectedStmts = List(varStmt, whileStmts)
+      val expectedStmts = Stmt.Block(List(varStmt, whileStmts))
 
       val inspector: Inspector[Unit] = Inspector(
         List.empty[Error[Unit]],
@@ -438,7 +437,7 @@ class StmtParserTest extends munit.FunSuite:
         tokens = ts,
       )
       val expectedInspector = inspector.copy(
-        stmts = expectedStmts,
+        stmts = List(expectedStmts),
         tokens = List.empty[Token[Unit]],
       )
 
