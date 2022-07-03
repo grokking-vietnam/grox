@@ -185,7 +185,67 @@ object Parser:
 
   def returnStmt[A](keyword: Token[A], tokens: List[Token[A]]): StmtParser[A] = ???
 
-  def forStmt[A](tokens: List[Token[A]]): StmtParser[A] = ???
+  def forStmt[A](tokens: List[Token[A]]): StmtParser[A] =
+    for {
+      (leftParen, afterLeftParenTokens) <- consume[A, LeftParen[A]](tokens)
+      (initializerStmtOption, afterInitializerTokens): (Option[Stmt[A]], List[Token[A]]) <-
+        afterLeftParenTokens.headOption match {
+
+          case Some(_: Semicolon[A]) => (None, afterLeftParenTokens.tail).asRight
+          case Some(_: Var[A]) =>
+            declaration(afterLeftParenTokens).map((declareStmt, tokens) =>
+              (declareStmt.some, tokens)
+            )
+          case _ =>
+            expressionStmt(afterLeftParenTokens).map((declareStmt, tokens) =>
+              (declareStmt.some, tokens)
+            )
+        }
+
+      (conditionalExprOption, afterConditionStmtTokens): (Option[Expr], List[Token[A]]) <-
+        afterInitializerTokens.headOption match {
+          case Some(_: Semicolon[A]) => (None, afterInitializerTokens).asRight
+          case _ =>
+            expression(afterLeftParenTokens).map((declareStmt, tokens) =>
+              (declareStmt.some, tokens)
+            )
+        }
+
+      (_, afterConditionStmtAndSemiColonTokens) <- consume[A, Semicolon[A]](
+        afterConditionStmtTokens
+      )
+
+      (incrementExprOption, afterIncrementStmtTokens): (Option[Expr], List[Token]) <-
+        afterConditionStmtAndSemiColonTokens.headOption match {
+          case Some(Operator.RightParen) =>
+            (None, afterConditionStmtAndSemiColonTokens.tail).asRight
+          case _ =>
+            expression(afterConditionStmtAndSemiColonTokens).map((declareStmt, tokens) =>
+              (declareStmt.some, tokens)
+            )
+        }
+
+      (_, afterIncrementStmtAndRightParenTokens) <- consume[A, RightParen[A]](
+        afterIncrementStmtTokens
+      )
+
+      (body, afterBodyTokens) <- statement(afterLeftParenTokens)
+      desugarIncrement =
+        if (incrementExprOption.isDefined)
+          new Stmt.Block(List(body, new Stmt.Expression(incrementExprOption.get)))
+        else
+          body
+      desugarCondition =
+        new Stmt.While(
+          conditionalExprOption.getOrElse(new Expr.Literal(true)),
+          desugarIncrement,
+        )
+
+      desugarInitializer = initializerStmtOption
+        .map(initializer => new Stmt.Block(List(initializer, desugarCondition)))
+        .getOrElse(desugarCondition)
+
+    } yield (desugarInitializer, afterBodyTokens)
 
   def whileStmt[A](tokens: List[Token[A]]): StmtParser[A] =
     for {
