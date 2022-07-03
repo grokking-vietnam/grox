@@ -188,8 +188,7 @@ object Parser:
   def forStmt[A](tokens: List[Token[A]]): StmtParser[A] =
     for {
 
-      (leftParen, afterLeftParenTokens) <-
-        consume[A, LeftParen[A]](tokens)
+      (leftParen, afterLeftParenTokens) <- consume[A, LeftParen[A]](tokens)
 
       (initializerStmtOption, afterInitializerTokens): (Option[Stmt[A]], List[Token[A]]) <-
         println(afterLeftParenTokens)
