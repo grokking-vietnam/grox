@@ -15,6 +15,7 @@ class ParserTest extends munit.FunSuite:
     val num3 = Number("3", ())
     val num4 = Number("4", ())
     val num5 = Number("5", ())
+    val num6 = Number("6", ())
     val num42 = Number("42", ())
 
     val expr1 = Expr.Literal(1)
@@ -22,9 +23,9 @@ class ParserTest extends munit.FunSuite:
     val expr3 = Expr.Literal(3)
     val expr4 = Expr.Literal(4)
     val expr5 = Expr.Literal(5)
+    val expr6 = Expr.Literal(6)
     val expr42 = Expr.Literal(42)
-
-    val avar = Identifier("a", ())
+    val avar: Identifier[Unit] = Identifier("a", ())
 
   test("empty") {
     assertEquals(parse[Unit](Nil), Left(Error.ExpectExpression(Nil)))
@@ -56,7 +57,7 @@ class ParserTest extends munit.FunSuite:
 
   test("primary nil") {
     val ts = List(Null(()))
-    val want = Expr.Literal(null)
+    val want = Expr.Literal(())
     assertEquals(parse(ts), Right(want, Nil))
   }
 
@@ -221,6 +222,57 @@ class ParserTest extends munit.FunSuite:
       assertEquals(parse(ts), Right(want, rmn))
   }
 
+  test("AND OR logic") {
+    new TestSets:
+      // True OR (3 >= 4) AND (5 < 6)
+      val ts = List(
+        True(()),
+        Or(()),
+        LeftParen(()),
+        num3,
+        GreaterEqual(()),
+        num4,
+        RightParen(()),
+        And(()),
+        LeftParen(()),
+        num5,
+        Less(()),
+        num6,
+        RightParen(()),
+      )
+      val want = Expr.Or(
+        left = Expr.Literal(true),
+        right = Expr.And(
+          left = Expr.Grouping(
+            Expr.GreaterEqual(
+              Expr.Literal(3),
+              Expr.Literal(4),
+            )
+          ),
+          right = Expr.Grouping(
+            Expr.Less(
+              Expr.Literal(5),
+              Expr.Literal(6),
+            )
+          ),
+        ),
+      )
+      val rmn = List.empty[Token[Unit]]
+
+      assertEquals(parse(ts), Right(want, rmn))
+
+  }
+
+  test("assignment statement") {
+    new TestSets:
+      val ts = List(avar, Equal(()), num1)
+      val want = Right(Expr.Assign(avar, expr1), List())
+      assertEquals(
+        assignment(ts),
+        want,
+      )
+  }
+
   test("error: expect expression") {
     // 1 + 2 / (3 - )
     new TestSets:
@@ -291,6 +343,104 @@ class ParserTest extends munit.FunSuite:
       assertEquals(synchronize(ts), remaining)
   }
 
+  test("Val declaration") {
+    new TestSets:
+      val ts = List(
+        Var(()),
+        avar,
+        Equal(()),
+        num42,
+        Semicolon(()),
+      )
+
+      val expectedStmt: Stmt[Unit] = Stmt.Var(
+        avar,
+        Some(Expr.Literal(42)),
+      )
+
+      val inspector: Inspector[Unit] = Inspector(
+        List.empty[Error[Unit]],
+        List.empty[Stmt[Unit]],
+        tokens = ts,
+      )
+      val expectedInspector = inspector.copy(
+        stmts = List(expectedStmt),
+        tokens = List.empty[Token[Unit]],
+      )
+
+      assertEquals(parseStmt(inspector), expectedInspector)
+  }
+
+  test("While: statement ") {
+    new TestSets:
+      val ts = List(
+        While(()),
+        LeftParen(()),
+        True(()),
+        RightParen(()),
+        LeftBrace(()),
+
+        // val a = 42
+        Var(()),
+        avar,
+        Equal(()),
+        num42,
+        Semicolon(()),
+        // a = a + a
+        avar,
+        Equal(()),
+        avar,
+        Plus(()),
+        avar,
+        Semicolon(()),
+        RightBrace(()),
+      )
+
+      val expectedStmt: Stmt[Unit] = Stmt.While(
+        Expr.Literal(true),
+        Stmt.Block(
+          List(
+            Stmt.Var(
+              avar,
+              Some(Expr.Literal(42)),
+            ),
+            Stmt.Expression(
+              Expr.Assign(
+                Identifier("a", ()),
+                Expr.Add(
+                  Expr.Variable(
+                    Identifier("a", ())
+                  ),
+                  Expr.Variable(
+                    Identifier("a", ())
+                  ),
+                ),
+              )
+            ),
+          )
+        ),
+      )
+
+      val inspector: Inspector[Unit] = Inspector(
+        List.empty[Error[Unit]],
+        List.empty[Stmt[Unit]],
+        tokens = ts,
+      )
+      val expectedInspector = inspector.copy(
+        stmts = List(expectedStmt),
+        tokens = List.empty[Token[Unit]],
+      )
+
+      assertEquals(parseStmt(inspector), expectedInspector)
+
+  }
+
+  test("1 + nil") {
+    val ts = List(Number("1", ()), Plus(()), Null(()))
+    val want = Expr.Add(Expr.Literal(1), Expr.Literal(()))
+    assertEquals(parse(ts), Right(want, Nil))
+  }
+
 end ParserTest
 
 class ParserCheck extends ScalaCheckSuite:
@@ -310,5 +460,23 @@ class ParserCheck extends ScalaCheckSuite:
     }
   }
 
-  // TODO: property: value of original expression and that of parsed expression are equal.
+  property("produce an equal numeric expression") {
+    Prop.forAll(numericGen) { expr =>
+      parse(expr.flatten) match
+        case Left(_) => false
+        case Right(parsedExpr, _) =>
+          (Interpreter.evaluate(expr), Interpreter.evaluate(parsedExpr)) match
+            case (Left(e1), Left(e2))                   => e1 == e2
+            case (Right(v1: Double), Right(v2: Double)) => math.abs(v1 - v2) < 0.01
+            case _                                      => false
+    }
+  }
+
+  property("produce an equal logical expression") {
+    Prop.forAll(logicalGen) { expr =>
+      parse(expr.flatten) match
+        case Left(_)              => false
+        case Right(parsedExpr, _) => Interpreter.evaluate(expr) == Interpreter.evaluate(parsedExpr)
+    }
+  }
 end ParserCheck
