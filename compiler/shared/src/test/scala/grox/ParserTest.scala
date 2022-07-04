@@ -57,7 +57,7 @@ class ParserTest extends munit.FunSuite:
 
   test("primary nil") {
     val ts = List(Null(()))
-    val want = Expr.Literal(null)
+    val want = Expr.Literal(())
     assertEquals(parse(ts), Right(want, Nil))
   }
 
@@ -341,6 +341,104 @@ class ParserTest extends munit.FunSuite:
       )
       val remaining = ts.dropWhile(_ != num2)
       assertEquals(synchronize(ts), remaining)
+  }
+
+  test("Val declaration") {
+    new TestSets:
+      val ts = List(
+        Var(()),
+        avar,
+        Equal(()),
+        num42,
+        Semicolon(()),
+      )
+
+      val expectedStmt: Stmt[Unit] = Stmt.Var(
+        avar,
+        Some(Expr.Literal(42)),
+      )
+
+      val inspector: Inspector[Unit] = Inspector(
+        List.empty[Error[Unit]],
+        List.empty[Stmt[Unit]],
+        tokens = ts,
+      )
+      val expectedInspector = inspector.copy(
+        stmts = List(expectedStmt),
+        tokens = List.empty[Token[Unit]],
+      )
+
+      assertEquals(parseStmt(inspector), expectedInspector)
+  }
+
+  test("While: statement ") {
+    new TestSets:
+      val ts = List(
+        While(()),
+        LeftParen(()),
+        True(()),
+        RightParen(()),
+        LeftBrace(()),
+
+        // val a = 42
+        Var(()),
+        avar,
+        Equal(()),
+        num42,
+        Semicolon(()),
+        // a = a + a
+        avar,
+        Equal(()),
+        avar,
+        Plus(()),
+        avar,
+        Semicolon(()),
+        RightBrace(()),
+      )
+
+      val expectedStmt: Stmt[Unit] = Stmt.While(
+        Expr.Literal(true),
+        Stmt.Block(
+          List(
+            Stmt.Var(
+              avar,
+              Some(Expr.Literal(42)),
+            ),
+            Stmt.Expression(
+              Expr.Assign(
+                Identifier("a", ()),
+                Expr.Add(
+                  Expr.Variable(
+                    Identifier("a", ())
+                  ),
+                  Expr.Variable(
+                    Identifier("a", ())
+                  ),
+                ),
+              )
+            ),
+          )
+        ),
+      )
+
+      val inspector: Inspector[Unit] = Inspector(
+        List.empty[Error[Unit]],
+        List.empty[Stmt[Unit]],
+        tokens = ts,
+      )
+      val expectedInspector = inspector.copy(
+        stmts = List(expectedStmt),
+        tokens = List.empty[Token[Unit]],
+      )
+
+      assertEquals(parseStmt(inspector), expectedInspector)
+
+  }
+
+  test("1 + nil") {
+    val ts = List(Number("1", ()), Plus(()), Null(()))
+    val want = Expr.Add(Expr.Literal(1), Expr.Literal(()))
+    assertEquals(parse(ts), Right(want, Nil))
   }
 
 end ParserTest
