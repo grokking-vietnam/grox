@@ -263,6 +263,16 @@ class ParserTest extends munit.FunSuite:
 
   }
 
+  test("assignment statement") {
+    new TestSets:
+      val ts = List(avar, Equal(()), num1)
+      val want = Right(Expr.Assign(avar, expr1), List())
+      assertEquals(
+        assignment(ts),
+        want,
+      )
+  }
+
   test("error: expect expression") {
     // 1 + 2 / (3 - )
     new TestSets:
