@@ -101,16 +101,6 @@ object Interpreter:
     right: LiteralType,
   ): EvaluationResult = equal(left, right).flatMap(r => !r)
 
-  // Implement Environment for Assign and Variable cases by using cats-mtl library
-  // cats-mlt is a Monad Transformer library for Cats
-  // which help us write polymophic programs using Monad Transformers
-  // The refactor will follow these step:
-  // 1. Use [F[_]: MonadThrow] instead of Either
-  // 2. Use Stateful[F, Environment] for State
-  // resources:
-  // https://typelevel.org/cats-mtl/getting-started.html
-  // https://typelevel.org/blog/2018/10/06/intro-to-mtl.html
-
   def evaluate[F[_]: MonadThrow](expr: Expr)(using S: Stateful[F, Environment]): F[LiteralType] =
     expr match
       case Expr.Literal(value) => value.pure[F]
