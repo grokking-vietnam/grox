@@ -5,9 +5,6 @@ import scala.util.control.NoStackTrace
 import cats.*
 import cats.syntax.all.*
 import cats.syntax.apply.*
-import cats.*
-import cats.syntax.all.*
-import scala.util.control.NoStackTrace
 
 trait Interpreter[F[_]]:
   def evaluate(expr: Expr): F[LiteralType]
@@ -34,7 +31,7 @@ object Interpreter:
 
     def isTruthy: Boolean =
       value match
-        case null       => false
+        case _: Unit    => false
         case v: Boolean => v
         case _          => true
 
@@ -92,11 +89,7 @@ object Interpreter:
       case (l: Double, r: Double) => Right(l <= r)
       case _                      => Left(RuntimeError.MustBeNumbers(Token.LessEqual(())))
 
-  def equal(left: LiteralType, right: LiteralType): EvaluationResult =
-    (left, right) match
-      case (null, null) => Right(true)
-      case (null, _)    => Right(false)
-      case _            => Right(left.equals(right))
+  def equal(left: LiteralType, right: LiteralType): EvaluationResult = Right(left == right)
 
   def notEqual(
     left: LiteralType,

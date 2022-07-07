@@ -76,3 +76,8 @@ class ExprShowTest extends munit.FunSuite:
     val not = Expr.Not(Expr.Literal(true))
     assertEquals(not.show, "!true")
   }
+
+  test("1 + nil") {
+    val onePlusNil = Expr.Add(Expr.Literal(1), Expr.Literal(()))
+    assertEquals(onePlusNil.show, "1.0 + nil")
+  }

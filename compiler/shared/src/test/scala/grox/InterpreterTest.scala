@@ -100,7 +100,7 @@ class InterpreterTest extends ScalaCheckSuite:
   }
 
   test("Two nulls should be equal") {
-    assertEquals(evaluate(Expr.Equal(Expr.Literal(null), Expr.Literal(null))), Right(true))
+    assertEquals(evaluate(Expr.Equal(Expr.Literal(()), Expr.Literal(()))), Right(true))
   }
 
   test("Two operators which are different in type should not be equal") {
