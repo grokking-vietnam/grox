@@ -3,28 +3,28 @@ package grox
 import cats.implicits.catsSyntaxEither
 
 object Environment:
-  def apply(): Environment = new Environment(Map.empty[String, Token[Unit]], enclosing = None)
+  def apply: Environment = new Environment(Map.empty[String, LiteralType], enclosing = None)
 
 enum EnvironmentError(msg: String):
-  case UndefinedVariableError(variable: Token[Unit])
+  case UndefinedVariableError(variable: String)
     extends EnvironmentError(s"Undefined variable: '$variable'.")
 
 class Environment(
-  private val values: Map[String, Token[Unit]],
+  private val values: Map[String, LiteralType],
   private val enclosing: Option[Environment],
 ):
 
-  def define(name: String, value: Token[Unit]): Environment =
+  def define(name: String, value: LiteralType): Environment =
     new Environment(values + (name -> value), enclosing)
 
   def get(
-    name: Token[Unit]
-  ): Option[Token[Unit]] = values.get(name.lexeme).orElse(enclosing.flatMap(_.get(name)))
+    name: String
+  ): Option[LiteralType] = values.get(name).orElse(enclosing.flatMap(_.get(name)))
 
-  def assign(name: Token[Unit], value: Token[Unit]): Either[EnvironmentError, Environment] =
+  def assign(name: String, value: LiteralType): Either[EnvironmentError, Environment] =
     val assignEither =
-      if (values.contains(name.lexeme))
-        Right(new Environment(values + (name.lexeme -> value), enclosing))
+      if (values.contains(name))
+        Right(new Environment(values + (name -> value), enclosing))
       else
         Left(EnvironmentError.UndefinedVariableError(name))
 
