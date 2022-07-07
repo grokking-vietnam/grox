@@ -57,7 +57,7 @@ class ParserTest extends munit.FunSuite:
 
   test("primary nil") {
     val ts = List(Null(()))
-    val want = Expr.Literal(null)
+    val want = Expr.Literal(())
     assertEquals(parse(ts), Right(want, Nil))
   }
 
@@ -263,6 +263,16 @@ class ParserTest extends munit.FunSuite:
 
   }
 
+  test("assignment statement") {
+    new TestSets:
+      val ts = List(avar, Equal(()), num1)
+      val want = Right(Expr.Assign(avar, expr1), List())
+      assertEquals(
+        assignment(ts),
+        want,
+      )
+  }
+
   test("error: expect expression") {
     // 1 + 2 / (3 - )
     new TestSets:
@@ -423,6 +433,12 @@ class ParserTest extends munit.FunSuite:
 
       assertEquals(parseStmt(inspector), expectedInspector)
 
+  }
+
+  test("1 + nil") {
+    val ts = List(Number("1", ()), Plus(()), Null(()))
+    val want = Expr.Add(Expr.Literal(1), Expr.Literal(()))
+    assertEquals(parse(ts), Right(want, Nil))
   }
 
 end ParserTest

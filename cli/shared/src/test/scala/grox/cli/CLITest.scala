@@ -13,3 +13,7 @@ class CLITest extends munit.FunSuite:
   test("parse command") {
     assertEquals(testCommand("parse", "."), Right(CLI.Command.Parse(".")))
   }
+
+  test("evaluate command") {
+    assertEquals(testCommand("evaluate", "."), Right(CLI.Command.Evaluate(".")))
+  }

@@ -2,7 +2,8 @@ package grox
 
 import cats.Show
 
-type LiteralType = Double | String | Boolean | Null
+// We use Unit to represent the absence of a value or nil in the language.
+type LiteralType = Double | String | Boolean | Unit
 
 enum Expr:
 
@@ -71,7 +72,10 @@ object Expr:
 
       case Grouping(expr) => s"${formatNestedExpr(expr, show(expr))})"
 
-      case Literal(value) => value.toString
+      case Literal(value) =>
+        value match
+          case _: Unit => "nil"
+          case v       => v.toString
 
       case And(left, right) =>
         s"${formatNestedExpr(left, show(left))} and ${formatNestedExpr(right, show(right))}"

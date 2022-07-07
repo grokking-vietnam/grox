@@ -1,5 +1,5 @@
 import {
   TyrianApp
-} from './target/scala-3.1.2/web-fastopt.js';
+} from './target/scala-3.1.3/web-fastopt.js';
 
 TyrianApp.launch("myapp");

@@ -86,3 +86,8 @@ class ExprShowTest extends munit.FunSuite:
     val and = Expr.And(Expr.Literal(true), Expr.Literal(false))
     assertEquals(and.show, "true and false")
   }
+  
+  test("1 + nil") {
+    val onePlusNil = Expr.Add(Expr.Literal(1), Expr.Literal(()))
+    assertEquals(onePlusNil.show, "1.0 + nil")
+  }
