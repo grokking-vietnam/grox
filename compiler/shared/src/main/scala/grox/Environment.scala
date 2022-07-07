@@ -3,7 +3,7 @@ package grox
 import cats.implicits.catsSyntaxEither
 
 object Environment:
-  def apply: Environment = new Environment(Map.empty[String, LiteralType], enclosing = None)
+  def apply(): Environment = new Environment(Map.empty[String, LiteralType], enclosing = None)
 
 enum EnvironmentError(msg: String):
   case UndefinedVariableError(variable: String)
@@ -17,9 +17,17 @@ class Environment(
   def define(name: String, value: LiteralType): Environment =
     new Environment(values + (name -> value), enclosing)
 
+  def _get(
+    name: String
+  ): Option[LiteralType] = values
+    .get(name)
+    .orElse(enclosing.flatMap(_._get(name)))
+
   def get(
     name: String
-  ): Option[LiteralType] = values.get(name).orElse(enclosing.flatMap(_.get(name)))
+  ): Either[EnvironmentError, LiteralType] =
+    _get(name)
+    .toRight(EnvironmentError.UndefinedVariableError(name))
 
   def assign(name: String, value: LiteralType): Either[EnvironmentError, Environment] =
     val assignEither =

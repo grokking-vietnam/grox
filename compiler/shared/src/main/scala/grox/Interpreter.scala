@@ -5,12 +5,13 @@ import scala.util.control.NoStackTrace
 import cats.*
 import cats.syntax.all.*
 import cats.syntax.apply.*
+import cats.mtl.Stateful
 
 trait Interpreter[F[_]]:
   def evaluate(expr: Expr): F[LiteralType]
 
 object Interpreter:
-  def instance[F[_]: MonadThrow]: Interpreter[F] = expr => evaluate(expr)
+  def instance[F[_]: MonadThrow](using S: Stateful[F, Environment]): Interpreter[F] = expr => evaluate(expr)
 
   enum RuntimeError(op: Token[Unit], msg: String) extends NoStackTrace:
     override def toString = msg
@@ -18,6 +19,7 @@ object Interpreter:
     case MustBeNumbersOrStrings
       extends RuntimeError(Token.Plus(()), "Operands must be two numbers or two strings")
     case DivisionByZero extends RuntimeError(Token.Slash(()), "Division by zerro")
+    case VariableNotFound(op: Token[Unit]) extends RuntimeError(op, "Variable not found")
 
   type EvaluationResult = Either[RuntimeError, LiteralType]
   type Evaluate = (LiteralType, LiteralType) => EvaluationResult
@@ -42,7 +44,7 @@ object Interpreter:
   )(
     left: Expr,
     right: Expr,
-  ): F[LiteralType] = (evaluate(left), evaluate(right)).mapN(eval).map(_.liftTo[F]).flatten
+  )(using S: Stateful[F, Environment]): F[LiteralType] = (evaluate(left), evaluate(right)).mapN(eval).map(_.liftTo[F]).flatten
 
   def add(left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
@@ -105,7 +107,8 @@ object Interpreter:
   // resources:
   // https://typelevel.org/cats-mtl/getting-started.html
   // https://typelevel.org/blog/2018/10/06/intro-to-mtl.html
-  def evaluate[F[_]: MonadThrow](expr: Expr): F[LiteralType] =
+
+  def evaluate[F[_]: MonadThrow](expr: Expr)(using S: Stateful[F, Environment]): F[LiteralType] =
     expr match
       case Expr.Literal(value) => value.pure[F]
       case Expr.Grouping(e)    => evaluate(e)
@@ -126,5 +129,23 @@ object Interpreter:
         evaluate(l).flatMap(lres => if !lres.isTruthy then lres.pure[F] else evaluate(r))
       case Expr.Or(l, r) =>
         evaluate(l).flatMap(lres => if lres.isTruthy then lres.pure[F] else evaluate(r))
-      case Expr.Assign(name, value) => ???
-      case Expr.Variable(name)      => ???
+      case Expr.Assign(name, expr) =>
+        for
+          env <- S.get
+          result <- evaluate(expr)
+          newEnv <- env
+            .assign(name.lexeme, result)
+            .left
+            .map(_ => RuntimeError.VariableNotFound(name))
+            .liftTo[F]
+          _ <- S.set(newEnv)
+        yield result
+      case Expr.Variable(name) =>
+        for
+          env <- S.get
+          result <- env
+            .get(name.lexeme)
+            .left
+            .map(_ => RuntimeError.VariableNotFound(name))
+            .liftTo[F]
+        yield result

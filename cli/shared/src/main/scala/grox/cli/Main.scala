@@ -7,6 +7,9 @@ import cats.syntax.all.*
 import com.monovore.decline.*
 import com.monovore.decline.effect.*
 import grox.Executor
+import cats.data.StateT
+import grox.Environment
+import cats.data.EitherT
 
 object Main
   extends CommandIOApp(
@@ -31,14 +34,14 @@ object Main
     case Command.Evaluate(str) => exec.evaluate(str).map(_.toString)
 
   given FileReader[IO] = FileReader.instance[IO]
-  val exec = Executor.module[IO]
+  val exec = Executor.module[EitherT[StateT[IO, Environment, *], Throwable, *]]
 
   override def main: Opts[IO[ExitCode]] = CLI.parse.map {
     convertCommand[IO](_)
       .flatMap { cmd =>
-        eval(exec)(cmd)
+        eval(exec)(cmd).value.run(Environment())
       }
-      .flatMap(IO.println)
+      .flatMap(x => IO.println(x._2.toString))
       .handleErrorWith { err =>
         IO.println(s"Error: ${err.toString}")
       }
