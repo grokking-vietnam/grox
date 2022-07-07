@@ -3,15 +3,16 @@ package grox
 import scala.util.control.NoStackTrace
 
 import cats.*
+import cats.mtl.Stateful
 import cats.syntax.all.*
 import cats.syntax.apply.*
-import cats.mtl.Stateful
 
 trait Interpreter[F[_]]:
   def evaluate(expr: Expr): F[LiteralType]
 
 object Interpreter:
-  def instance[F[_]: MonadThrow](using S: Stateful[F, Environment]): Interpreter[F] = expr => evaluate(expr)
+  def instance[F[_]: MonadThrow](using S: Stateful[F, Environment]): Interpreter[F] =
+    expr => evaluate(expr)
 
   enum RuntimeError(op: Token[Unit], msg: String) extends NoStackTrace:
     override def toString = msg
@@ -44,7 +45,9 @@ object Interpreter:
   )(
     left: Expr,
     right: Expr,
-  )(using S: Stateful[F, Environment]): F[LiteralType] = (evaluate(left), evaluate(right)).mapN(eval).map(_.liftTo[F]).flatten
+  )(
+    using S: Stateful[F, Environment]
+  ): F[LiteralType] = (evaluate(left), evaluate(right)).mapN(eval).map(_.liftTo[F]).flatten
 
   def add(left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match

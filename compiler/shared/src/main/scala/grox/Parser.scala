@@ -1,9 +1,8 @@
 package grox
 
 import scala.annotation.tailrec
-import scala.reflect.{ClassTag, TypeTest}
+import scala.reflect.{ClassTag, TypeTest, Typeable}
 import scala.util.control.NoStackTrace
-import scala.reflect.Typeable
 
 import cats.*
 import cats.implicits.*

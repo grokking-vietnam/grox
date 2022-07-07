@@ -25,8 +25,7 @@ class Environment(
 
   def get(
     name: String
-  ): Either[EnvironmentError, LiteralType] =
-    _get(name)
+  ): Either[EnvironmentError, LiteralType] = _get(name)
     .toRight(EnvironmentError.UndefinedVariableError(name))
 
   def assign(name: String, value: LiteralType): Either[EnvironmentError, Environment] =

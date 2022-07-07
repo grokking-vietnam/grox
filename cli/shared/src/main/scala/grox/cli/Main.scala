@@ -1,15 +1,13 @@
 package grox.cli
 
 import cats.Functor
+import cats.data.{EitherT, StateT}
 import cats.effect.*
 import cats.syntax.all.*
 
 import com.monovore.decline.*
 import com.monovore.decline.effect.*
-import grox.Executor
-import cats.data.StateT
-import grox.Environment
-import cats.data.EitherT
+import grox.{Environment, Executor}
 
 object Main
   extends CommandIOApp(
