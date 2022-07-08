@@ -1,7 +1,7 @@
 package grox.cli
 
 import cats.Functor
-import cats.data.{EitherT, StateT}
+import cats.data.StateT
 import cats.effect.*
 import cats.syntax.all.*
 
@@ -32,12 +32,12 @@ object Main
     case Command.Evaluate(str) => exec.evaluate(str).map(_.toString)
 
   given FileReader[IO] = FileReader.instance[IO]
-  val exec = Executor.module[EitherT[StateT[IO, Environment, *], Throwable, *]]
+  val exec = Executor.module[StateT[IO, Environment, *]]
 
   override def main: Opts[IO[ExitCode]] = CLI.parse.map {
     convertCommand[IO](_)
       .flatMap { cmd =>
-        eval(exec)(cmd).value.run(Environment())
+        eval(exec)(cmd).run(Environment())
       }
       .flatMap(x => IO.println(x._2.toString))
       .handleErrorWith { err =>
