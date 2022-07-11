@@ -93,28 +93,29 @@ object Parser:
       .getOrElse(Left(Error.ExpectVarIdentifier(tokens)))
   )
 
-  def expression[A](tokens: List[Token[A]]): ExprParser[A] = assignment(tokens)
+  def expression[A](tokens: List[Token[A]]): ExprParser[A] = or(tokens)
 
   def or[A]: List[Token[A]] => ExprParser[A] = binary(orOp, and)
 
   def and[A]: List[Token[A]] => ExprParser[A] = binary(andOp, equality)
 
-  def assignment[A](
-    tokens: List[Token[A]]
-  ): ExprParser[A] = or(tokens).flatMap((expr: Expr, restTokens: List[Token[A]]) =>
-    restTokens.headOption match {
-      case Some(equalToken @ Equal(_)) =>
-        expr match {
-          case Expr.Variable(name) =>
-            assignment(restTokens.tail).flatMap((value, tokens) =>
-              Right((Expr.Assign(name, value), tokens)),
-            )
-          case _ => Left(Error.InvalidAssignmentTarget(equalToken))
-        }
+  def assignment[A](tokens: List[Token[A]]): StmtParser[A] = ???
 
-      case _ => Right((expr, restTokens))
-    },
-  )
+  // def assignment[A](
+  //   tokens: List[Token[A]]
+  // ): ExprParser[A] = or(tokens).flatMap((expr: Expr, restTokens: List[Token[A]]) =>
+  //   restTokens.headOption match {
+  //     case Some(equalToken @ Equal(_)) =>
+  //       expr match {
+  //         case Expr.Variable(name) =>
+  //           assignment(restTokens.tail).flatMap((value, tokens) =>
+  //             Right((Expr.Assign(name, value), tokens)),
+  //           )
+  //         case _ => Left(Error.InvalidAssignmentTarget(equalToken))
+  //       }
+  //     case _ => Right((expr, restTokens))
+  //   },
+  // )
 
   def statement[A](tokens: List[Token[A]]): StmtParser[A] =
     tokens.headOption match

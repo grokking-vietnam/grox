@@ -117,5 +117,4 @@ object Interpreter:
         evaluate(l).flatMap(lres => if !lres.isTruthy then Right(lres) else evaluate(r))
       case Expr.Or(l, r) =>
         evaluate(l).flatMap(lres => if lres.isTruthy then Right(lres) else evaluate(r))
-      case Expr.Assign(name, value) => ???
       case Expr.Variable(name)      => ???
