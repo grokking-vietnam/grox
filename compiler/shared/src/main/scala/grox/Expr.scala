@@ -5,40 +5,39 @@ import cats.Show
 // We use Unit to represent the absence of a value or nil in the language.
 type LiteralType = Double | String | Boolean | Unit
 
-enum Expr[+A](val token: Token[A]):
+enum Expr[+A]:
 
   // Binary
-
   // arithmetic
-  case Add(override val token: Token[A], left: Expr[A], right: Expr[A]) extends Expr(token)
-  case Subtract(override val token: Token[A], left: Expr[A], right: Expr[A]) extends Expr(token)
-  case Multiply(override val token: Token[A], left: Expr[A], right: Expr[A]) extends Expr(token)
-  case Divide(override val token: Token[A], left: Expr[A], right: Expr[A]) extends Expr(token)
+  case Add(val token: Token[A], left: Expr[A], right: Expr[A])
+  case Subtract( val token: Token[A], left: Expr[A], right: Expr[A])
+  case Multiply( val token: Token[A], left: Expr[A], right: Expr[A])
+  case Divide( val token: Token[A], left: Expr[A], right: Expr[A])
 
   // comparison
-  case Greater(override val token: Token[A], left: Expr[A], right: Expr[A]) extends Expr(token)
-  case GreaterEqual(override val token: Token[A], left: Expr[A], right: Expr[A]) extends Expr(token)
-  case Less(override val token: Token[A], left: Expr[A], right: Expr[A]) extends Expr(token)
-  case LessEqual(override val token: Token[A], left: Expr[A], right: Expr[A]) extends Expr(token)
-  case Equal(override val token: Token[A], left: Expr[A], right: Expr[A]) extends Expr(token)
-  case NotEqual(override val token: Token[A], left: Expr[A], right: Expr[A]) extends Expr(token)
+  case Greater( val token: Token[A], left: Expr[A], right: Expr[A])
+  case GreaterEqual( val token: Token[A], left: Expr[A], right: Expr[A])
+  case Less( val token: Token[A], left: Expr[A], right: Expr[A])
+  case LessEqual( val token: Token[A], left: Expr[A], right: Expr[A])
+  case Equal( val token: Token[A], left: Expr[A], right: Expr[A])
+  case NotEqual( val token: Token[A], left: Expr[A], right: Expr[A])
 
   // assignment
-  case Assign(override val token: Token.Identifier[A], value: Expr[A]) extends Expr(token)
+  case Assign( val token: Token.Identifier[A], value: Expr[A])
 
   // logic
-  case Or(override val token: Token[A], left: Expr[A], right: Expr[A]) extends Expr(token)
-  case And(override val token: Token[A], left: Expr[A], right: Expr[A]) extends Expr(token)
+  case Or( val token: Token[A], left: Expr[A], right: Expr[A])
+  case And( val token: Token[A], left: Expr[A], right: Expr[A])
 
   // Unary
-  case Negate(override val token: Token[A], expr: Expr[A]) extends Expr(token)
-  case Not(override val token: Token[A], expr: Expr[A]) extends Expr(token)
+  case Negate( val token: Token[A], expr: Expr[A])
+  case Not( val token: Token[A], expr: Expr[A])
 
-  case Literal(override val token: Token[A], value: LiteralType) extends Expr(token)
+  case Literal(value: LiteralType)
 
-  case Grouping(override val token: Token[A], expr: Expr[A]) extends Expr(token)
+  case Grouping( val token: Token[A], expr: Expr[A])
 
-  case Variable(override val token: Token.Identifier[A]) extends Expr(token)
+  case Variable( val token: Token.Identifier[A])
 
 object Expr:
 

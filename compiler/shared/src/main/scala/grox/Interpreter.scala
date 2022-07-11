@@ -7,10 +7,12 @@ import cats.syntax.all.*
 import cats.syntax.apply.*
 
 trait Interpreter[F[_]]:
-  def evaluate(expr: Expr): F[LiteralType]
+  def evaluate[A](expr: Expr[A]): F[LiteralType]
 
 object Interpreter:
-  def instance[F[_]: MonadThrow]: Interpreter[F] = expr => evaluate(expr).liftTo[F]
+  def instance[F[_]: MonadThrow]: Interpreter[F] = new Interpreter:
+    def evaluate[A](expr: Expr[A]): F[LiteralType] = evaluate(expr)
+
 
   enum RuntimeError(op: Token[Unit], msg: String) extends NoStackTrace:
     override def toString = msg
