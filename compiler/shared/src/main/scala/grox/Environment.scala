@@ -9,9 +9,9 @@ enum EnvironmentError(msg: String):
   case UndefinedVariableError(variable: String)
     extends EnvironmentError(s"Undefined variable: '$variable'.")
 
-class Environment(
-  private val values: Map[String, LiteralType],
-  private val enclosing: Option[Environment],
+case class Environment(
+  private val values: Map[String, LiteralType] = Map.empty[String, LiteralType],
+  private val enclosing: Option[Environment] = None,
 ):
 
   def define(name: String, value: LiteralType): Environment =
