@@ -16,6 +16,7 @@ object Executor:
     interpreter: Interpreter[F],
   ): Executor[F] =
     new Executor[F]:
+      val env = Environment()
       def scan(str: String): F[List[Token[Span]]] = scanner.scan(str)
 
       def parse(str: String): F[Expr] =
@@ -28,7 +29,7 @@ object Executor:
         for
           tokens <- scanner.scan(str)
           expr <- parser.parse(tokens)
-          result <- interpreter.evaluate(expr)
+          result <- interpreter.evaluate(env, expr)
         yield result
 
   def module[F[_]: MonadThrow]: Executor[F] =

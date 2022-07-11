@@ -4,13 +4,12 @@ import scala.util.control.NoStackTrace
 
 import cats.*
 import cats.syntax.all.*
-import cats.syntax.apply.*
 
 trait Interpreter[F[_]]:
-  def evaluate(expr: Expr): F[LiteralType]
+  def evaluate(env: Environment, expr: Expr): F[LiteralType]
 
 object Interpreter:
-  def instance[F[_]: MonadThrow]: Interpreter[F] = expr => evaluate(expr).liftTo[F]
+  def instance[F[_]: MonadThrow]: Interpreter[F] = (env, expr) => evaluate(env)(expr)
 
   enum RuntimeError(op: Token[Unit], msg: String) extends NoStackTrace:
     override def toString = msg
@@ -18,6 +17,7 @@ object Interpreter:
     case MustBeNumbersOrStrings
       extends RuntimeError(Token.Plus(()), "Operands must be two numbers or two strings")
     case DivisionByZero extends RuntimeError(Token.Slash(()), "Division by zerro")
+    case VariableNotFound(op: Token[Unit]) extends RuntimeError(op, "Variable not found")
 
   type EvaluationResult = Either[RuntimeError, LiteralType]
   type Evaluate = (LiteralType, LiteralType) => EvaluationResult
@@ -37,12 +37,15 @@ object Interpreter:
 
     def `unary_!` : EvaluationResult = Right(!value.isTruthy)
 
-  def evaluateBinary(
+  def evaluateBinary[F[_]: MonadThrow](
+    env: Environment
+  )(
     eval: Evaluate
   )(
     left: Expr,
     right: Expr,
-  ): EvaluationResult = (evaluate(left), evaluate(right)).mapN(eval).flatten
+  ): F[LiteralType] =
+    (evaluate(env)(left), evaluate(env)(right)).mapN(eval).map(_.liftTo[F]).flatten
 
   def add(left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
@@ -96,26 +99,30 @@ object Interpreter:
     right: LiteralType,
   ): EvaluationResult = equal(left, right).flatMap(r => !r)
 
-  def evaluate(expr: Expr): EvaluationResult =
+  def evaluate[F[_]: MonadThrow](env: Environment)(expr: Expr): F[LiteralType] =
     expr match
-      case Expr.Literal(value) => Right(value)
-      case Expr.Grouping(e)    => evaluate(e)
-      case Expr.Negate(e)      => evaluate(e).flatMap(res => -res)
-      case Expr.Not(e)         => evaluate(e).flatMap(`unary_!`)
-      case Expr.Add(l, r)      => evaluateBinary(add)(l, r)
-      case Expr.Subtract(l, r) => evaluateBinary(subtract)(l, r)
-      case Expr.Multiply(l, r) => evaluateBinary(multiply)(l, r)
-      case Expr.Divide(l, r)   => evaluateBinary(divide)(l, r)
+      case Expr.Literal(value) => value.pure[F]
+      case Expr.Grouping(e)    => evaluate(env)(e)
+      case Expr.Negate(e)      => evaluate(env)(e).flatMap(x => (-x).liftTo[F])
+      case Expr.Not(e)         => evaluate(env)(e).flatMap(x => (!x).liftTo[F])
+      case Expr.Add(l, r)      => evaluateBinary(env)(add)(l, r)
+      case Expr.Subtract(l, r) => evaluateBinary(env)(subtract)(l, r)
+      case Expr.Multiply(l, r) => evaluateBinary(env)(multiply)(l, r)
+      case Expr.Divide(l, r)   => evaluateBinary(env)(divide)(l, r)
 
-      case Expr.Greater(l, r)      => evaluateBinary(greater)(l, r)
-      case Expr.GreaterEqual(l, r) => evaluateBinary(greaterOrEqual)(l, r)
-      case Expr.Less(l, r)         => evaluateBinary(less)(l, r)
-      case Expr.LessEqual(l, r)    => evaluateBinary(lessOrEqual)(l, r)
-      case Expr.Equal(l, r)        => evaluateBinary(equal)(l, r)
-      case Expr.NotEqual(l, r)     => evaluateBinary(notEqual)(l, r)
+      case Expr.Greater(l, r)      => evaluateBinary(env)(greater)(l, r)
+      case Expr.GreaterEqual(l, r) => evaluateBinary(env)(greaterOrEqual)(l, r)
+      case Expr.Less(l, r)         => evaluateBinary(env)(less)(l, r)
+      case Expr.LessEqual(l, r)    => evaluateBinary(env)(lessOrEqual)(l, r)
+      case Expr.Equal(l, r)        => evaluateBinary(env)(equal)(l, r)
+      case Expr.NotEqual(l, r)     => evaluateBinary(env)(notEqual)(l, r)
       case Expr.And(l, r) =>
-        evaluate(l).flatMap(lres => if !lres.isTruthy then Right(lres) else evaluate(r))
+        evaluate(env)(l).flatMap(lres => if !lres.isTruthy then lres.pure[F] else evaluate(env)(r))
       case Expr.Or(l, r) =>
-        evaluate(l).flatMap(lres => if lres.isTruthy then Right(lres) else evaluate(r))
-      case Expr.Assign(name, value) => ???
-      case Expr.Variable(name)      => ???
+        evaluate(env)(l).flatMap(lres => if lres.isTruthy then lres.pure[F] else evaluate(env)(r))
+      case Expr.Variable(name) =>
+        env
+          .get(name.lexeme)
+          .left
+          .map(_ => RuntimeError.VariableNotFound(name.as(())))
+          .liftTo[F]
