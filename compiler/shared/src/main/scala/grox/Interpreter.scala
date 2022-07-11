@@ -11,7 +11,7 @@ trait Interpreter[F[_]]:
 
 object Interpreter:
   def instance[F[_]: MonadThrow]: Interpreter[F] = new Interpreter:
-    def evaluate[A](expr: Expr[A]): F[LiteralType] = evaluate(expr)
+    def evaluate[A](expr: Expr[A]): F[LiteralType] = Interpreter.evaluate(expr).liftTo[F]
 
 
   enum RuntimeError(op: Token[Unit], msg: String) extends NoStackTrace:
@@ -100,8 +100,8 @@ object Interpreter:
 
   def evaluate[A](expr: Expr[A]): EvaluationResult =
     expr match
-      case Expr.Literal(_, value) => Right(value)
-      case Expr.Grouping(_, e)    => evaluate(e)
+      case Expr.Literal(value) => Right(value)
+      case Expr.Grouping(e)    => evaluate(e)
       case Expr.Negate(_, e)      => evaluate(e).flatMap(res => -res)
       case Expr.Not(_, e)         => evaluate(e).flatMap(`unary_!`)
       case Expr.Add(_, l, r)      => evaluateBinary(add)(l, r)
@@ -119,5 +119,4 @@ object Interpreter:
         evaluate(l).flatMap(lres => if !lres.isTruthy then Right(lres) else evaluate(r))
       case Expr.Or(_, l, r) =>
         evaluate(l).flatMap(lres => if lres.isTruthy then Right(lres) else evaluate(r))
-      case Expr.Assign(name, value) => ???
-      case Expr.Variable(name)      => ???
+      case Expr.Variable(_, name)      => ???

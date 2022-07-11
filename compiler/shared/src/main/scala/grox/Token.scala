@@ -1,9 +1,13 @@
 package grox
 
 import cats.Functor
+import cats.kernel.Monoid
 
 case class Location(val line: Int, val col: Int, val offset: Int)
 case class Span(start: Location, end: Location)
+
+object Span:
+  def empty = Span(Location(0, 0, 0), Location(0, 0, 0))
 
 enum Token[+T](val lexeme: String, val tag: T):
   case Identifier(override val lexeme: String, override val tag: T) extends Token(lexeme, tag)
