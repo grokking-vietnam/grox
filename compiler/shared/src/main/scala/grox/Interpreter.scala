@@ -17,7 +17,7 @@ object Interpreter:
     case MustBeNumbersOrStrings
       extends RuntimeError(Token.Plus(()), "Operands must be two numbers or two strings")
     case DivisionByZero extends RuntimeError(Token.Slash(()), "Division by zerro")
-    case VariableNotFound(op: Token[Unit]) extends RuntimeError(op, "Variable not found")
+    case VariableNotFound(op: String) extends RuntimeError(op, "Variable not found")
 
   type EvaluationResult = Either[RuntimeError, LiteralType]
   type Evaluate = (LiteralType, LiteralType) => EvaluationResult
@@ -101,28 +101,28 @@ object Interpreter:
 
   def evaluate[F[_]: MonadThrow](env: Environment)(expr: Expr): F[LiteralType] =
     expr match
-      case Expr.Literal(value) => value.pure[F]
+      case Expr.Literal(_, value) => value.pure[F]
       case Expr.Grouping(e)    => evaluate(env)(e)
-      case Expr.Negate(e)      => evaluate(env)(e).flatMap(x => (-x).liftTo[F])
-      case Expr.Not(e)         => evaluate(env)(e).flatMap(x => (!x).liftTo[F])
-      case Expr.Add(l, r)      => evaluateBinary(env)(add)(l, r)
-      case Expr.Subtract(l, r) => evaluateBinary(env)(subtract)(l, r)
-      case Expr.Multiply(l, r) => evaluateBinary(env)(multiply)(l, r)
-      case Expr.Divide(l, r)   => evaluateBinary(env)(divide)(l, r)
+      case Expr.Negate(_, e)      => evaluate(env)(e).flatMap(x => (-x).liftTo[F])
+      case Expr.Not(_, e)         => evaluate(env)(e).flatMap(x => (!x).liftTo[F])
+      case Expr.Add(_, l, r)      => evaluateBinary(env)(add)(l, r)
+      case Expr.Subtract(_, l, r) => evaluateBinary(env)(subtract)(l, r)
+      case Expr.Multiply(_, l, r) => evaluateBinary(env)(multiply)(l, r)
+      case Expr.Divide(_, l, r)   => evaluateBinary(env)(divide)(l, r)
 
-      case Expr.Greater(l, r)      => evaluateBinary(env)(greater)(l, r)
-      case Expr.GreaterEqual(l, r) => evaluateBinary(env)(greaterOrEqual)(l, r)
-      case Expr.Less(l, r)         => evaluateBinary(env)(less)(l, r)
-      case Expr.LessEqual(l, r)    => evaluateBinary(env)(lessOrEqual)(l, r)
-      case Expr.Equal(l, r)        => evaluateBinary(env)(equal)(l, r)
-      case Expr.NotEqual(l, r)     => evaluateBinary(env)(notEqual)(l, r)
-      case Expr.And(l, r) =>
+      case Expr.Greater(_, l, r)      => evaluateBinary(env)(greater)(l, r)
+      case Expr.GreaterEqual(_, l, r) => evaluateBinary(env)(greaterOrEqual)(l, r)
+      case Expr.Less(_, l, r)         => evaluateBinary(env)(less)(l, r)
+      case Expr.LessEqual(_, l, r)    => evaluateBinary(env)(lessOrEqual)(l, r)
+      case Expr.Equal(_, l, r)        => evaluateBinary(env)(equal)(l, r)
+      case Expr.NotEqual(_, l, r)     => evaluateBinary(env)(notEqual)(l, r)
+      case Expr.And(_, l, r) =>
         evaluate(env)(l).flatMap(lres => if !lres.isTruthy then lres.pure[F] else evaluate(env)(r))
-      case Expr.Or(l, r) =>
+      case Expr.Or(_, l, r) =>
         evaluate(env)(l).flatMap(lres => if lres.isTruthy then lres.pure[F] else evaluate(env)(r))
-      case Expr.Variable(name) =>
+      case Expr.Variable(_, name) =>
         env
-          .get(name.lexeme)
+          .get(name)
           .left
-          .map(_ => RuntimeError.VariableNotFound(name.as(())))
+          .map(_ => RuntimeError.VariableNotFound(name))
           .liftTo[F]
