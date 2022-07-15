@@ -26,6 +26,7 @@ val commonSettings = Seq(
   scalacOptions += "-Yexplicit-nulls",
   libraryDependencies ++= Seq(
     Dependencies.catsCore.value,
+    Dependencies.catsEffect.value,
     Dependencies.munit.value,
     Dependencies.munitCatsEffect.value,
     Dependencies.munitScalaCheck.value,
@@ -49,7 +50,6 @@ val cli = crossProject(JSPlatform, JVMPlatform)
   .settings(
     commonSettings,
     libraryDependencies ++= Seq(
-      Dependencies.catsEffect.value,
       Dependencies.fs2.value,
       Dependencies.fs2IO.value,
       Dependencies.decline.value,
@@ -65,7 +65,6 @@ val web = project
     commonSettings,
     commonJsSettings,
     libraryDependencies ++= Seq(
-      Dependencies.catsEffect.value,
       Dependencies.fs2.value,
       Dependencies.fs2IO.value,
       Dependencies.tyrian.value,
