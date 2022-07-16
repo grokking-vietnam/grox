@@ -8,17 +8,18 @@ import cats.syntax.all.*
 // todo move Environment => State
 //
 trait Env[F[_]]:
-  def define(name: String, value: Option[LiteralType]): F[Unit]
+  def define(name: String, value: LiteralType): F[Unit]
   def assign(name: String, value: LiteralType): F[Unit]
   def get(name: String): F[LiteralType]
   def state: F[Environment]
+  def startBlock(): F[Unit]
+  def endBlock(): F[Unit]
 
 object Env:
 
   def instance[F[_]: MonadThrow: Ref.Make](s: Environment): F[Env[F]] = Ref[F].of(s).map { ref =>
     new Env {
-      def define(name: String, value: Option[LiteralType]): F[Unit] =
-        ??? // ref.update(s => s.define(name, value))
+      def define(name: String, value: LiteralType): F[Unit] = ref.update(s => s.define(name, value))
       def assign(name: String, value: LiteralType): F[Unit] =
         for
           s <- ref.get
@@ -27,6 +28,8 @@ object Env:
         yield ()
       def get(name: String): F[LiteralType] = ref.get.map(_.get(name).liftTo[F]).flatten
       def state: F[Environment] = ref.get
+      def startBlock(): F[Unit] = ref.update(s => Environment(Map.empty, Some(s)))
+      def endBlock(): F[Unit] = ref.update(_.enclosing.getOrElse(Environment()))
     }
   }
 
@@ -48,7 +51,12 @@ object StmtExecutor:
 
       private def executeStmt[A](stmt: Stmt[A]): F[Unit] =
         stmt match
-          case Block(stmts) => execute(stmts)
+          case Block(stmts) =>
+            for
+              _ <- env.startBlock()
+              _ <- execute(stmts)
+              _ <- env.endBlock()
+            yield ()
 
           case Expression(expr) => ???
 
@@ -62,8 +70,8 @@ object StmtExecutor:
           case Var(name, init) =>
             for
               state <- env.state
-              result <- init.map(x => interpreter.evaluate(state, x)).sequence
-              _ <- env.define(name.lexeme, result)
+              result <- init.map(interpreter.evaluate(state, _)).sequence
+              _ <- env.define(name.lexeme, result.getOrElse(()))
             yield ()
 
           case While(cond, body) => ???
@@ -74,5 +82,5 @@ object StmtExecutor:
               _ <- env.assign(name, result)
             yield ()
 
-      def execute[A](stmt: List[Stmt[A]]): F[Unit] = stmt.traverse_(x => executeStmt(x))
+      def execute[A](stmts: List[Stmt[A]]): F[Unit] = stmts.traverse_(x => executeStmt(x))
     }

@@ -5,19 +5,21 @@ import scala.util.control.NoStackTrace
 import cats.implicits.catsSyntaxEither
 
 object Environment:
-  def apply(): Environment = new Environment(Map.empty[String, LiteralType], enclosing = None)
+  def apply(): Environment = Environment(Map.empty[String, LiteralType], enclosing = None)
 
 enum EnvironmentError(msg: String) extends NoStackTrace:
   case UndefinedVariableError(variable: String)
     extends EnvironmentError(s"Undefined variable: '$variable'.")
 
 case class Environment(
-  private val values: Map[String, LiteralType] = Map.empty[String, LiteralType],
-  private val enclosing: Option[Environment] = None,
+  val values: Map[String, LiteralType] = Map.empty[String, LiteralType],
+  val enclosing: Option[Environment] = None,
 ):
 
-  def define(name: String, value: LiteralType): Environment =
-    new Environment(values + (name -> value), enclosing)
+  def define(
+    name: String,
+    value: LiteralType,
+  ): Environment = Environment(values + (name -> value), enclosing)
 
   def get(
     name: String
@@ -33,7 +35,7 @@ case class Environment(
   def assign(name: String, value: LiteralType): Either[EnvironmentError, Environment] =
     val assignEither =
       if (values.contains(name))
-        Right(new Environment(values + (name -> value), enclosing))
+        Right(Environment(values + (name -> value), enclosing))
       else
         Left(EnvironmentError.UndefinedVariableError(name))
 
@@ -41,7 +43,7 @@ case class Environment(
       enclosing
         .map(
           _.assign(name, value)
-            .map(newEnclosing => new Environment(values, Some(newEnclosing)))
+            .map(newEnclosing => Environment(values, Some(newEnclosing)))
         )
         .getOrElse(Left(EnvironmentError.UndefinedVariableError(name)))
     }
