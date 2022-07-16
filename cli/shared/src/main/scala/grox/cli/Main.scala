@@ -31,16 +31,19 @@ object Main
     case Command.Evaluate(str) => exec.evaluate(str).map(_.toString)
 
   given FileReader[IO] = FileReader.instance[IO]
-  val exec = Executor.module[IO]
 
-  override def main: Opts[IO[ExitCode]] = CLI.parse.map {
-    convertCommand[IO](_)
-      .flatMap { cmd =>
-        eval(exec)(cmd)
-      }
-      .flatMap(IO.println)
-      .handleErrorWith { err =>
-        IO.println(s"Error: ${err.toString}")
-      }
+  override def main: Opts[IO[ExitCode]] = CLI.parse.map { command =>
+    Executor
+      .module[IO]
+      .use(exec =>
+        convertCommand[IO](command)
+          .flatMap { cmd =>
+            eval(exec)(cmd)
+          }
+          .flatMap(IO.println)
+          .handleErrorWith { err =>
+            IO.println(s"Error: ${err.toString}")
+          }
+      )
       .as(ExitCode.Success)
   }

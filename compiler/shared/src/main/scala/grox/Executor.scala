@@ -1,7 +1,12 @@
 package grox
 
 import cats.MonadThrow
-import cats.implicits.*
+import cats.syntax.all.*
+import cats.effect.kernel.Resource
+import cats.effect.std.Console
+import cats.effect.implicits.*
+import cats.Applicative
+import cats.effect.kernel.Sync
 
 trait Executor[F[_]]:
   def scan(str: String): F[List[Token[Span]]]
@@ -16,6 +21,7 @@ object Executor:
     using scanner: Scanner[F],
     parser: Parser[F],
     interpreter: Interpreter[F],
+    executor: StmtExecutor[F],
   ): Executor[F] =
     new Executor[F]:
       val env = Environment()
@@ -36,8 +42,14 @@ object Executor:
 
       def execute(str: String): F[Unit] = ???
 
-  def module[F[_]: MonadThrow]: Executor[F] =
+  def module[F[_]: MonadThrow: Sync: Console]: Resource[F, Executor[F]] =
+
+    val unit = Applicative[F].unit.toResource
     given Scanner[F] = Scanner.instance[F]
     given Parser[F] = Parser.instance[F]
     given Interpreter[F] = Interpreter.instance[F]
-    instance[F]
+    for
+      given Env[F] <- Env.instance[F](Environment()).toResource
+      _ <- unit
+      given StmtExecutor[F] = StmtExecutor.instance[F]
+    yield instance[F]
