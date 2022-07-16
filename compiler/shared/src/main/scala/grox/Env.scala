@@ -58,7 +58,11 @@ object StmtExecutor:
               _ <- env.endBlock()
             yield ()
 
-          case Expression(expr) => ???
+          case Expression(expr) =>
+            for
+              state <- env.state
+              _ = interpreter.evaluate(state, expr)
+            yield ()
 
           case Print(expr) =>
             for
@@ -74,13 +78,16 @@ object StmtExecutor:
               _ <- env.define(name.lexeme, result.getOrElse(()))
             yield ()
 
-          case While(cond, body) => ???
           case Assign(name, value) =>
             for
               state <- env.state
               result <- interpreter.evaluate(state, value)
               _ <- env.assign(name, result)
             yield ()
+
+          case While(cond, body)                => ???
+          case If(cond, thenBranch, elseBranch) => ???
+          case Function(name, params, body)     => ???
 
       def execute[A](stmts: List[Stmt[A]]): F[Unit] = stmts.traverse_(x => executeStmt(x))
     }
