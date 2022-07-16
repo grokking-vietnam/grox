@@ -7,7 +7,9 @@ trait Executor[F[_]]:
   def scan(str: String): F[List[Token[Span]]]
   def parse(str: String): F[Expr]
   def evaluate(str: String): F[LiteralType]
+  def execute(str: String): F[Unit]
 
+// todo add StmtExecutor
 object Executor:
 
   def instance[F[_]: MonadThrow](
@@ -31,6 +33,8 @@ object Executor:
           expr <- parser.parse(tokens)
           result <- interpreter.evaluate(env, expr)
         yield result
+
+      def execute(str: String): F[Unit] = ???
 
   def module[F[_]: MonadThrow]: Executor[F] =
     given Scanner[F] = Scanner.instance[F]

@@ -9,5 +9,6 @@ enum Stmt[A]:
   case Return(keyword: Token[A], value: Expr)
   case Var(name: Token.Identifier[A], init: Option[Expr])
   case While(cond: Expr, body: Stmt[A])
+  case Assign(name: String, value: Expr)
 
 object Stmt {}

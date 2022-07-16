@@ -1,11 +1,13 @@
 package grox
 
+import scala.util.control.NoStackTrace
+
 import cats.implicits.catsSyntaxEither
 
 object Environment:
   def apply(): Environment = new Environment(Map.empty[String, LiteralType], enclosing = None)
 
-enum EnvironmentError(msg: String):
+enum EnvironmentError(msg: String) extends NoStackTrace:
   case UndefinedVariableError(variable: String)
     extends EnvironmentError(s"Undefined variable: '$variable'.")
 
