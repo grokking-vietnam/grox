@@ -10,6 +10,7 @@ object CLI:
     case Scan(file: String)
     case Parse(file: String)
     case Evaluate(file: String)
+    case Execute(file: String)
 
   val parse: Opts[Command] =
     val scan =
@@ -26,4 +27,10 @@ object CLI:
       Opts.subcommand[Command]("evaluate", "Evaluate file to grox object")(
         Opts.argument[String]("path").map(Command.Evaluate(_))
       )
-    scan <+> parse <+> evaluate
+
+    val execute: Opts[Command] =
+      Opts.subcommand[Command]("execute", "Execute grox file")(
+        Opts.argument[String]("path").map(Command.Evaluate(_))
+      )
+
+    scan <+> parse <+> evaluate <+> execute

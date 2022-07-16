@@ -30,17 +30,22 @@ object Executor:
       def parse(str: String): F[Expr] =
         for
           tokens <- scanner.scan(str)
-          expr <- parser.parse(tokens)
+          expr <- parser.parseExpr(tokens)
         yield expr
 
       def evaluate(str: String): F[LiteralType] =
         for
           tokens <- scanner.scan(str)
-          expr <- parser.parse(tokens)
+          expr <- parser.parseExpr(tokens)
           result <- interpreter.evaluate(env, expr)
         yield result
 
-      def execute(str: String): F[Unit] = ???
+      def execute(str: String): F[Unit] =
+        for
+          tokens <- scanner.scan(str)
+          stmts <- parser.parse(tokens)
+          _ <- executor.execute(stmts)
+        yield ()
 
   def module[F[_]: MonadThrow: Sync: Console]: Resource[F, Executor[F]] =
 
