@@ -23,7 +23,7 @@ jobs:
       - name: Cache scala dependencies
         uses: coursier/cache-action@v6
       - name: Check Website Generation
-        run: sbt docs/mdoc
+        run: sbt 'docs/mdoc;web/fastOptJS'
       - uses: actions/setup-node@v2
         with:
           node-version: 16.x
