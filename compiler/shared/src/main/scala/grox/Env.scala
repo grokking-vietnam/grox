@@ -7,6 +7,11 @@ import cats.syntax.all.*
 
 // todo move Environment => State
 //
+// [ ] Env Tests
+// [ ] Executor Tests
+// [ ] While execution
+// [ ] If execution
+
 trait Env[F[_]]:
   def define(name: String, value: LiteralType): F[Unit]
   def assign(name: String, value: LiteralType): F[Unit]
