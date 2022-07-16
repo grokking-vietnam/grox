@@ -30,7 +30,7 @@ object CLI:
 
     val execute: Opts[Command] =
       Opts.subcommand[Command]("execute", "Execute grox file")(
-        Opts.argument[String]("path").map(Command.Evaluate(_))
+        Opts.argument[String]("path").map(Command.Execute(_))
       )
 
     scan <+> parse <+> evaluate <+> execute

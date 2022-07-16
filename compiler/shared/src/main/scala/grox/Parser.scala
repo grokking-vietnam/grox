@@ -344,9 +344,7 @@ object Parser:
       case Null(_) :: rest                  => Right(Expr.Literal(()), rest)
       case Identifier(name, tag: A) :: rest => Right(Expr.Variable[A](Identifier(name, tag)), rest)
       case LeftParen(_) :: rest             => parenBody(rest)
-      case x                                =>
-        println(x)
-        Left(Error.ExpectExpression(tokens))
+      case _                                => Left(Error.ExpectExpression(tokens))
 
   // Parse the body within a pair of parentheses (the part after "(")
   def parenBody[A](

@@ -33,7 +33,7 @@ class StmtParserTest extends munit.FunSuite:
       )
       val want = Stmt.Var(grox.Token.Identifier("x", ()), Some(Expr.Literal(1)))
       assertEquals(
-        parseStmt(Inspector(List.empty, List.empty, ts)),
+        _parseStmt(Inspector(List.empty, List.empty, ts)),
         Inspector(List.empty, List(want), List.empty),
       )
   }
@@ -45,7 +45,7 @@ class StmtParserTest extends munit.FunSuite:
       )
       val want = Error.ExpectVarIdentifier[Unit](ts)
       assertEquals(
-        parseStmt(Inspector(List.empty, List.empty, ts)),
+        _parseStmt(Inspector(List.empty, List.empty, ts)),
         Inspector(List(want), List.empty, List.empty),
       )
   }
@@ -53,7 +53,7 @@ class StmtParserTest extends munit.FunSuite:
   test("Parse empty token list") {
     val ts = List()
     assertEquals(
-      parseStmt(Inspector(List.empty, List.empty, ts)),
+      _parseStmt(Inspector(List.empty, List.empty, ts)),
       Inspector(List.empty, List.empty, List.empty),
     )
   }
@@ -62,7 +62,7 @@ class StmtParserTest extends munit.FunSuite:
     val ts = List(Var(()), Identifier("x", ()), Semicolon(()))
     val want = Stmt.Var(Identifier("x", ()), None)
     assertEquals(
-      parseStmt(Inspector(List.empty, List.empty, ts)),
+      _parseStmt(Inspector(List.empty, List.empty, ts)),
       Inspector(List.empty, List(want), List.empty),
     )
   }
@@ -85,7 +85,7 @@ class StmtParserTest extends munit.FunSuite:
         Stmt.Expression(Expr.Multiply(expr2, expr3)),
       )
       assertEquals(
-        parseStmt(Inspector(List.empty, List.empty, ts)),
+        _parseStmt(Inspector(List.empty, List.empty, ts)),
         Inspector(
           List.empty,
           want,
@@ -99,7 +99,7 @@ class StmtParserTest extends munit.FunSuite:
       val ts = List(Print(()), num1, Semicolon(()))
       val want = List(Stmt.Print[Unit](expr1))
       assertEquals(
-        parseStmt(Inspector(List.empty, List.empty, ts)),
+        _parseStmt(Inspector(List.empty, List.empty, ts)),
         Inspector(List.empty, want, List.empty),
       )
   }
@@ -299,7 +299,7 @@ class StmtParserTest extends munit.FunSuite:
         tokens = List.empty[Token[Unit]],
       )
 
-      assertEquals(parseStmt(inspector), expectedInspector)
+      assertEquals(_parseStmt(inspector), expectedInspector)
   }
 
   test("While: statement ") {
@@ -363,7 +363,7 @@ class StmtParserTest extends munit.FunSuite:
         tokens = List.empty[Token[Unit]],
       )
 
-      assertEquals(parseStmt(inspector), expectedInspector)
+      assertEquals(_parseStmt(inspector), expectedInspector)
 
   }
 
@@ -441,6 +441,6 @@ class StmtParserTest extends munit.FunSuite:
         tokens = List.empty[Token[Unit]],
       )
 
-      assertEquals(parseStmt(inspector), expectedInspector)
+      assertEquals(_parseStmt(inspector), expectedInspector)
 
   }

@@ -1,12 +1,10 @@
 package grox
 
-import cats.MonadThrow
-import cats.syntax.all.*
-import cats.effect.kernel.Resource
-import cats.effect.std.Console
 import cats.effect.implicits.*
-import cats.Applicative
-import cats.effect.kernel.Sync
+import cats.effect.kernel.{Resource, Sync}
+import cats.effect.std.Console
+import cats.syntax.all.*
+import cats.{Applicative, MonadThrow}
 
 trait Executor[F[_]]:
   def scan(str: String): F[List[Token[Span]]]

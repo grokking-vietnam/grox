@@ -61,6 +61,13 @@ class ParserTest extends munit.FunSuite:
     assertEquals(parse(ts), Right(want, Nil))
   }
 
+  test("primary variable") {
+    val avar: Identifier[Unit] = Identifier("a", ())
+    val ts = List(avar)
+    val want = Expr.Variable(avar)
+    assertEquals(parse(ts), Right(want, Nil))
+  }
+
   test("unary negate") {
     val ts = List(Minus(()), Number("42", ()))
     val want = Expr.Negate(Expr.Literal(42))
@@ -368,7 +375,7 @@ class ParserTest extends munit.FunSuite:
         tokens = List.empty[Token[Unit]],
       )
 
-      assertEquals(parseStmt(inspector), expectedInspector)
+      assertEquals(_parseStmt(inspector), expectedInspector)
   }
 
   test("While: statement ") {
@@ -431,7 +438,7 @@ class ParserTest extends munit.FunSuite:
         tokens = List.empty[Token[Unit]],
       )
 
-      assertEquals(parseStmt(inspector), expectedInspector)
+      assertEquals(_parseStmt(inspector), expectedInspector)
 
   }
 
