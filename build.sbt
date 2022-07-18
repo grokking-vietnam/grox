@@ -70,6 +70,8 @@ val web = project
       Dependencies.fs2IO.value,
       Dependencies.tyrian.value,
     ),
+    Compile / fastLinkJS / scalaJSLinkerOutputDirectory := file("./web/target/scala-3"),
+    Compile / fullLinkJS / scalaJSLinkerOutputDirectory := file("./web/target/scala-3"),
   )
   .dependsOn(compiler.js)
 

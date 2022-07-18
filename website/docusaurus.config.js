@@ -50,6 +50,10 @@ const config = {
             to: '/docs'
           },
           {
+            label: 'Playground',
+            to: '/playground'
+          },
+          {
             href: 'https://github.com/grokking-vietnam/grox',
             label: 'GitHub',
             position: 'right',
