@@ -40,7 +40,8 @@ val compiler = crossProject(JSPlatform, JVMPlatform)
   .settings(
     commonSettings,
     libraryDependencies ++= Seq(
-      Dependencies.catsParse.value
+      Dependencies.catsParse.value,
+      Dependencies.catsMtl.value,
     ),
   )
   .jsSettings(commonJsSettings)

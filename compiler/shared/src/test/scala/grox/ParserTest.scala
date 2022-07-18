@@ -444,6 +444,11 @@ class ParserTest extends munit.FunSuite:
 end ParserTest
 
 class ParserCheck extends ScalaCheckSuite:
+
+  import cats.data.EitherT
+  import cats.data.StateT
+  import cats.Eval
+
   property("parse numerics succesfully") {
     Prop.forAll(numericGen) { expr =>
       parse(expr.flatten) match
@@ -460,12 +465,15 @@ class ParserCheck extends ScalaCheckSuite:
     }
   }
 
+  val interpreter = Interpreter.instance[EitherT[StateT[Eval, Environment, *], Throwable, *]]
+  val evaluate = (x: Expr) => interpreter.evaluate(x).value.run(Environment()).value._2
+
   property("produce an equal numeric expression") {
     Prop.forAll(numericGen) { expr =>
       parse(expr.flatten) match
         case Left(_) => false
         case Right(parsedExpr, _) =>
-          (Interpreter.evaluate(expr), Interpreter.evaluate(parsedExpr)) match
+          (evaluate(expr), evaluate(parsedExpr)) match
             case (Left(e1), Left(e2))                   => e1 == e2
             case (Right(v1: Double), Right(v2: Double)) => math.abs(v1 - v2) < 0.01
             case _                                      => false
@@ -476,7 +484,7 @@ class ParserCheck extends ScalaCheckSuite:
     Prop.forAll(logicalGen) { expr =>
       parse(expr.flatten) match
         case Left(_)              => false
-        case Right(parsedExpr, _) => Interpreter.evaluate(expr) == Interpreter.evaluate(parsedExpr)
+        case Right(parsedExpr, _) => evaluate(expr) == evaluate(parsedExpr)
     }
   }
 end ParserCheck

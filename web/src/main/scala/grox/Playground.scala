@@ -2,9 +2,10 @@ package grox
 
 import scala.scalajs.js.annotation.*
 
-import cats.Functor
+import cats.data.{EitherT, StateT}
 import cats.effect.IO
 import cats.syntax.all.*
+import cats.{Eval, Functor}
 
 import tyrian.Html.*
 import tyrian.*
@@ -12,7 +13,7 @@ import tyrian.*
 @JSExportTopLevel("TyrianApp")
 object Playground extends TyrianApp[Msg, Model]:
 
-  val exec = Executor.module[Either[Throwable, *]]
+  val exec = Executor.module[EitherT[StateT[Eval, Environment, *], Throwable, *]]
 
   def init(flags: Map[String, String]): (Model, Cmd[IO, Msg]) = (Model("", ""), Cmd.None)
 
@@ -21,10 +22,20 @@ object Playground extends TyrianApp[Msg, Model]:
     case Msg.Scan =>
       val result = exec
         .scan(model.input)
+        .value
+        .run(Environment())
+        .value
+        ._2
         .fold(t => s"Error: ${t.toString}", tokens => tokens.mkString("\n"))
       (model.copy(result = result), Cmd.None)
     case Msg.Parse =>
-      val result = exec.parse(model.input).fold(t => s"Error: ${t.toString}", _.show)
+      val result = exec
+        .parse(model.input)
+        .value
+        .run(Environment())
+        .value
+        ._2
+        .fold(t => s"Error: ${t.toString}", _.show)
       (model.copy(result = result), Cmd.None)
 
   def view(model: Model): Html[Msg] = div(

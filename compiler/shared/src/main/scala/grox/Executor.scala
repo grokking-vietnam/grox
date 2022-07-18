@@ -2,6 +2,7 @@ package grox
 
 import cats.MonadThrow
 import cats.implicits.*
+import cats.mtl.Stateful
 
 trait Executor[F[_]]:
   def scan(str: String): F[List[Token[Span]]]
@@ -31,7 +32,7 @@ object Executor:
           result <- interpreter.evaluate(expr)
         yield result
 
-  def module[F[_]: MonadThrow]: Executor[F] =
+  def module[F[_]: MonadThrow](using S: Stateful[F, Environment]): Executor[F] =
     given Scanner[F] = Scanner.instance[F]
     given Parser[F] = Parser.instance[F]
     given Interpreter[F] = Interpreter.instance[F]
