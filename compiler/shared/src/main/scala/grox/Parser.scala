@@ -141,7 +141,6 @@ object Parser:
       cnsm <- consume[A, Semicolon[A]](pr._2)
     } yield (Stmt.Print(pr._1), cnsm._2)
 
-  // TODO:
   def consume[A, TokenType <: Token[A]: ClassTag](
     tokens: List[Token[A]]
   ): Either[Error[A], (Token[A], List[Token[A]])] =
