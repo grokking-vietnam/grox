@@ -336,18 +336,16 @@ class StmtParserTest extends munit.FunSuite:
               avar,
               Some(Expr.Literal(1)),
             ),
-            Stmt.Expression(
-              Expr.Assign(
-                Identifier("a", ()),
-                Expr.Add(
-                  Expr.Variable(
-                    Identifier("a", ())
-                  ),
-                  Expr.Variable(
-                    Identifier("a", ())
-                  ),
+            Stmt.Assign(
+              Identifier("a", ()),
+              Expr.Add(
+                Expr.Variable(
+                  Identifier("a", ())
                 ),
-              )
+                Expr.Variable(
+                  Identifier("a", ())
+                ),
+              ),
             ),
           )
         ),
@@ -414,16 +412,14 @@ class StmtParserTest extends munit.FunSuite:
             Stmt.Print(
               Expr.Variable(ivar)
             ),
-            Stmt.Expression(
-              Expr.Assign(
-                ivar,
-                Expr.Add(
-                  Expr.Variable(
-                    ivar
-                  ),
-                  Expr.Literal(1),
+            Stmt.Assign(
+              ivar,
+              Expr.Add(
+                Expr.Variable(
+                  ivar
                 ),
-              )
+                Expr.Literal(1),
+              ),
             ),
           )
         ),

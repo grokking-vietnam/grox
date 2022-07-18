@@ -25,8 +25,6 @@ enum Expr:
 
   // assignment
 
-  case Assign[A](name: Token[A], value: Expr)
-
   // logic
   case Or(left: Expr, right: Expr)
   case And(left: Expr, right: Expr)
@@ -82,8 +80,6 @@ object Expr:
 
       case Or(left, right) =>
         s"${formatNestedExpr(left, show(left))} or ${formatNestedExpr(right, show(right))}"
-
-      case Assign(name, value) => s"${name.lexeme} = ${formatNestedExpr(value, show(value))}"
 
       case Variable(name) => name.lexeme
 
