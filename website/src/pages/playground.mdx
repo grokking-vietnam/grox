@@ -1,5 +1,14 @@
-import Hello from './_playground.js'
+import {
+    TyrianApp
+} from '../../../web/target/scala-3/main.js'
+
+
+export default function Hello() {
+    React.useEffect(() => { TyrianApp.launch("myapp"); }, [])
+    return (
+        <div id="myapp" />
+    );
+}
 
 Type your code below and click a button:
-
-<Hello/>
+<Hello />
