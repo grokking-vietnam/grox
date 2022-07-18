@@ -98,24 +98,23 @@ object Interpreter:
 
   def evaluate(expr: Expr): EvaluationResult =
     expr match
-      case Expr.Literal(value) => Right(value)
-      case Expr.Grouping(e)    => evaluate(e)
-      case Expr.Negate(e)      => evaluate(e).flatMap(res => -res)
-      case Expr.Not(e)         => evaluate(e).flatMap(`unary_!`)
-      case Expr.Add(l, r)      => evaluateBinary(add)(l, r)
-      case Expr.Subtract(l, r) => evaluateBinary(subtract)(l, r)
-      case Expr.Multiply(l, r) => evaluateBinary(multiply)(l, r)
-      case Expr.Divide(l, r)   => evaluateBinary(divide)(l, r)
+      case Expr.Literal(_, value) => Right(value)
+      case Expr.Grouping(e)       => evaluate(e)
+      case Expr.Negate(_, e)      => evaluate(e).flatMap(res => -res)
+      case Expr.Not(_, e)         => evaluate(e).flatMap(`unary_!`)
+      case Expr.Add(_, l, r)      => evaluateBinary(add)(l, r)
+      case Expr.Subtract(_, l, r) => evaluateBinary(subtract)(l, r)
+      case Expr.Multiply(_, l, r) => evaluateBinary(multiply)(l, r)
+      case Expr.Divide(_, l, r)   => evaluateBinary(divide)(l, r)
 
-      case Expr.Greater(l, r)      => evaluateBinary(greater)(l, r)
-      case Expr.GreaterEqual(l, r) => evaluateBinary(greaterOrEqual)(l, r)
-      case Expr.Less(l, r)         => evaluateBinary(less)(l, r)
-      case Expr.LessEqual(l, r)    => evaluateBinary(lessOrEqual)(l, r)
-      case Expr.Equal(l, r)        => evaluateBinary(equal)(l, r)
-      case Expr.NotEqual(l, r)     => evaluateBinary(notEqual)(l, r)
-      case Expr.And(l, r) =>
+      case Expr.Greater(_, l, r)      => evaluateBinary(greater)(l, r)
+      case Expr.GreaterEqual(_, l, r) => evaluateBinary(greaterOrEqual)(l, r)
+      case Expr.Less(_, l, r)         => evaluateBinary(less)(l, r)
+      case Expr.LessEqual(_, l, r)    => evaluateBinary(lessOrEqual)(l, r)
+      case Expr.Equal(_, l, r)        => evaluateBinary(equal)(l, r)
+      case Expr.NotEqual(_, l, r)     => evaluateBinary(notEqual)(l, r)
+      case Expr.And(_, l, r) =>
         evaluate(l).flatMap(lres => if !lres.isTruthy then Right(lres) else evaluate(r))
-      case Expr.Or(l, r) =>
+      case Expr.Or(_, l, r) =>
         evaluate(l).flatMap(lres => if lres.isTruthy then Right(lres) else evaluate(r))
-      case Expr.Assign(name, value) => ???
-      case Expr.Variable(name)      => ???
+      case Expr.Variable(_, name) => ???
