@@ -2,7 +2,7 @@ import React from 'react'
 import Layout from '@theme/Layout'
 import {
     TyrianApp
-} from '../../../web/target/scala-3.1.3/web-fastopt.js'
+} from '../../../web/target/scala-3/main.js'
 
 
 export default function Hello() {
