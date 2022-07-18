@@ -11,7 +11,8 @@ import cats.instances.*
 import grox.Parser.ExprParser
 
 trait Parser[F[_]]:
-  def parse[T](tokens: List[Token[T]]): F[Expr]
+  def parse[T](tokens: List[Token[T]]): F[List[Stmt[T]]]
+  def parseExpr[T](tokens: List[Token[T]]): F[Expr]
 
 object Parser:
 
@@ -22,7 +23,15 @@ object Parser:
 
       def parse[T](
         tokens: List[Token[T]]
+      ): F[List[Stmt[T]]] = Parser.parseStmt(tokens).liftTo[F]
+
+      def parseExpr[T](
+        tokens: List[Token[T]]
       ): F[Expr] = Parser.parse(tokens).map { case (exp, _) => exp }.liftTo[F]
+
+  enum ParseError[T] extends NoStackTrace:
+    case Failure(errors: List[Error[T]])
+    case PartialError(rest: List[Token[T]])
 
   enum Error[T](msg: String, tokens: List[Token[T]]) extends NoStackTrace:
     case ExpectExpression(tokens: List[Token[T]]) extends Error("Expect expression", tokens)
@@ -47,17 +56,20 @@ object Parser:
   // Parse a single expression and return remaining tokens
   def parse[A](ts: List[Token[A]]): ExprParser[A] = expression[A](ts)
 
+  def parseStmt[A](ts: List[Token[A]]): Either[ParseError[A], List[Stmt[A]]] =
+    _parseStmt(Inspector(Nil, Nil, ts)).stmts.asRight
+
   @tailrec
-  def parseStmt[A](inspector: Inspector[A]): Inspector[A] =
+  def _parseStmt[A](inspector: Inspector[A]): Inspector[A] =
     inspector.tokens match
       case Nil => inspector
       case _ =>
         declaration(inspector.tokens) match
           case Right(stmt, rest) =>
             val updatedInspector = inspector.copy(tokens = rest, stmts = inspector.stmts :+ stmt)
-            parseStmt(updatedInspector)
+            _parseStmt(updatedInspector)
           case Left(err) =>
-            parseStmt(
+            _parseStmt(
               inspector.copy(
                 tokens = synchronize(inspector.tokens.tail),
                 errors = inspector.errors :+ err,
@@ -141,6 +153,7 @@ object Parser:
       cnsm <- consume[A, Semicolon[A]](pr._2)
     } yield (Stmt.Print(pr._1), cnsm._2)
 
+  // TODO:
   def consume[A, TokenType <: Token[A]: ClassTag](
     tokens: List[Token[A]]
   ): Either[Error[A], (Token[A], List[Token[A]])] =

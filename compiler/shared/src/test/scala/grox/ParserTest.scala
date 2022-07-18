@@ -61,6 +61,13 @@ class ParserTest extends munit.FunSuite:
     assertEquals(parse(ts), Right(want, Nil))
   }
 
+  test("primary variable") {
+    val avar: Identifier[Unit] = Identifier("a", ())
+    val ts = List(avar)
+    val want = Expr.Variable(avar)
+    assertEquals(parse(ts), Right(want, Nil))
+  }
+
   test("unary negate") {
     val ts = List(Minus(()), Number("42", ()))
     val want = Expr.Negate(Expr.Literal(42))
@@ -368,7 +375,7 @@ class ParserTest extends munit.FunSuite:
         tokens = List.empty[Token[Unit]],
       )
 
-      assertEquals(parseStmt(inspector), expectedInspector)
+      assertEquals(_parseStmt(inspector), expectedInspector)
   }
 
   test("While: statement ") {
@@ -431,7 +438,7 @@ class ParserTest extends munit.FunSuite:
         tokens = List.empty[Token[Unit]],
       )
 
-      assertEquals(parseStmt(inspector), expectedInspector)
+      assertEquals(_parseStmt(inspector), expectedInspector)
 
   }
 
@@ -460,12 +467,15 @@ class ParserCheck extends ScalaCheckSuite:
     }
   }
 
+  val interpreter = Interpreter.instance[Either[Throwable, *]]
+  val evaluate = (x: Expr) => interpreter.evaluate(Environment(), x)
+
   property("produce an equal numeric expression") {
     Prop.forAll(numericGen) { expr =>
       parse(expr.flatten) match
         case Left(_) => false
         case Right(parsedExpr, _) =>
-          (Interpreter.evaluate(expr), Interpreter.evaluate(parsedExpr)) match
+          (evaluate(expr), evaluate(parsedExpr)) match
             case (Left(e1), Left(e2))                   => e1 == e2
             case (Right(v1: Double), Right(v2: Double)) => math.abs(v1 - v2) < 0.01
             case _                                      => false
@@ -476,7 +486,7 @@ class ParserCheck extends ScalaCheckSuite:
     Prop.forAll(logicalGen) { expr =>
       parse(expr.flatten) match
         case Left(_)              => false
-        case Right(parsedExpr, _) => Interpreter.evaluate(expr) == Interpreter.evaluate(parsedExpr)
+        case Right(parsedExpr, _) => evaluate(expr) == evaluate(parsedExpr)
     }
   }
 end ParserCheck

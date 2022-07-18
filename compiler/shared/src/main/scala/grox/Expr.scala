@@ -24,7 +24,6 @@ enum Expr:
   case NotEqual(left: Expr, right: Expr)
 
   // assignment
-
   case Assign[A](name: Token[A], value: Expr)
 
   // logic

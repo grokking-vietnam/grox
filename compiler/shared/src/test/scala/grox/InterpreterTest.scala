@@ -7,6 +7,9 @@ import Interpreter.*
 
 class InterpreterTest extends ScalaCheckSuite:
 
+  val interpreter = Interpreter.instance[Either[Throwable, *]]
+  val evaluate = (x: Expr) => interpreter.evaluate(Environment(), x)
+
   property("addition") {
     forAll { (n1: Double, n2: Double) =>
       evaluate(Expr.Add(Expr.Literal(n1), Expr.Literal(n2))) == Right(n1 + n2)
@@ -66,23 +69,37 @@ class InterpreterTest extends ScalaCheckSuite:
     }
   }
 
+  test("variable expression") {
+    val env = Environment(Map("x" -> 0.0d), None)
+    val expr = Expr.Variable(Token.Identifier("x", ()))
+    assertEquals(interpreter.evaluate(env, expr), Right(0.0))
+  }
+
   // from: https://www.learncbse.in/bodmas-rule/
   test("complex expression -4*(10+15/5*4-2*2)") {
-    def evaluate(str: String) = Scanner
+    val env = Environment(Map("x" -> 10.0), None)
+
+    def eval(str: String) = Scanner
       .parse(str)
       .flatMap(Parser.parse(_))
-      .flatMap(e => Interpreter.evaluate(e._1))
-    val expr = evaluate("-4*(10+15/5*4-2*2)")
-    val division = evaluate("-4*(10+3*4-2*2)")
-    val multiplication = evaluate("-4*(10+12-4)")
-    val addition = evaluate("-4*(22-4)")
-    val subtraction = evaluate("-4*18")
-    val answer = evaluate("-72")
+      .flatMap(x => interpreter.evaluate(env, x._1))
+
+    val expr = eval("-4*(10+15/5*4-2*2)")
+    val division = eval("-4*(10+3*4-2*2)")
+    val multiplication = eval("-4*(10+12-4)")
+    val addition = eval("-4*(22-4)")
+    val subtraction = eval("-4*18")
+    val answer = eval("-72")
+    val exprWithX = eval("-4*(x+15/5*4-2*2)")
+    val divisionWithX = eval("-4*(x+3*4-2*2)")
+
     assertEquals(expr, division)
     assertEquals(division, multiplication)
     assertEquals(multiplication, addition)
     assertEquals(addition, subtraction)
     assertEquals(subtraction, answer)
+    assertEquals(exprWithX, answer)
+    assertEquals(divisionWithX, answer)
   }
 
   test("division by zero error") {
