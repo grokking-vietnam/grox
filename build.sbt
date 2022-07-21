@@ -18,10 +18,13 @@ inThisBuild(
         ),
         name = Some("Setup Node"),
       ),
-      WorkflowStep.Sbt(List("web/fullLinkJS"), name = Some("Build web playground")),
       WorkflowStep.Run(
-        commands = List("yarn install --frozen-lockfile", "yarn build"),
-        params = Map("working-directory" -> "./website"),
+        commands = List(
+          "sbt web/fullLinkJS",
+          "cd ./website",
+          "yarn install --frozen-lockfile",
+          "yarn build",
+        ),
         name = Some("Check build website"),
       ),
     ),

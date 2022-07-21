@@ -72,12 +72,9 @@ jobs:
           cache: yarn
           cache-dependency-path: website/yarn.lock
 
-      - name: Build web playground
-        run: sbt ++${{ matrix.scala }} web/fullLinkJS
-
       - name: Check build website
         run: |
+          sbt web/fullLinkJS
+          cd ./website
           yarn install --frozen-lockfile
           yarn build
-        with:
-          working-directory: ./website
