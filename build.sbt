@@ -5,6 +5,7 @@ inThisBuild(
 
     // Github Workflow
     githubWorkflowPublishTargetBranches := Seq(), // Don't publish anywhere
+    githubWorkflowUseSbtThinClient := true,
     githubWorkflowBuild ++= Seq(
       WorkflowStep.Sbt(List("build"), name = Some("Build projects")),
       WorkflowStep.Sbt(List("check"), name = Some("Check Formatting")),
@@ -20,7 +21,6 @@ inThisBuild(
       ),
       WorkflowStep.Run(
         commands = List(
-          "sbt web/fullLinkJS",
           "cd ./website",
           "yarn install --frozen-lockfile",
           "yarn build",
