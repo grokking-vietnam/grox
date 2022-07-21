@@ -51,19 +51,19 @@ jobs:
           key: ${{ runner.os }}-sbt-cache-v2-${{ hashFiles('**/*.sbt') }}-${{ hashFiles('project/build.properties') }}
 
       - name: Check that workflows are up to date
-        run: sbt ++${{ matrix.scala }} githubWorkflowCheck
+        run: sbt --client '++${{ matrix.scala }}; githubWorkflowCheck'
 
       - name: Build project
-        run: sbt ++${{ matrix.scala }} test
+        run: sbt --client '++${{ matrix.scala }}; test'
 
       - name: Build projects
-        run: sbt ++${{ matrix.scala }} build
+        run: sbt --client '++${{ matrix.scala }}; build'
 
       - name: Check Formatting
-        run: sbt ++${{ matrix.scala }} check
+        run: sbt --client '++${{ matrix.scala }}; check'
 
       - name: Check docs formatting
-        run: sbt ++${{ matrix.scala }} docs/mdoc
+        run: sbt --client '++${{ matrix.scala }}; docs/mdoc'
 
       - name: Setup Node
         uses: actions/setup-node@v2
@@ -74,7 +74,6 @@ jobs:
 
       - name: Check build website
         run: |
-          sbt web/fullLinkJS
           cd ./website
           yarn install --frozen-lockfile
           yarn build
