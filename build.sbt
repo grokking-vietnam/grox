@@ -9,6 +9,21 @@ inThisBuild(
       WorkflowStep.Sbt(List("build"), name = Some("Build projects")),
       WorkflowStep.Sbt(List("check"), name = Some("Check Formatting")),
       WorkflowStep.Sbt(List("docs/mdoc"), name = Some("Check docs formatting")),
+      WorkflowStep.Use(
+        UseRef.Public("actions", "setup-node", "v2"),
+        params = Map(
+          "node-version" -> "16.x",
+          "cache" -> "yarn",
+          "cache-dependency-path" -> "website/yarn.lock",
+        ),
+        name = Some("Setup Node"),
+      ),
+      WorkflowStep.Sbt(List("web/fullLinkJS"), name = Some("Build web playground")),
+      WorkflowStep.Run(
+        commands = List("yarn install --frozen-lockfile", "yarn build"),
+        params = Map("working-directory" -> "./website"),
+        name = Some("Check build website"),
+      ),
     ),
 
     // Scalafix
