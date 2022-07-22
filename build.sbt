@@ -5,10 +5,29 @@ inThisBuild(
 
     // Github Workflow
     githubWorkflowPublishTargetBranches := Seq(), // Don't publish anywhere
+    githubWorkflowUseSbtThinClient := true,
+    githubWorkflowEnv := Map("SBT_OPTS" -> "-Xmx2048M"),
     githubWorkflowBuild ++= Seq(
       WorkflowStep.Sbt(List("build"), name = Some("Build projects")),
       WorkflowStep.Sbt(List("check"), name = Some("Check Formatting")),
       WorkflowStep.Sbt(List("docs/mdoc"), name = Some("Check docs formatting")),
+      WorkflowStep.Use(
+        UseRef.Public("actions", "setup-node", "v2"),
+        params = Map(
+          "node-version" -> "16.x",
+          "cache" -> "yarn",
+          "cache-dependency-path" -> "website/yarn.lock",
+        ),
+        name = Some("Setup Node"),
+      ),
+      WorkflowStep.Run(
+        commands = List(
+          "cd ./website",
+          "yarn install --frozen-lockfile",
+          "yarn build",
+        ),
+        name = Some("Check build website"),
+      ),
     ),
 
     // Scalafix
