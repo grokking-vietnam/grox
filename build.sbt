@@ -28,6 +28,17 @@ inThisBuild(
         ),
         name = Some("Check build website"),
       ),
+      WorkflowStep.Use(
+        UseRef.Public("peaceiris", "actions-gh-pages", "v3"),
+        params = Map(
+          "github_token" -> "${{ secrets.GITHUB_TOKEN }}",
+          "publish_dir" -> "./website/build",
+          "user_name" -> "github-actions[bot]",
+          "user_email" -> "41898282+github-actions[bot]@users.noreply.github.com",
+        ),
+        name = Some("Deploy to Github Pages"),
+        cond = Some("${{ github.ref == 'refs/heads/main' }}"),
+      ),
     ),
 
     // Scalafix
