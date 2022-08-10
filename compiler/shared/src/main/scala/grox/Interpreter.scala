@@ -11,13 +11,13 @@ trait Interpreter[F[_]]:
 object Interpreter:
   def instance[F[_]: MonadThrow]: Interpreter[F] = (env, expr) => evaluate(env)(expr)
 
-  enum RuntimeError(op: Token[Unit], msg: String) extends NoStackTrace:
+  enum RuntimeError(location: Span, msg: String) extends NoStackTrace:
     override def toString = msg
-    case MustBeNumbers(op: Token[Unit]) extends RuntimeError(op, "Operands must be numbers.")
-    case MustBeNumbersOrStrings
-      extends RuntimeError(Token.Plus(()), "Operands must be two numbers or two strings")
-    case DivisionByZero extends RuntimeError(Token.Slash(()), "Division by zerro")
-    case VariableNotFound(op: String) extends RuntimeError(op, "Variable not found")
+    case MustBeNumbers(location: Span) extends RuntimeError(location, "Operands must be numbers.")
+    case MustBeNumbersOrStrings(location: Span)
+      extends RuntimeError(location, "Operands must be two numbers or two strings")
+    case DivisionByZero(location: Span) extends RuntimeError(location, "Division by zerro")
+    case VariableNotFound(location: Span) extends RuntimeError(location, "Variable not found")
 
   type EvaluationResult = Either[RuntimeError, LiteralType]
   type Evaluate = (LiteralType, LiteralType) => EvaluationResult

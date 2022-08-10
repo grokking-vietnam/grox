@@ -4,6 +4,7 @@ import cats.Functor
 
 case class Location(val line: Int, val col: Int, val offset: Int)
 case class Span(start: Location, end: Location)
+case class Source(val text: String, val span: Span)
 
 object Span:
   val empty = Span(Location(0, 0, 0), Location(0, 0, 0))

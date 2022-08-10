@@ -436,7 +436,6 @@ class ParserTest extends munit.FunSuite:
 
 end ParserTest
 
-<<<<<<< HEAD
 class ParserCheck extends ScalaCheckSuite:
   property("parse numerics succesfully") {
     Prop.forAll(numericGen) { expr =>
