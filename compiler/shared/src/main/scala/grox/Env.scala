@@ -11,7 +11,8 @@ import cats.Monad
 // [ ] Env Tests
 // [ ] Executor Tests
 // [ ] While execution
-// [ ] If execution
+// [x] If execution
+// [ ] Fix playground
 
 trait Env[F[_]]:
   def define(name: String, value: LiteralType): F[Unit]
