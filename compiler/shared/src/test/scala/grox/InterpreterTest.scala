@@ -88,7 +88,7 @@ class InterpreterTest extends ScalaCheckSuite:
 
   test("variable expression") {
     val env = Environment(Map("x" -> 0.0d), None)
-    val expr = Expr.Variable(Token.Identifier("x", ()))
+    val expr = Expr.Variable(empty, "x")
     assertEquals(interpreter.evaluate(env, expr), Right(0.0))
   }
 
@@ -122,7 +122,7 @@ class InterpreterTest extends ScalaCheckSuite:
   test("division by zero error") {
     assertEquals(
       evaluate(Expr.Divide(empty, Expr.Literal(empty, 1), Expr.Literal(empty, 0))),
-      Left(RuntimeError.DivisionByZero),
+      Left(RuntimeError.DivisionByZero(empty)),
     )
   }
 
@@ -151,7 +151,7 @@ class InterpreterTest extends ScalaCheckSuite:
   test("must be numbers or strings runtime error") {
     assertEquals(
       evaluate(Expr.Add(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string"))),
-      Left(RuntimeError.MustBeNumbersOrStrings),
+      Left(RuntimeError.MustBeNumbersOrStrings(empty)),
     )
   }
 
@@ -172,30 +172,30 @@ class InterpreterTest extends ScalaCheckSuite:
   test("must be numbers runtime error") {
     assertEquals(
       evaluate(Expr.Subtract(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string"))),
-      Left(RuntimeError.MustBeNumbers(Token.Minus(()))),
+      Left(RuntimeError.MustBeNumbers(empty)),
     )
     assertEquals(
       evaluate(Expr.Divide(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string"))),
-      Left(RuntimeError.MustBeNumbers(Token.Slash(()))),
+      Left(RuntimeError.MustBeNumbers(empty)),
     )
     assertEquals(
       evaluate(Expr.Multiply(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string"))),
-      Left(RuntimeError.MustBeNumbers(Token.Star(()))),
+      Left(RuntimeError.MustBeNumbers(empty)),
     )
     assertEquals(
       evaluate(Expr.Greater(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string"))),
-      Left(RuntimeError.MustBeNumbers(Token.Greater(()))),
+      Left(RuntimeError.MustBeNumbers(empty)),
     )
     assertEquals(
       evaluate(Expr.GreaterEqual(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string"))),
-      Left(RuntimeError.MustBeNumbers(Token.GreaterEqual(()))),
+      Left(RuntimeError.MustBeNumbers(empty)),
     )
     assertEquals(
       evaluate(Expr.Less(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string"))),
-      Left(RuntimeError.MustBeNumbers(Token.Less(()))),
+      Left(RuntimeError.MustBeNumbers(empty)),
     )
     assertEquals(
       evaluate(Expr.LessEqual(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string"))),
-      Left(RuntimeError.MustBeNumbers(Token.LessEqual(()))),
+      Left(RuntimeError.MustBeNumbers(empty)),
     )
   }
