@@ -20,6 +20,8 @@ object Scanner:
   val whitespace: P[Unit] = endOfLine | R.wsp
   val whitespaces: P0[Unit] = P.until0(!whitespace).void
   val location = P.caret.map(c => Location(c.line, c.col, c.offset))
+  val alphaOrUnderscore = R.alpha | P.char('_')
+  val alphaNumeric = alphaOrUnderscore | N.digit
 
   // != | !
   val bangEqualOrBang: P[Token[Unit]] = BangEqual(()).operator | Bang(()).operator
@@ -55,13 +57,9 @@ object Scanner:
 
   // An identifier can only start with an undercore or a letter
   // and can contain underscore or letter or numeric character
-  val identifier: P[Token[Unit]] =
-    val alphaOrUnderscore = R.alpha | P.char('_')
-    val alphaNumeric = alphaOrUnderscore | N.digit
-
-    (alphaOrUnderscore ~ alphaNumeric.rep0)
-      .string
-      .map(Identifier(_, ()))
+  val identifier: P[Token[Unit]] = (alphaOrUnderscore ~ alphaNumeric.rep0)
+    .string
+    .map(Identifier(_, ()))
 
   val str: P[Token[Unit]] = P
     .until0(R.dquote)
@@ -126,7 +124,11 @@ object Scanner:
 
   extension (t: Token[Unit])
     def operator = P.string(t.lexeme).as(t)
-    def keyword = (P.string(t.lexeme).as(t) <* (whitespace | P.end).peek).backtrack
+
+    // The character that immediately follows a keyword must not be a alphanumberic character.
+    //
+    // A keyword should be followed by a non-alphanumberic character.
+    def keyword = (P.string(t.lexeme).as(t) <* (!alphaNumeric).peek).backtrack
 
   extension (p: P[Token[Unit]])
     def span = (location.with1 ~ p ~ location).map { case ((s, t), e) => t.as(Span(s, e)) }
