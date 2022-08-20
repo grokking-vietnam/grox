@@ -33,9 +33,9 @@ object Playground extends TyrianApp[Msg, Model]:
       onInput(s => Msg.Update(s)),
       myStyle,
     ),
-    div(myStyle)(text(model.result)),
     button(onClick(Msg.Scan))("Scan"),
     button(onClick(Msg.Parse))("Parse"),
+    p(styles("text-align" -> "center"))(text(model.result)),
   )
 
   def subscriptions(model: Model): Sub[IO, Msg] = Sub.None
@@ -46,6 +46,7 @@ object Playground extends TyrianApp[Msg, Model]:
     "padding" -> "10px 0",
     "font-size" -> "2em",
     "text-align" -> "center",
+    "margin-bottom" -> "0.25em",
   )
 
 case class Model(val input: String, val result: String)
