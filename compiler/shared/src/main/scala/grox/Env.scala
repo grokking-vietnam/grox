@@ -4,6 +4,7 @@ import cats.MonadThrow
 import cats.effect.kernel.Ref
 import cats.effect.std.Console
 import cats.syntax.all.*
+import cats.Monad
 
 // todo move Environment => State
 //
@@ -52,9 +53,9 @@ object StmtExecutor:
 
     def isTruthy: Boolean =
       value match
-        case _: Unit => false
+        case _: Unit    => false
         case v: Boolean => v
-        case _ => true
+        case _          => true
 
   def instance[F[_]: MonadThrow: Console](
     using env: Env[F],
@@ -107,19 +108,14 @@ object StmtExecutor:
 //              while interpreter.evaluate(cond, state) do executeStmt(body)
 
           case If(cond, thenBranch, elseBranch) =>
-//            for
-//              state  <- env.state
-//              result <- interpreter.evaluate(state, cond)
-//              _ = println(s"IS $result truthy: ${result.isTruthy}")
-//              _ = if result.isTruthy
-//                then execute(List(thenBranch))
-//                else elseBranch.map(eb => execute(List(eb))).getOrElse(Right(state))
-              executeStmt(thenBranch)
-//            yield ()
+            for
+              state <- env.state
+              result <- interpreter.evaluate(state, cond)
+              _ <- if result.isTruthy then executeStmt(thenBranch)
+                   else elseBranch.fold(Monad[F].unit)(eb => executeStmt(eb))
+            yield ()
 
-          case Function(name, params, body)     => ???
+          case Function(name, params, body) => ???
 
-      def execute[A](stmts: List[Stmt[A]]): F[Unit] = stmts.traverse_(x => {
-        executeStmt(x)
-      })
+      def execute[A](stmts: List[Stmt[A]]): F[Unit] = stmts.traverse_(x => executeStmt(x))
     }
