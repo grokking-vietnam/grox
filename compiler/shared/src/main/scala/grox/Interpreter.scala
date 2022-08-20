@@ -17,7 +17,8 @@ object Interpreter:
     case MustBeNumbersOrStrings(location: Span)
       extends RuntimeError(location, "Operands must be two numbers or two strings")
     case DivisionByZero(location: Span) extends RuntimeError(location, "Division by zerro")
-    case VariableNotFound(location: Span, name: String) extends RuntimeError(location, "Variable not found")
+    case VariableNotFound(location: Span, name: String)
+      extends RuntimeError(location, "Variable not found")
 
   type EvaluationResult = Either[RuntimeError, LiteralType]
   type Evaluate = (LiteralType, LiteralType) => EvaluationResult
@@ -51,14 +52,14 @@ object Interpreter:
     (left, right) match
       case (l: Double, r: Double) => Right(l + r)
       case (l: String, r: String) => Right(l + r)
-      case (_, _)                      => Left(RuntimeError.MustBeNumbersOrStrings(span))
+      case (_, _)                 => Left(RuntimeError.MustBeNumbersOrStrings(span))
 
-  def subtract(span: Span)( left: LiteralType, right: LiteralType): EvaluationResult =
+  def subtract(span: Span)(left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l - r)
       case _                      => Left(RuntimeError.MustBeNumbers(span))
 
-  def multiply(span: Span)( left: LiteralType, right: LiteralType): EvaluationResult =
+  def multiply(span: Span)(left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l * r)
       case _                      => Left(RuntimeError.MustBeNumbers(span))
@@ -101,10 +102,10 @@ object Interpreter:
 
   def evaluate[F[_]: MonadThrow](env: Environment)(expr: Expr): F[LiteralType] =
     expr match
-      case Expr.Literal(_, value) => value.pure[F]
-      case Expr.Grouping(e)    => evaluate(env)(e)
+      case Expr.Literal(_, value)   => value.pure[F]
+      case Expr.Grouping(e)         => evaluate(env)(e)
       case Expr.Negate(tag, e)      => evaluate(env)(e).flatMap(x => x.negate(tag).liftTo[F])
-      case Expr.Not(_, e)         => evaluate(env)(e).flatMap(x => (!x).liftTo[F])
+      case Expr.Not(_, e)           => evaluate(env)(e).flatMap(x => (!x).liftTo[F])
       case Expr.Add(tag, l, r)      => evaluateBinary(env)(add(tag))(l, r)
       case Expr.Subtract(tag, l, r) => evaluateBinary(env)(subtract(tag))(l, r)
       case Expr.Multiply(tag, l, r) => evaluateBinary(env)(multiply(tag))(l, r)

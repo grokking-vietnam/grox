@@ -7,7 +7,7 @@ case class Span(start: Location, end: Location)
 
 /** Parsed value, equiped with its start and end position in the original source code. */
 case class Parsed[+A](value: A, span: Span):
-  def map[B](f: A => B): Parsed[B]        = copy(value = f(value))
+  def map[B](f: A => B): Parsed[B] = copy(value = f(value))
 
 object Span:
   val empty = Span(Location(0, 0, 0), Location(0, 0, 0))
