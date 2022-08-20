@@ -48,6 +48,14 @@ trait StmtExecutor[F[_]]:
 object StmtExecutor:
   import Stmt.*
 
+  extension (value: LiteralType)
+
+    def isTruthy: Boolean =
+      value match
+        case _: Unit => false
+        case v: Boolean => v
+        case _ => true
+
   def instance[F[_]: MonadThrow: Console](
     using env: Env[F],
     interpreter: Interpreter[F],
@@ -70,8 +78,10 @@ object StmtExecutor:
             yield ()
 
           case Print(expr) =>
+            println(s"EXECUTING PRINT $expr")
             for
               state <- env.state
+              _ = println(s"ENV PRINT $expr")
               result <- interpreter.evaluate(state, expr)
               _ <- Console[F].println(result)
             yield ()
@@ -90,9 +100,26 @@ object StmtExecutor:
               _ <- env.assign(name, result)
             yield ()
 
-          case While(cond, body)                => ???
-          case If(cond, thenBranch, elseBranch) => ???
+//          case While(cond, body)                =>
+//            for
+//              state <- env.state
+//            yield
+//              while interpreter.evaluate(cond, state) do executeStmt(body)
+
+          case If(cond, thenBranch, elseBranch) =>
+//            for
+//              state  <- env.state
+//              result <- interpreter.evaluate(state, cond)
+//              _ = println(s"IS $result truthy: ${result.isTruthy}")
+//              _ = if result.isTruthy
+//                then execute(List(thenBranch))
+//                else elseBranch.map(eb => execute(List(eb))).getOrElse(Right(state))
+              executeStmt(thenBranch)
+//            yield ()
+
           case Function(name, params, body)     => ???
 
-      def execute[A](stmts: List[Stmt[A]]): F[Unit] = stmts.traverse_(x => executeStmt(x))
+      def execute[A](stmts: List[Stmt[A]]): F[Unit] = stmts.traverse_(x => {
+        executeStmt(x)
+      })
     }

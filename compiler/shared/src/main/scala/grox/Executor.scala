@@ -41,6 +41,7 @@ object Executor:
       def execute(str: String): F[Unit] =
         for
           tokens <- scanner.scan(str)
+          _ = println(s"TOKENS: $tokens")
           stmts <- parser.parse(tokens)
           _ <- executor.execute(stmts)
         yield ()
