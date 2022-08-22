@@ -57,9 +57,11 @@ val commonSettings = Seq(
   libraryDependencies ++= Seq(
     Dependencies.catsCore.value,
     Dependencies.catsEffect.value,
+    Dependencies.scalaCheckEffect.value,
     Dependencies.munit.value,
     Dependencies.munitCatsEffect.value,
     Dependencies.munitScalaCheck.value,
+    Dependencies.munitScalaCheckEffect.value,
   ),
 )
 
