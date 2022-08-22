@@ -1,7 +1,6 @@
 package grox
 
-import org.scalacheck.Arbitrary
-import org.scalacheck.Gen
+import org.scalacheck.{Arbitrary, Gen}
 
 object Arbitraries:
 

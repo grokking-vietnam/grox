@@ -1,12 +1,11 @@
 package grox
 
 import cats.effect.IO
-import Arbitraries.given
-import munit.CatsEffectSuite
-import munit.ScalaCheckEffectSuite
 
 import munit.{CatsEffectSuite, ScalaCheckEffectSuite}
 import org.scalacheck.effect.PropF
+
+import Arbitraries.given
 
 class EnvTest extends CatsEffectSuite with ScalaCheckEffectSuite:
 

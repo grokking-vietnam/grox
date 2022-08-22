@@ -22,5 +22,9 @@ object Dependencies {
   val scalaCheck = Def.setting("org.scalacheck" %%% "scalacheck" % "1.16.0" % Test)
   val munitScalaCheck = Def.setting("org.scalameta" %%% "munit-scalacheck" % "0.7.29" % Test)
   val scalaCheckEffect = Def.setting("org.typelevel" %%% "scalacheck-effect" % "1.0.4" % Test)
-  val munitScalaCheckEffect = Def.setting("org.typelevel" %%% "scalacheck-effect-munit" % "1.0.4" % Test)
+
+  val munitScalaCheckEffect = Def.setting(
+    "org.typelevel" %%% "scalacheck-effect-munit" % "1.0.4" % Test
+  )
+
 }
