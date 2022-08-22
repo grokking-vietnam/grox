@@ -1,18 +1,9 @@
 package grox
 
-import cats.MonadThrow
 import cats.effect.kernel.Ref
 import cats.effect.std.Console
 import cats.syntax.all.*
-import cats.Monad
-
-// todo move Environment => State
-//
-// [ ] Env Tests
-// [ ] Executor Tests
-// [ ] While execution
-// [x] If execution
-// [ ] Fix playground
+import cats.{Monad, MonadThrow}
 
 trait Env[F[_]]:
   def define(name: String, value: LiteralType): F[Unit]
@@ -40,8 +31,6 @@ object Env:
     }
   }
 
-// Todo rename => Interpreter
-// rename Interpreter => Expr evaluator or something
 trait StmtExecutor[F[_]]:
   def execute[A](stmt: List[Stmt[A]]): F[Unit]
 
