@@ -12,7 +12,6 @@ trait Executor[F[_]]:
   def evaluate(str: String): F[LiteralType]
   def execute(str: String): F[Unit]
 
-// todo add StmtExecutor
 object Executor:
 
   def instance[F[_]: MonadThrow](
@@ -22,7 +21,6 @@ object Executor:
     executor: StmtExecutor[F],
   ): Executor[F] =
     new Executor[F]:
-      val env = Environment()
       def scan(str: String): F[List[Token[Span]]] = scanner.scan(str)
 
       def parse(str: String): F[Expr] =
@@ -35,13 +33,12 @@ object Executor:
         for
           tokens <- scanner.scan(str)
           expr <- parser.parseExpr(tokens)
-          result <- interpreter.evaluate(env, expr)
+          result <- interpreter.evaluate(Environment(), expr)
         yield result
 
       def execute(str: String): F[Unit] =
         for
           tokens <- scanner.scan(str)
-          _ = println(s"TOKENS: $tokens")
           stmts <- parser.parse(tokens)
           _ <- executor.execute(stmts)
         yield ()

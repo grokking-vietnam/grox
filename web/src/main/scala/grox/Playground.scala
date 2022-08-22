@@ -12,20 +12,36 @@ import tyrian.*
 @JSExportTopLevel("TyrianApp")
 object Playground extends TyrianApp[Msg, Model]:
 
-  val exec = Executor.module[Either[Throwable, *]]
-
   def init(flags: Map[String, String]): (Model, Cmd[IO, Msg]) = (Model("", ""), Cmd.None)
+
+  def eval(source: String)(f: Executor[IO] => IO[String]): Cmd[IO, Msg] =
+    Cmd.Run(
+      Executor
+        .module[IO]
+        .use(f)
+    )(Msg.Result.apply)
+
+  def scan(source: String): Cmd[IO, Msg] =
+    eval(source)(exec =>
+      exec
+        .scan(source)
+        .map(tokens => tokens.mkString("\n"))
+        .handleError(err => s"Error: ${err.toString}")
+    )
+
+  def parse(source: String): Cmd[IO, Msg] =
+    eval(source)(exec =>
+      exec
+        .parse(source)
+        .map(_.toString)
+        .handleError(err => s"Error: ${err.toString}")
+    )
 
   def update(model: Model): Msg => (Model, Cmd[IO, Msg]) =
     case Msg.Update(str) => (model.copy(input = str, result = ""), Cmd.None)
-    case Msg.Scan =>
-      val result = exec
-        .scan(model.input)
-        .fold(t => s"Error: ${t.toString}", tokens => tokens.mkString("\n"))
-      (model.copy(result = result), Cmd.None)
-    case Msg.Parse =>
-      val result = exec.parse(model.input).fold(t => s"Error: ${t.toString}", _.show)
-      (model.copy(result = result), Cmd.None)
+    case Msg.Result(str) => (model.copy(result = str), Cmd.None)
+    case Msg.Scan        => (model, scan(model.input))
+    case Msg.Parse       => (model, parse(model.input))
 
   def view(model: Model): Html[Msg] = div(
     input(
@@ -53,5 +69,6 @@ case class Model(val input: String, val result: String)
 
 enum Msg:
   case Update(val str: String)
+  case Result(val str: String)
   case Scan
   case Parse

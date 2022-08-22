@@ -34,10 +34,8 @@ case class Environment(
 
   def assign(name: String, value: LiteralType): Either[EnvironmentError, Environment] =
     val assignEither =
-      if values.contains(name) then
-        Right(Environment(values + (name -> value), enclosing))
-      else
-        Left(EnvironmentError.UndefinedVariableError(name))
+      if values.contains(name) then Right(Environment(values + (name -> value), enclosing))
+      else Left(EnvironmentError.UndefinedVariableError(name))
 
     assignEither.recoverWith { case _ =>
       enclosing
