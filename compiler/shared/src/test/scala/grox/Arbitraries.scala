@@ -11,5 +11,6 @@ object Arbitraries:
       Gen.alphaNumStr,
       Gen.double,
       Gen.long.map(l => l % 2 == 0),
+      Gen.const(()),
     )
   }
