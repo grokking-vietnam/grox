@@ -17,7 +17,7 @@ object Env:
 
   def instance[F[_]: MonadThrow: Ref.Make](s: Environment): F[Env[F]] = Ref[F].of(s).map { ref =>
     new Env {
-      // we allowed redeclaration of variable
+      // we allowed redeclaration of variables
       def define(name: String, value: LiteralType): F[Unit] = ref.update(s => s.define(name, value))
       def assign(name: String, value: LiteralType): F[Unit] =
         for
@@ -92,11 +92,19 @@ object StmtExecutor:
               _ <- env.assign(name, result)
             yield ()
 
-//          case While(cond, body)                =>
-//            for
-//              state <- env.state
-//            yield
-//              while interpreter.evaluate(cond, state) do executeStmt(body)
+          case While(cond, body) =>
+            val c =
+              for
+                state <- env.state
+                r <- interpreter.evaluate(state, cond)
+              yield r.isTruthy
+            val b = executeStmt(body)
+            Monad[F].whileM_(c)(b)
+          // for
+          //   state <- env.state
+          //   r <- interpreter.evaluate(state, cond)
+          //   _ <- executeStmt(body) if r.isTruthy
+          // yield ()
 
           case If(cond, thenBranch, elseBranch) =>
             for
@@ -109,5 +117,5 @@ object StmtExecutor:
 
           case Function(name, params, body) => ???
 
-      def execute[A](stmts: List[Stmt[A]]): F[Unit] = stmts.traverse_(x => executeStmt(x))
+      def execute[A](stmts: List[Stmt[A]]): F[Unit] = stmts.traverse_(executeStmt)
     }
