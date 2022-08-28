@@ -45,6 +45,7 @@ statement      → exprStmt
                | printStmt
                | returnStmt
                | whileStmt
+               | assignStmt
                | block ;
 
 exprStmt       → expression ";" ;

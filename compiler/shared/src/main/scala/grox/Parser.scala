@@ -99,23 +99,24 @@ object Parser:
 
   def and[A]: List[Token[A]] => ExprParser[A] = binary(andOp, equality)
 
-  def assignment[A](tokens: List[Token[A]]): StmtParser[A] = ???
+  def assignment[A](
+    tokens: List[Token[A]]
+  ): StmtParser[A] =
+    val attemptToParseAssignment =
+      for {
+        (identifer, restTokens) <- consume[A, Identifier[A]](tokens)
+        iden <-
+          identifer match
+            case a: Identifier[A] => Right(a)
+            case _                => Left(Error.UnexpectedToken(tokens))
+        (equalToken, afterEqualToken) <- consume[A, Equal[A]](restTokens)
+        (valueExpr, afterValue) <- expression(afterEqualToken)
+        semicolonCnsm <- consume[A, Semicolon[A]](afterValue)
 
-  // def assignment[A](
-  //   tokens: List[Token[A]]
-  // ): ExprParser[A] = or(tokens).flatMap((expr: Expr, restTokens: List[Token[A]]) =>
-  //   restTokens.headOption match {
-  //     case Some(equalToken @ Equal(_)) =>
-  //       expr match {
-  //         case Expr.Variable(name) =>
-  //           assignment(restTokens.tail).flatMap((value, tokens) =>
-  //             Right((Expr.Assign(name, value), tokens)),
-  //           )
-  //         case _ => Left(Error.InvalidAssignmentTarget(equalToken))
-  //       }
-  //     case _ => Right((expr, restTokens))
-  //   },
-  // )
+      } yield (Stmt.Assign(iden, valueExpr), semicolonCnsm._2)
+
+    attemptToParseAssignment.recoverWith { case error => expressionStmt(tokens) }
+
 
   def statement[A](tokens: List[Token[A]]): StmtParser[A] =
     tokens.headOption match
