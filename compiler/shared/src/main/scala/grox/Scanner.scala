@@ -55,7 +55,7 @@ object Scanner:
 
   val commentOrSlash: P[Token[Unit]] = blockComment | singleLineComment | Slash(()).operator
 
-  // An identifier can only start with an undercore or a letter
+  // An identifier can only start with an underscore or a letter
   // and can contain underscore or letter or numeric character
   val identifier: P[Token[Unit]] = (alphaOrUnderscore ~ alphaNumeric.rep0)
     .string
@@ -125,8 +125,6 @@ object Scanner:
   extension (t: Token[Unit])
     def operator = P.string(t.lexeme).as(t)
 
-    // The character that immediately follows a keyword must not be a alphanumberic character.
-    //
     // A keyword should be followed by a non-alphanumberic character.
     def keyword = (P.string(t.lexeme).as(t) <* (!alphaNumeric).peek).backtrack
 
