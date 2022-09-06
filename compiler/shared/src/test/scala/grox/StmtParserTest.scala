@@ -2,52 +2,47 @@ package grox
 
 import grox.Parser.*
 import grox.Token.*
-import munit.Clue.generate
+
+import Span.*
 
 class StmtParserTest extends munit.FunSuite:
 
-  trait TestSets:
-    val identifierX = Identifier("x", ())
-    val identifierXSpan = Identifier("x", Span(Location(0, 0, 0), Location(0, 1, 0)))
-    val avar: Identifier[Unit] = Identifier("a", ())
+  val identifierX: Identifier[Span] = Identifier("x", empty)
+  val avar: Identifier[Span] = Identifier("a", empty)
 
-    val exprX = Expr.Literal("x")
+  val exprX = Expr.Literal(empty, "x")
 
-    val num1 = Number("1", ())
-    val num2 = Number("2", ())
-    val num3 = Number("3", ())
+  val num1 = Number("1", empty)
+  val num2 = Number("2", empty)
+  val num3 = Number("3", empty)
 
-    val expr1 = Expr.Literal(1)
-    val expr2 = Expr.Literal(2)
-    val expr3 = Expr.Literal(3)
-    val span = Span(Location(0, 0, 0), Location(0, 5, 5))
+  val expr1 = Expr.Literal(empty, 1)
+  val expr2 = Expr.Literal(empty, 2)
+  val expr3 = Expr.Literal(empty, 3)
+  val span = Span(Location(0, 0, 0), Location(0, 5, 5))
 
   test("Parse full variable declaration") {
-    new TestSets:
-      val ts = List(
-        Var(()),
-        identifierX,
-        Equal(()),
-        num1,
-        Semicolon(()),
-      )
-      val want = Stmt.Var(grox.Token.Identifier("x", ()), Some(Expr.Literal(1)))
-      assertEquals(
-        parseStmt(Inspector(List.empty, List.empty, ts)),
-        Inspector(List.empty, List(want), List.empty),
-      )
+    val ts = List(
+      Var(empty),
+      identifierX,
+      Equal(empty),
+      num1,
+      Semicolon(empty),
+    )
+    val want = Stmt.Var(identifierX, Some(expr1))
+    assertEquals(
+      parseStmt(Inspector(List.empty, List.empty, ts)),
+      Inspector(List.empty, List(want), List.empty),
+    )
   }
 
   test("Parse variable declaration failed when missing identifier") {
-    new TestSets:
-      val ts = List(
-        Var(())
-      )
-      val want = Error.ExpectVarIdentifier[Unit](ts)
-      assertEquals(
-        parseStmt(Inspector(List.empty, List.empty, ts)),
-        Inspector(List(want), List.empty, List.empty),
-      )
+    val ts = List(Var(empty))
+    val want = Error.ExpectVarIdentifier(ts)
+    assertEquals(
+      parseStmt(Inspector(List.empty, List.empty, ts)),
+      Inspector(List(want), List.empty, List.empty),
+    )
   }
 
   test("Parse empty token list") {
@@ -59,8 +54,8 @@ class StmtParserTest extends munit.FunSuite:
   }
 
   test("Parse variable declaration without initializer") {
-    val ts = List(Var(()), Identifier("x", ()), Semicolon(()))
-    val want = Stmt.Var(Identifier("x", ()), None)
+    val ts = List(Var(empty), Identifier("x", empty), Semicolon(empty))
+    val want = Stmt.Var(Identifier("x", empty), None)
     assertEquals(
       parseStmt(Inspector(List.empty, List.empty, ts)),
       Inspector(List.empty, List(want), List.empty),
@@ -68,379 +63,229 @@ class StmtParserTest extends munit.FunSuite:
   }
 
   test("Parse full variable declaration with trailing expressions") {
-    new TestSets:
-      val ts = List(
-        Var(()),
-        grox.Token.Identifier("x", ()),
-        Equal(()),
-        num1,
-        Semicolon(()),
-        num2,
-        Star(()),
-        num3,
-        Semicolon(()),
-      )
-      val want = List(
-        Stmt.Var[Unit](grox.Token.Identifier("x", ()), Some(Expr.Literal(1.0))),
-        Stmt.Expression(Expr.Multiply(expr2, expr3)),
-      )
-      assertEquals(
-        parseStmt(Inspector(List.empty, List.empty, ts)),
-        Inspector(
-          List.empty,
-          want,
-          List.empty,
-        ),
-      )
+    val ts = List(
+      Var(empty),
+      grox.Token.Identifier("x", empty),
+      Equal(empty),
+      num1,
+      Semicolon(empty),
+      num2,
+      Star(empty),
+      num3,
+      Semicolon(empty),
+    )
+    val want = List(
+      Stmt.Var(grox.Token.Identifier("x", empty), Some(Expr.Literal(empty, 1.0))),
+      Stmt.Expression(Expr.Multiply(empty, expr2, expr3)),
+    )
+    assertEquals(
+      parseStmt(Inspector(List.empty, List.empty, ts)),
+      Inspector(
+        List.empty,
+        want,
+        List.empty,
+      ),
+    )
   }
 
   test("Parse single print Statement") {
-    new TestSets:
-      val ts = List(Print(()), num1, Semicolon(()))
-      val want = List(Stmt.Print[Unit](expr1))
-      assertEquals(
-        parseStmt(Inspector(List.empty, List.empty, ts)),
-        Inspector(List.empty, want, List.empty),
-      )
+    val ts = List(Print(empty), num1, Semicolon(empty))
+    val want = List(Stmt.Print(expr1))
+    assertEquals(
+      parseStmt(Inspector(List.empty, List.empty, ts)),
+      Inspector(List.empty, want, List.empty),
+    )
   }
 
   test("Test consume Var") {
-    new TestSets:
-      val ts = List(Var(()), identifierX, Semicolon(()))
-      val want = Right((Var(()), ts.tail))
-      assertEquals(
-        consume[Unit, Var[Unit]](ts),
-        want,
-      )
+    val ts = List(Var(span), identifierX, Semicolon(span))
+    val want = Right((Var(span), ts.tail))
+    assertEquals(
+      consume[Var[Span]](ts),
+      want,
+    )
   }
 
-  test("Test consume failed Var") {
-    new TestSets:
-      val ts = List(Print(()), identifierX, Semicolon(()))
-      val want = Left(Error.UnexpectedToken(ts))
-      assertEquals(
-        consume[Unit, Var[Unit]](ts),
-        want,
-      )
-  }
-
-  test("Test consume Var with Span") {
-    new TestSets:
-      val ts = List(Var(span), identifierXSpan, Semicolon(span))
-      val want = Right((Var(span), ts.tail))
-      assertEquals(
-        consume[Span, Var[Span]](ts),
-        want,
-      )
-  }
-
-  test("Test consume Var failed with Span") {
-    new TestSets:
-      val ts = List(Print(span), identifierXSpan, Semicolon(span))
-      val want = Left(Error.UnexpectedToken(ts))
-      assertEquals(
-        consume[Span, Var[Span]](ts),
-        want,
-      )
-  }
-
-  test("Test consume Equal") {
-    new TestSets:
-      val ts = List(Equal(()), identifierX, Semicolon(()))
-      val want = Right((Equal(()), ts.tail))
-      assertEquals(
-        consume[Unit, Equal[Unit]](ts),
-        want,
-      )
-  }
-
-  test("Test consume failed Equal") {
-    new TestSets:
-      val ts = List(Print(()), identifierX, Semicolon(()))
-      val want = Left(Error.UnexpectedToken(ts))
-      assertEquals(
-        consume[Unit, Equal[Unit]](ts),
-        want,
-      )
-  }
-
-  test("Test consume Equal with Span") {
-    new TestSets:
-      val ts = List(Equal(span), identifierXSpan, Semicolon(span))
-      val want = Right((Equal(span), ts.tail))
-      assertEquals(
-        consume[Span, Equal[Span]](ts),
-        want,
-      )
-  }
-
-  test("Test consume Equal failed with Span") {
-    new TestSets:
-      val ts = List(Print(span), identifierXSpan, Semicolon(span))
-      val want = Left(Error.UnexpectedToken(ts))
-      assertEquals(
-        consume[Span, Var[Span]](ts),
-        want,
-      )
-  }
-
-  test("Test consume Semicolon") {
-    new TestSets:
-      val ts = List(Semicolon(()), identifierX, Semicolon(()))
-      val want = Right((Semicolon(()), ts.tail))
-      assertEquals(
-        consume[Unit, Semicolon[Unit]](ts),
-        want,
-      )
-  }
-
-  test("Test consume failed Semicolon") {
-    new TestSets:
-      val ts = List(Print(()), identifierX, Semicolon(()))
-      val want = Left(Error.UnexpectedToken(ts))
-      assertEquals(
-        consume[Unit, Semicolon[Unit]](ts),
-        want,
-      )
-  }
-
-  test("Test consume Semicolon with Span") {
-    new TestSets:
-      val ts = List(Semicolon(span), identifierXSpan, Semicolon(span))
-      val want = Right((Semicolon(span), ts.tail))
-      assertEquals(
-        consume[Span, Semicolon[Span]](ts),
-        want,
-      )
-  }
-
-  test("Test consume Semicolon failed with Span") {
-    new TestSets:
-      val ts = List(Print(span), identifierXSpan, Semicolon(span))
-      val want = Left(Error.UnexpectedToken(ts))
-      assertEquals(
-        consume[Span, Semicolon[Span]](ts),
-        want,
-      )
-  }
-
-  test("Test consume LeftParen") {
-    new TestSets:
-      val ts = List(LeftParen(()), identifierX, LeftParen(()))
-      val want = Right((LeftParen(()), ts.tail))
-      assertEquals(
-        consume[Unit, LeftParen[Unit]](ts),
-        want,
-      )
-  }
-
-  test("Test consume failed LeftParen") {
-    new TestSets:
-      val ts = List(Print(()), identifierX, Semicolon(()))
-      val want = Left(Error.UnexpectedToken(ts))
-      assertEquals(
-        consume[Unit, LeftParen[Unit]](ts),
-        want,
-      )
-  }
-
-  test("Test consume LeftParen with Span") {
-    new TestSets:
-      val ts = List(LeftParen(span), identifierXSpan, Semicolon(span))
-      val want = Right((LeftParen(span), ts.tail))
-      assertEquals(
-        consume[Span, LeftParen[Span]](ts),
-        want,
-      )
-  }
-
-  test("Test consume LeftParen failed with Span") {
-    new TestSets:
-      val ts = List(Print(span), identifierXSpan, Semicolon(span))
-      val want = Left(Error.UnexpectedToken(ts))
-      assertEquals(
-        consume[Span, LeftParen[Span]](ts),
-        want,
-      )
+  test("Test consume Var failed") {
+    val ts = List(Print(span), identifierX, Semicolon(span))
+    val want = Left(Error.UnexpectedToken(ts))
+    assertEquals(
+      consume[Var[Span]](ts),
+      want,
+    )
   }
 
   test("Parse single print Statement") {
-    new TestSets:
-      val ts = List(num1, Semicolon(()))
-      val want = Right(Stmt.Print[Unit](expr1), List())
-      assertEquals(
-        printStmt(ts),
-        want,
-      )
+    val ts = List(num1, Semicolon(empty))
+    val want = Right(Stmt.Print(expr1), List())
+    assertEquals(
+      printStmt(ts),
+      want,
+    )
   }
 
   test("Val declaration") {
-    new TestSets:
-      val ts = List(
-        Var(()),
-        avar,
-        Equal(()),
-        num1,
-        Semicolon(()),
-      )
+    val ts = List(
+      Var(empty),
+      avar,
+      Equal(empty),
+      num1,
+      Semicolon(empty),
+    )
 
-      val expectedStmt: Stmt[Unit] = Stmt.Var(
-        avar,
-        Some(Expr.Literal(1)),
-      )
+    val expectedStmt: Stmt = Stmt.Var(
+      avar,
+      Some(Expr.Literal(empty, 1.0)),
+    )
 
-      val inspector: Inspector[Unit] = Inspector(
-        List.empty[Error[Unit]],
-        List.empty[Stmt[Unit]],
-        tokens = ts,
-      )
-      val expectedInspector = inspector.copy(
-        stmts = List(expectedStmt),
-        tokens = List.empty[Token[Unit]],
-      )
+    val inspector: Inspector = Inspector(
+      List.empty[Error],
+      List.empty[Stmt],
+      tokens = ts,
+    )
+    val expectedInspector = inspector.copy(
+      stmts = List(expectedStmt),
+      tokens = Nil,
+    )
 
-      assertEquals(parseStmt(inspector), expectedInspector)
+    assertEquals(parseStmt(inspector), expectedInspector)
   }
 
   test("While: statement ") {
     // while (true) { var a = 1;  a = a + a; }
-    new TestSets:
-      val ts = List(
-        While(()),
-        LeftParen(()),
-        True(()),
-        RightParen(()),
-        LeftBrace(()),
+    val ts = List(
+      While(empty),
+      LeftParen(empty),
+      True(empty),
+      RightParen(empty),
+      LeftBrace(empty),
 
-        // val a = 1
-        Var(()),
-        avar,
-        Equal(()),
-        num1,
-        Semicolon(()),
-        // a = a + a
-        avar,
-        Equal(()),
-        avar,
-        Plus(()),
-        avar,
-        Semicolon(()),
-        RightBrace(()),
-      )
+      // val a = 1
+      Var(empty),
+      avar,
+      Equal(empty),
+      num1,
+      Semicolon(empty),
+      // a = a + a
+      avar,
+      Equal(empty),
+      avar,
+      Plus(empty),
+      avar,
+      Semicolon(empty),
+      RightBrace(empty),
+    )
 
-      val expectedStmt: Stmt[Unit] = Stmt.While(
-        Expr.Literal(true),
-        Stmt.Block(
-          List(
-            Stmt.Var(
-              avar,
-              Some(Expr.Literal(1)),
-            ),
-            Stmt.Expression(
-              Expr.Assign(
-                Identifier("a", ()),
-                Expr.Add(
-                  Expr.Variable(
-                    Identifier("a", ())
-                  ),
-                  Expr.Variable(
-                    Identifier("a", ())
-                  ),
+    val expectedStmt: Stmt = Stmt.While(
+      Expr.Literal(empty, true),
+      Stmt.Block(
+        List(
+          Stmt.Var(
+            avar,
+            Some(Expr.Literal(empty, 1)),
+          ),
+          Stmt.Expression(
+            Expr.Assign(
+              empty,
+              "a",
+              Expr.Add(
+                empty,
+                Expr.Variable(
+                  empty,
+                  "a",
                 ),
-              )
-            ),
-          )
-        ),
-      )
+                Expr.Variable(
+                  empty,
+                  "a",
+                ),
+              ),
+            )
+          ),
+        )
+      ),
+    )
 
-      val inspector: Inspector[Unit] = Inspector(
-        List.empty[Error[Unit]],
-        List.empty[Stmt[Unit]],
-        tokens = ts,
-      )
-      val expectedInspector = inspector.copy(
-        stmts = List(expectedStmt),
-        tokens = List.empty[Token[Unit]],
-      )
+    val inspector = Inspector().copy(tokens = ts)
 
-      assertEquals(parseStmt(inspector), expectedInspector)
+    val expectedInspector = Inspector().copy(
+      stmts = List(expectedStmt)
+    )
+
+    assertEquals(parseStmt(inspector), expectedInspector)
 
   }
 
   test("For loop statement") {
     // for (var i = 0; i < 10; i = i + 1) print i
-    new TestSets:
-      val ivar: Identifier[Unit] = Identifier("i", ())
+    val ivar: Identifier[Span] = Identifier("i", empty)
 
-      val ts = List(
-        For(()),
+    val ts = List(
+      For(empty),
 
-        // (var i = 0; i < 10; i = i + 1)
-        LeftParen(()),
-        Var(()),
-        ivar,
-        Equal(()),
-        Number("0", ()),
-        Semicolon(()),
-        ivar,
-        Less(()),
-        Number("10", ()),
-        Semicolon(()),
-        ivar,
-        Equal(()),
-        ivar,
-        Plus(()),
-        num1,
-        RightParen(()),
+      // (var i = 0; i < 10; i = i + 1)
+      LeftParen(empty),
+      Var(empty),
+      ivar,
+      Equal(empty),
+      Number("0", empty),
+      Semicolon(empty),
+      ivar,
+      Less(empty),
+      Number("10", empty),
+      Semicolon(empty),
+      ivar,
+      Equal(empty),
+      ivar,
+      Plus(empty),
+      num1,
+      RightParen(empty),
 
-        // print i;
-        Print(()),
-        ivar,
-        Semicolon(()),
-      )
+      // print i;
+      Print(empty),
+      ivar,
+      Semicolon(empty),
+    )
 
-      val varStmt: Stmt[Unit] = Stmt.Var(
-        ivar,
-        Some(Expr.Literal(0)),
-      )
+    val varStmt: Stmt = Stmt.Var(
+      ivar,
+      Some(Expr.Literal(empty, 0)),
+    )
 
-      val whileStmts: Stmt[Unit] = Stmt.While(
-        Expr.Less(
-          Expr.Variable(ivar),
-          Expr.Literal(10),
-        ),
-        Stmt.Block(
-          List(
-            Stmt.Print(
-              Expr.Variable(ivar)
-            ),
-            Stmt.Expression(
-              Expr.Assign(
-                ivar,
-                Expr.Add(
-                  Expr.Variable(
-                    ivar
-                  ),
-                  Expr.Literal(1),
+    val whileStmts: Stmt = Stmt.While(
+      Expr.Less(
+        empty,
+        Expr.Variable(empty, "i"),
+        Expr.Literal(empty, 10),
+      ),
+      Stmt.Block(
+        List(
+          Stmt.Print(Expr.Variable(empty, "i")),
+          Stmt.Expression(
+            Expr.Assign(
+              empty,
+              "i",
+              Expr.Add(
+                empty,
+                Expr.Variable(
+                  empty,
+                  "i",
                 ),
-              )
-            ),
-          )
-        ),
-      )
+                Expr.Literal(empty, 1),
+              ),
+            )
+          ),
+        )
+      ),
+    )
 
-      val expectedStmts = Stmt.Block(List(varStmt, whileStmts))
+    val inspector = Inspector().copy(tokens = ts)
 
-      val inspector: Inspector[Unit] = Inspector(
-        List.empty[Error[Unit]],
-        List.empty[Stmt[Unit]],
-        tokens = ts,
-      )
-      val expectedInspector = inspector.copy(
-        stmts = List(expectedStmts),
-        tokens = List.empty[Token[Unit]],
-      )
+    val expectedStmts = Stmt.Block(List(varStmt, whileStmts))
 
-      assertEquals(parseStmt(inspector), expectedInspector)
+    val expectedInspector = Inspector().copy(
+      stmts = List(expectedStmts)
+    )
+
+    assertEquals(parseStmt(inspector), expectedInspector)
 
   }

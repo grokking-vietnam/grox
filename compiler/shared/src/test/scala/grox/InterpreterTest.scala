@@ -4,6 +4,7 @@ import munit.ScalaCheckSuite
 import org.scalacheck.Prop.*
 
 import Interpreter.*
+import Span.*
 
 class InterpreterTest extends ScalaCheckSuite:
 
@@ -12,66 +13,82 @@ class InterpreterTest extends ScalaCheckSuite:
 
   property("addition") {
     forAll { (n1: Double, n2: Double) =>
-      evaluate(Expr.Add(Expr.Literal(n1), Expr.Literal(n2))) == Right(n1 + n2)
+      evaluate(Expr.Add(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2))) == Right(n1 + n2)
     }
   }
   property("addition 2 string") {
     forAll { (n1: String, n2: String) =>
-      evaluate(Expr.Add(Expr.Literal(n1), Expr.Literal(n2))) == Right(n1 + n2)
+      evaluate(Expr.Add(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2))) == Right(n1 + n2)
     }
   }
 
   property("subtraction") {
     forAll { (n1: Double, n2: Double) =>
-      evaluate(Expr.Subtract(Expr.Literal(n1), Expr.Literal(n2))) == Right(n1 - n2)
+      evaluate(Expr.Subtract(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2))) == Right(
+        n1 - n2
+      )
     }
   }
   property("multiplication") {
     forAll { (n1: Double, n2: Double) =>
-      evaluate(Expr.Multiply(Expr.Literal(n1), Expr.Literal(n2))) == Right(n1 * n2)
+      evaluate(Expr.Multiply(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2))) == Right(
+        n1 * n2
+      )
     }
   }
   property("division") {
     forAll { (n1: Double, n2: Double) =>
       n2 != 0 ==>
-        (evaluate(Expr.Divide(Expr.Literal(n1), Expr.Literal(n2))) == Right(n1 / n2))
+        (evaluate(Expr.Divide(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2))) == Right(
+          n1 / n2
+        ))
     }
   }
 
   property("greater") {
     forAll { (n1: Double, n2: Double) =>
-      evaluate(Expr.Greater(Expr.Literal(n1), Expr.Literal(n2))) == Right(n1 > n2)
+      evaluate(Expr.Greater(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2))) == Right(
+        n1 > n2
+      )
     }
   }
   property("greater or equal") {
     forAll { (n1: Double, n2: Double) =>
-      evaluate(Expr.GreaterEqual(Expr.Literal(n1), Expr.Literal(n2))) == Right(n1 >= n2)
+      evaluate(Expr.GreaterEqual(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2))) == Right(
+        n1 >= n2
+      )
     }
   }
   property("less") {
     forAll { (n1: Double, n2: Double) =>
-      evaluate(Expr.Less(Expr.Literal(n1), Expr.Literal(n2))) == Right(n1 < n2)
+      evaluate(Expr.Less(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2))) == Right(n1 < n2)
     }
   }
   property("less or equal") {
     forAll { (n1: Double, n2: Double) =>
-      evaluate(Expr.LessEqual(Expr.Literal(n1), Expr.Literal(n2))) == Right(n1 <= n2)
+      evaluate(Expr.LessEqual(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2))) == Right(
+        n1 <= n2
+      )
     }
   }
   property("equal") {
     forAll { (n1: Double, n2: Double) =>
-      evaluate(Expr.Equal(Expr.Literal(n1), Expr.Literal(n2))) == Right(n1 == n2)
+      evaluate(Expr.Equal(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2))) == Right(
+        n1 == n2
+      )
     }
   }
   property("not equal") {
     forAll { (n1: Double, n2: Double) =>
-      evaluate(Expr.NotEqual(Expr.Literal(n1), Expr.Literal(n2))) == Right(n1 != n2)
+      evaluate(Expr.NotEqual(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2))) == Right(
+        n1 != n2
+      )
     }
   }
 
   test("variable expression") {
     val env = Environment(Map("x" -> 0.0d), None)
-    val expr = Expr.Variable(Token.Identifier("x", ()))
+    val expr = Expr.Variable(empty, "x")
     assertEquals(interpreter.evaluate(env, expr), Right(0.0))
   }
 
@@ -104,75 +121,81 @@ class InterpreterTest extends ScalaCheckSuite:
 
   test("division by zero error") {
     assertEquals(
-      evaluate(Expr.Divide(Expr.Literal(1), Expr.Literal(0))),
-      Left(RuntimeError.DivisionByZero),
+      evaluate(Expr.Divide(empty, Expr.Literal(empty, 1), Expr.Literal(empty, 0))),
+      Left(RuntimeError.DivisionByZero(empty)),
     )
   }
 
   test("logical or") {
     assertEquals(
-      evaluate(Expr.Or(Expr.Literal(true), Expr.Literal(false))),
+      evaluate(Expr.Or(empty, Expr.Literal(empty, true), Expr.Literal(empty, false))),
       Right(true),
     )
     assertEquals(
-      evaluate(Expr.Or(Expr.Literal(false), Expr.Literal(false))),
+      evaluate(Expr.Or(empty, Expr.Literal(empty, false), Expr.Literal(empty, false))),
       Right(false),
     )
   }
 
   test("logical and") {
     assertEquals(
-      evaluate(Expr.And(Expr.Literal(true), Expr.Literal(false))),
+      evaluate(Expr.And(empty, Expr.Literal(empty, true), Expr.Literal(empty, false))),
       Right(false),
     )
     assertEquals(
-      evaluate(Expr.And(Expr.Literal(false), Expr.Literal(false))),
+      evaluate(Expr.And(empty, Expr.Literal(empty, false), Expr.Literal(empty, false))),
       Right(false),
     )
   }
 
   test("must be numbers or strings runtime error") {
     assertEquals(
-      evaluate(Expr.Add(Expr.Literal(1), Expr.Literal("string"))),
-      Left(RuntimeError.MustBeNumbersOrStrings),
+      evaluate(Expr.Add(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string"))),
+      Left(RuntimeError.MustBeNumbersOrStrings(empty)),
     )
   }
 
   test("Two nulls should be equal") {
-    assertEquals(evaluate(Expr.Equal(Expr.Literal(()), Expr.Literal(()))), Right(true))
+    assertEquals(
+      evaluate(Expr.Equal(empty, Expr.Literal(empty, ()), Expr.Literal(empty, ()))),
+      Right(true),
+    )
   }
 
   test("Two operators which are different in type should not be equal") {
-    assertEquals(evaluate(Expr.Equal(Expr.Literal(1), Expr.Literal("string"))), Right(false))
+    assertEquals(
+      evaluate(Expr.Equal(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string"))),
+      Right(false),
+    )
   }
 
   test("must be numbers runtime error") {
     assertEquals(
-      evaluate(Expr.Subtract(Expr.Literal(1), Expr.Literal("string"))),
-      Left(RuntimeError.MustBeNumbers(Token.Minus(()))),
+      evaluate(Expr.Subtract(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string"))),
+      Left(RuntimeError.MustBeNumbers(empty)),
     )
     assertEquals(
-      evaluate(Expr.Divide(Expr.Literal(1), Expr.Literal("string"))),
-      Left(RuntimeError.MustBeNumbers(Token.Slash(()))),
+      evaluate(Expr.Divide(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string"))),
+      Left(RuntimeError.MustBeNumbers(empty)),
     )
     assertEquals(
-      evaluate(Expr.Multiply(Expr.Literal(1), Expr.Literal("string"))),
-      Left(RuntimeError.MustBeNumbers(Token.Star(()))),
+      evaluate(Expr.Multiply(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string"))),
+      Left(RuntimeError.MustBeNumbers(empty)),
     )
     assertEquals(
-      evaluate(Expr.Greater(Expr.Literal(1), Expr.Literal("string"))),
-      Left(RuntimeError.MustBeNumbers(Token.Greater(()))),
+      evaluate(Expr.Greater(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string"))),
+      Left(RuntimeError.MustBeNumbers(empty)),
     )
     assertEquals(
-      evaluate(Expr.GreaterEqual(Expr.Literal(1), Expr.Literal("string"))),
-      Left(RuntimeError.MustBeNumbers(Token.GreaterEqual(()))),
+      evaluate(Expr.GreaterEqual(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string"))),
+      Left(RuntimeError.MustBeNumbers(empty)),
     )
     assertEquals(
-      evaluate(Expr.Less(Expr.Literal(1), Expr.Literal("string"))),
-      Left(RuntimeError.MustBeNumbers(Token.Less(()))),
+      evaluate(Expr.Less(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string"))),
+      Left(RuntimeError.MustBeNumbers(empty)),
     )
     assertEquals(
-      evaluate(Expr.LessEqual(Expr.Literal(1), Expr.Literal("string"))),
-      Left(RuntimeError.MustBeNumbers(Token.LessEqual(()))),
+      evaluate(Expr.LessEqual(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string"))),
+      Left(RuntimeError.MustBeNumbers(empty)),
     )
   }
