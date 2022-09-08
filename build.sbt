@@ -1,14 +1,44 @@
 inThisBuild(
   Seq(
-    scalaVersion := "3.1.3",
+    scalaVersion := "3.2.0",
     versionScheme := Some("early-semver"),
 
     // Github Workflow
     githubWorkflowPublishTargetBranches := Seq(), // Don't publish anywhere
+    githubWorkflowUseSbtThinClient := true,
+    githubWorkflowEnv := Map("SBT_OPTS" -> "-Xmx2048M"),
     githubWorkflowBuild ++= Seq(
       WorkflowStep.Sbt(List("build"), name = Some("Build projects")),
       WorkflowStep.Sbt(List("check"), name = Some("Check Formatting")),
       WorkflowStep.Sbt(List("docs/mdoc"), name = Some("Check docs formatting")),
+      WorkflowStep.Use(
+        UseRef.Public("actions", "setup-node", "v2"),
+        params = Map(
+          "node-version" -> "16.x",
+          "cache" -> "yarn",
+          "cache-dependency-path" -> "website/yarn.lock",
+        ),
+        name = Some("Setup Node"),
+      ),
+      WorkflowStep.Run(
+        commands = List(
+          "cd ./website",
+          "yarn install --frozen-lockfile",
+          "yarn build",
+        ),
+        name = Some("Check build website"),
+      ),
+      WorkflowStep.Use(
+        UseRef.Public("peaceiris", "actions-gh-pages", "v3"),
+        params = Map(
+          "github_token" -> "${{ secrets.GITHUB_TOKEN }}",
+          "publish_dir" -> "./website/build",
+          "user_name" -> "github-actions[bot]",
+          "user_email" -> "41898282+github-actions[bot]@users.noreply.github.com",
+        ),
+        name = Some("Deploy to Github Pages"),
+        cond = Some("${{ github.ref == 'refs/heads/main' }}"),
+      ),
     ),
 
     // Scalafix
@@ -33,7 +63,8 @@ val commonSettings = Seq(
 )
 
 val commonJsSettings = Seq(
-  scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule))
+  scalacOptions += "-scalajs",
+  scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule)),
 )
 
 val compiler = crossProject(JSPlatform, JVMPlatform)

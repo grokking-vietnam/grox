@@ -9,7 +9,7 @@ expression     -> literal
                | grouping ;
 
 literal        -> NUMBER | STRING | "true" | "false" | "nil" ;
-logical        
+logical
 grouping       -> "(" expression ")" ;
 unary          -> ( "-" | "!" ) expression ;
 binary         -> expression operator expression ;
@@ -22,13 +22,13 @@ operator       -> "==" | "!=" | "<" | "<=" | ">" | ">="
 expression    -> IDENTIFIER "=" assignment
                | logic_or ;
 logic_or      -> logic_and ( "or" logic_and )* ;
-logic_and     -> equality ( "and" equality )* ; 
+logic_and     -> equality ( "and" equality )* ;
 assignment    -> IDENTIFIER "=" assignment | equality
 equality      -> comparison (("!=" | "==") comparison)*
 comparison    -> factor (("<" | "<=" | ">" | ">=") factor)*
-factor        -> term (("+" | "-") term)* 
+factor        -> term (("+" | "-") term)*
 term          -> unary (("*" | "/") unary)*
-unary         -> ("-" | "!") unary 
+unary         -> ("-" | "!") unary
               | primary
 primary       -> "true" | "false" | "nil"
               | NUMBER | STRING
@@ -57,5 +57,18 @@ ifStmt         → "if" "(" expression ")" statement
 printStmt      → "print" expression ";" ;
 returnStmt     → "return" expression? ";" ;
 whileStmt      → "while" "(" expression ")" statement ;
+
 block          → "{" declaration* "}" ;
+declaration    → classDecl
+               | funDecl
+               | varDecl
+               | statement ;
+classDecl      → "class" IDENTIFIER ( "<" IDENTIFIER )?
+                 "{" function* "}" ;
+funDecl        → "fun" function ;
+varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
+
+function       → IDENTIFIER "(" parameters? ")" block ;
+parameters     → IDENTIFIER ( "," IDENTIFIER )* ;
+arguments      → expression ( "," expression )* ;
 ```

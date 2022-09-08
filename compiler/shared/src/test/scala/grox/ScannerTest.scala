@@ -183,6 +183,21 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
     assertEquals(Scanner.parse(str), Right(expected))
   }
 
+  test("(true)") {
+    val str = "(true)"
+    val expected = List(
+      LeftParen(Span(Location(0, 0, 0), Location(0, 1, 1))),
+      True(
+        Span(
+          Location(0, 1, 1),
+          Location(0, 5, 5),
+        )
+      ),
+      RightParen(Span(Location(0, 5, 5), Location(0, 6, 6))),
+    )
+    assertEquals(Scanner.parse(str), Right(expected))
+  }
+
   test("numbers.lox") {
     val str = """123
   123.456
