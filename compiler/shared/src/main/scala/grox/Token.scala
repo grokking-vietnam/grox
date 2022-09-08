@@ -8,6 +8,10 @@ case class Span(start: Location, end: Location)
 object Span:
   val empty = Span(Location(0, 0, 0), Location(0, 0, 0))
 
+
+object Location:
+  val empty = Location(0, 0, 0)
+
 enum Token[+T](val lexeme: String, val tag: T):
   case Identifier(override val lexeme: String, override val tag: T) extends Token(lexeme, tag)
   case Str(override val lexeme: String, override val tag: T) extends Token(lexeme, tag)

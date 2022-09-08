@@ -10,85 +10,82 @@ enum Expr:
   // Binary
 
   // arithmetic
-  case Add(left: Expr, right: Expr)
-  case Subtract(left: Expr, right: Expr)
-  case Multiply(left: Expr, right: Expr)
-  case Divide(left: Expr, right: Expr)
+  case Add(tag: Span, left: Expr, right: Expr)
+  case Subtract(tag: Span, left: Expr, right: Expr)
+  case Multiply(tag: Span, left: Expr, right: Expr)
+  case Divide(tag: Span, left: Expr, right: Expr)
 
   // comparison
-  case Greater(left: Expr, right: Expr)
-  case GreaterEqual(left: Expr, right: Expr)
-  case Less(left: Expr, right: Expr)
-  case LessEqual(left: Expr, right: Expr)
-  case Equal(left: Expr, right: Expr)
-  case NotEqual(left: Expr, right: Expr)
+  case Greater(tag: Span, left: Expr, right: Expr)
+  case GreaterEqual(tag: Span, left: Expr, right: Expr)
+  case Less(tag: Span, left: Expr, right: Expr)
+  case LessEqual(tag: Span, left: Expr, right: Expr)
+  case Equal(tag: Span, left: Expr, right: Expr)
+  case NotEqual(tag: Span, left: Expr, right: Expr)
 
-  // assignment
-  case Assign[A](name: Token[A], value: Expr)
+  case Assign(tag: Span, name: String, value: Expr)
 
   // logic
-  case Or(left: Expr, right: Expr)
-  case And(left: Expr, right: Expr)
+  case Or(tag: Span, left: Expr, right: Expr)
+  case And(tag: Span, left: Expr, right: Expr)
 
   // Unary
-  case Negate(expr: Expr)
-  case Not(expr: Expr)
+  case Negate(tag: Span, expr: Expr)
+  case Not(tag: Span, expr: Expr)
 
-  case Literal(value: LiteralType)
+  case Literal(tag: Span, value: LiteralType)
 
   case Grouping(expr: Expr)
 
-  case Variable[A](name: Token[A])
+  case Variable(tag: Span, name: String)
 
 object Expr:
 
   def show(expr: Expr): String =
     expr match
-      case Add(left, right) =>
+      case Add(_, left, right) =>
         s"${formatNestedExpr(left, show(left))} + ${formatNestedExpr(right, show(right))}"
-      case Subtract(left, right) =>
+      case Subtract(_, left, right) =>
         s"${formatNestedExpr(left, show(left))} - ${formatNestedExpr(right, show(right))}"
-      case Multiply(left, right) =>
+      case Multiply(_, left, right) =>
         s"${formatNestedExpr(left, show(left))} × ${formatNestedExpr(right, show(right))}"
-      case Divide(left, right) =>
+      case Divide(_, left, right) =>
         s"${formatNestedExpr(left, show(left))} ÷ ${formatNestedExpr(right, show(right))}"
 
-      case Negate(expr) => s"-${formatNestedExpr(expr, show(expr))}"
-      case Not(expr)    => s"!${formatNestedExpr(expr, show(expr))}"
+      case Negate(_, expr) => s"-${formatNestedExpr(expr, show(expr))}"
+      case Not(_, expr)    => s"!${formatNestedExpr(expr, show(expr))}"
 
-      case Greater(left, right) =>
+      case Greater(_, left, right) =>
         s"${formatNestedExpr(left, show(left))} > ${formatNestedExpr(right, show(right))}"
-      case GreaterEqual(left, right) =>
+      case GreaterEqual(_, left, right) =>
         s"${formatNestedExpr(left, show(left))} ≥ ${formatNestedExpr(right, show(right))}"
-      case Less(left, right) =>
+      case Less(_, left, right) =>
         s"${formatNestedExpr(left, show(left))} < ${formatNestedExpr(right, show(right))}"
-      case LessEqual(left, right) =>
+      case LessEqual(_, left, right) =>
         s"${formatNestedExpr(left, show(left))} ≤ ${formatNestedExpr(right, show(right))}"
-      case Equal(left, right) =>
+      case Equal(_, left, right) =>
         s"${formatNestedExpr(left, show(left))} == ${formatNestedExpr(right, show(right))}"
-      case NotEqual(left, right) =>
+      case NotEqual(_, left, right) =>
         s"${formatNestedExpr(left, show(left))} ≠ ${formatNestedExpr(right, show(right))}"
 
       case Grouping(expr) => s"${formatNestedExpr(expr, show(expr))})"
 
-      case Literal(value) =>
+      case Literal(_, value) =>
         value match
           case _: Unit => "nil"
           case v       => v.toString
 
-      case And(left, right) =>
+      case And(_, left, right) =>
         s"${formatNestedExpr(left, show(left))} and ${formatNestedExpr(right, show(right))}"
 
-      case Or(left, right) =>
+      case Or(_, left, right) =>
         s"${formatNestedExpr(left, show(left))} or ${formatNestedExpr(right, show(right))}"
 
-      case Assign(name, value) => s"${name.lexeme} = ${formatNestedExpr(value, show(value))}"
-
-      case Variable(name) => name.lexeme
+      case Variable(_, name) => name
 
   private def formatNestedExpr(expr: Expr, exprShow: String): String =
     expr match
-      case Literal(_) => exprShow
-      case _          => s"($exprShow)"
+      case Literal(_, _) => exprShow
+      case _             => s"($exprShow)"
 
   given Show[Expr] = Show.show(Expr.show)

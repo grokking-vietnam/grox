@@ -11,23 +11,24 @@ trait Interpreter[F[_]]:
 object Interpreter:
   def instance[F[_]: MonadThrow]: Interpreter[F] = (env, expr) => evaluate(env)(expr)
 
-  enum RuntimeError(op: Token[Unit], msg: String) extends NoStackTrace:
+  enum RuntimeError(location: Span, msg: String) extends NoStackTrace:
     override def toString = msg
-    case MustBeNumbers(op: Token[Unit]) extends RuntimeError(op, "Operands must be numbers.")
-    case MustBeNumbersOrStrings
-      extends RuntimeError(Token.Plus(()), "Operands must be two numbers or two strings")
-    case DivisionByZero extends RuntimeError(Token.Slash(()), "Division by zerro")
-    case VariableNotFound(op: Token[Unit]) extends RuntimeError(op, "Variable not found")
+    case MustBeNumbers(location: Span) extends RuntimeError(location, "Operands must be numbers.")
+    case MustBeNumbersOrStrings(location: Span)
+      extends RuntimeError(location, "Operands must be two numbers or two strings")
+    case DivisionByZero(location: Span) extends RuntimeError(location, "Division by zerro")
+    case VariableNotFound(location: Span, name: String)
+      extends RuntimeError(location, "Variable not found")
 
   type EvaluationResult = Either[RuntimeError, LiteralType]
   type Evaluate = (LiteralType, LiteralType) => EvaluationResult
 
   extension (value: LiteralType)
 
-    def `unary_-` : EvaluationResult =
+    def negate(tag: Span): EvaluationResult =
       value match
         case v: Double => Right(-v)
-        case _         => Left(RuntimeError.MustBeNumbers(Token.Minus(())))
+        case _         => Left(RuntimeError.MustBeNumbers(tag))
 
     def isTruthy: Boolean =
       value match
@@ -47,50 +48,50 @@ object Interpreter:
   ): F[LiteralType] =
     (evaluate(env)(left), evaluate(env)(right)).mapN(eval).map(_.liftTo[F]).flatten
 
-  def add(left: LiteralType, right: LiteralType): EvaluationResult =
+  def add(span: Span)(left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l + r)
       case (l: String, r: String) => Right(l + r)
-      case _                      => Left(RuntimeError.MustBeNumbersOrStrings)
+      case (_, _)                 => Left(RuntimeError.MustBeNumbersOrStrings(span))
 
-  def subtract(left: LiteralType, right: LiteralType): EvaluationResult =
+  def subtract(span: Span)(left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l - r)
-      case _                      => Left(RuntimeError.MustBeNumbers(Token.Minus(())))
+      case _                      => Left(RuntimeError.MustBeNumbers(span))
 
-  def multiply(left: LiteralType, right: LiteralType): EvaluationResult =
+  def multiply(span: Span)(left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l * r)
-      case _                      => Left(RuntimeError.MustBeNumbers(Token.Star(())))
+      case _                      => Left(RuntimeError.MustBeNumbers(span))
 
-  def divide(left: LiteralType, right: LiteralType): EvaluationResult =
+  def divide(span: Span)(left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) =>
         if (r != 0)
           Right(l / r)
         else
-          Left(RuntimeError.DivisionByZero)
-      case _ => Left(RuntimeError.MustBeNumbers(Token.Slash(())))
+          Left(RuntimeError.DivisionByZero(span))
+      case _ => Left(RuntimeError.MustBeNumbers(span))
 
-  def greater(left: LiteralType, right: LiteralType): EvaluationResult =
+  def greater(span: Span)(left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l > r)
-      case _                      => Left(RuntimeError.MustBeNumbers(Token.Greater(())))
+      case _                      => Left(RuntimeError.MustBeNumbers(span))
 
-  def greaterOrEqual(left: LiteralType, right: LiteralType): EvaluationResult =
+  def greaterOrEqual(span: Span)(left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l >= r)
-      case _                      => Left(RuntimeError.MustBeNumbers(Token.GreaterEqual(())))
+      case _                      => Left(RuntimeError.MustBeNumbers(span))
 
-  def less(left: LiteralType, right: LiteralType): EvaluationResult =
+  def less(span: Span)(left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l < r)
-      case _                      => Left(RuntimeError.MustBeNumbers(Token.Less(())))
+      case _                      => Left(RuntimeError.MustBeNumbers(span))
 
-  def lessOrEqual(left: LiteralType, right: LiteralType): EvaluationResult =
+  def lessOrEqual(span: Span)(left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l <= r)
-      case _                      => Left(RuntimeError.MustBeNumbers(Token.LessEqual(())))
+      case _                      => Left(RuntimeError.MustBeNumbers(span))
 
   def equal(left: LiteralType, right: LiteralType): EvaluationResult = Right(left == right)
 
@@ -101,28 +102,28 @@ object Interpreter:
 
   def evaluate[F[_]: MonadThrow](env: Environment)(expr: Expr): F[LiteralType] =
     expr match
-      case Expr.Literal(value) => value.pure[F]
-      case Expr.Grouping(e)    => evaluate(env)(e)
-      case Expr.Negate(e)      => evaluate(env)(e).flatMap(x => (-x).liftTo[F])
-      case Expr.Not(e)         => evaluate(env)(e).flatMap(x => (!x).liftTo[F])
-      case Expr.Add(l, r)      => evaluateBinary(env)(add)(l, r)
-      case Expr.Subtract(l, r) => evaluateBinary(env)(subtract)(l, r)
-      case Expr.Multiply(l, r) => evaluateBinary(env)(multiply)(l, r)
-      case Expr.Divide(l, r)   => evaluateBinary(env)(divide)(l, r)
+      case Expr.Literal(_, value)   => value.pure[F]
+      case Expr.Grouping(e)         => evaluate(env)(e)
+      case Expr.Negate(tag, e)      => evaluate(env)(e).flatMap(x => x.negate(tag).liftTo[F])
+      case Expr.Not(_, e)           => evaluate(env)(e).flatMap(x => (!x).liftTo[F])
+      case Expr.Add(tag, l, r)      => evaluateBinary(env)(add(tag))(l, r)
+      case Expr.Subtract(tag, l, r) => evaluateBinary(env)(subtract(tag))(l, r)
+      case Expr.Multiply(tag, l, r) => evaluateBinary(env)(multiply(tag))(l, r)
+      case Expr.Divide(tag, l, r)   => evaluateBinary(env)(divide(tag))(l, r)
 
-      case Expr.Greater(l, r)      => evaluateBinary(env)(greater)(l, r)
-      case Expr.GreaterEqual(l, r) => evaluateBinary(env)(greaterOrEqual)(l, r)
-      case Expr.Less(l, r)         => evaluateBinary(env)(less)(l, r)
-      case Expr.LessEqual(l, r)    => evaluateBinary(env)(lessOrEqual)(l, r)
-      case Expr.Equal(l, r)        => evaluateBinary(env)(equal)(l, r)
-      case Expr.NotEqual(l, r)     => evaluateBinary(env)(notEqual)(l, r)
-      case Expr.And(l, r) =>
+      case Expr.Greater(tag, l, r)      => evaluateBinary(env)(greater(tag))(l, r)
+      case Expr.GreaterEqual(tag, l, r) => evaluateBinary(env)(greaterOrEqual(tag))(l, r)
+      case Expr.Less(tag, l, r)         => evaluateBinary(env)(less(tag))(l, r)
+      case Expr.LessEqual(tag, l, r)    => evaluateBinary(env)(lessOrEqual(tag))(l, r)
+      case Expr.Equal(tag, l, r)        => evaluateBinary(env)(equal)(l, r)
+      case Expr.NotEqual(tag, l, r)     => evaluateBinary(env)(notEqual)(l, r)
+      case Expr.And(_, l, r) =>
         evaluate(env)(l).flatMap(lres => if !lres.isTruthy then lres.pure[F] else evaluate(env)(r))
-      case Expr.Or(l, r) =>
+      case Expr.Or(_, l, r) =>
         evaluate(env)(l).flatMap(lres => if lres.isTruthy then lres.pure[F] else evaluate(env)(r))
-      case Expr.Variable(name) =>
+      case Expr.Variable(tag, name) =>
         env
-          .get(name.lexeme)
+          .get(name)
           .left
-          .map(_ => RuntimeError.VariableNotFound(name.as(())))
+          .map(_ => RuntimeError.VariableNotFound(tag, name))
           .liftTo[F]
