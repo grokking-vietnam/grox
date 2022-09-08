@@ -11,8 +11,8 @@ import cats.instances.*
 import grox.Parser.ExprParser
 
 trait Parser[F[_]]:
-  def parse[T](tokens: List[Token[T]]): F[List[Stmt[T]]]
-  def parseExpr[T](tokens: List[Token[T]]): F[Expr]
+  def parse(tokens: List[Token[Span]]): F[List[Stmt]]
+  def parseExpr(tokens: List[Token[Span]]): F[Expr]
 
 object Parser:
 
@@ -21,18 +21,17 @@ object Parser:
   def instance[F[_]: MonadThrow]: Parser[F] =
     new Parser[F]:
 
-      def parse[T](
-        tokens: List[Token[T]]
-      ): F[List[Stmt[T]]] = Parser.parseStmt(tokens).liftTo[F]
+      def parse(
+        tokens: List[Token[Span]]
+      ): F[List[Stmt]] = Parser.parseStmt(tokens).liftTo[F]
 
-      def parseExpr[T](
-        tokens: List[Token[T]]
+      def parseExpr(
+        tokens: List[Token[Span]]
       ): F[Expr] = Parser.parse(tokens).map { case (exp, _) => exp }.liftTo[F]
 
-  enum ParseError[T] extends NoStackTrace:
-    case Failure(errors: List[Error[T]])
-    case PartialError(rest: List[Token[T]])
-
+  enum ParseError extends NoStackTrace:
+    case Failure(errors: List[Error])
+    case PartialError(rest: List[Token[Span]])
 
   enum Error(msg: String, tokens: List[Token[Span]]) extends NoStackTrace:
     case ExpectExpression(tokens: List[Token[Span]]) extends Error("Expect expression", tokens)
@@ -61,7 +60,7 @@ object Parser:
   // Parse a single expression and return remaining tokens
   def parse(ts: List[Token[Span]]): ExprParser = expression(ts)
 
-  def parseStmt[A](ts: List[Token[A]]): Either[ParseError[A], List[Stmt[A]]] =
+  def parseStmt(ts: List[Token[Span]]): Either[ParseError, List[Stmt]] =
     _parseStmt(Inspector(Nil, Nil, ts)).stmts.asRight
 
   @tailrec
@@ -157,7 +156,6 @@ object Parser:
       pr <- expression(tokens)
       cnsm <- consume[Semicolon[Span]](pr._2)
     } yield (Stmt.Print(pr._1), cnsm._2)
-
 
   def consume[TokenType <: Token[Span]: ClassTag](
     tokens: List[Token[Span]]

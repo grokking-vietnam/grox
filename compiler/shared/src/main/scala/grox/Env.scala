@@ -16,7 +16,7 @@ trait Env[F[_]]:
 object Env:
 
   def instance[F[_]: MonadThrow: Ref.Make](s: Environment): F[Env[F]] = Ref[F].of(s).map { ref =>
-    new Env {
+    new Env:
       // we allowed redeclaration of variables
       def define(name: String, value: LiteralType): F[Unit] = ref.update(s => s.define(name, value))
       def assign(name: String, value: LiteralType): F[Unit] =
@@ -29,11 +29,10 @@ object Env:
       def state: F[Environment] = ref.get
       def startBlock(): F[Unit] = ref.update(s => Environment(Map.empty, Some(s)))
       def endBlock(): F[Unit] = ref.update(_.enclosing.getOrElse(Environment()))
-    }
   }
 
 trait StmtExecutor[F[_]]:
-  def execute[A](stmt: List[Stmt[A]]): F[Unit]
+  def execute(stmt: List[Stmt]): F[Unit]
 
 // Each block need to add new Environment and use the current env as enclosing
 // => we have multiple versions of env
@@ -52,9 +51,9 @@ object StmtExecutor:
     using env: Env[F],
     interpreter: Interpreter[F],
   ): StmtExecutor[F] =
-    new StmtExecutor {
+    new StmtExecutor:
 
-      private def executeStmt[A](stmt: Stmt[A]): F[Unit] =
+      private def executeStmt(stmt: Stmt): F[Unit] =
         stmt match
           case Block(stmts) =>
             for
@@ -117,5 +116,4 @@ object StmtExecutor:
 
           case Function(name, params, body) => ???
 
-      def execute[A](stmts: List[Stmt[A]]): F[Unit] = stmts.traverse_(executeStmt)
-    }
+      def execute(stmts: List[Stmt]): F[Unit] = stmts.traverse_(executeStmt)

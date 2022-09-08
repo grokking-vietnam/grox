@@ -8,7 +8,6 @@ case class Span(start: Location, end: Location)
 object Span:
   val empty = Span(Location(0, 0, 0), Location(0, 0, 0))
 
-
 object Location:
   val empty = Location(0, 0, 0)
 
