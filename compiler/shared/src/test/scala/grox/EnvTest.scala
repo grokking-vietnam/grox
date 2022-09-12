@@ -13,7 +13,7 @@ class EnvTest extends CatsEffectSuite with ScalaCheckEffectSuite:
   test("define => get returns the same value") {
     PropF.forAllF { (name: String, value: LiteralType) =>
       Env
-        .instance[IO](Environment())
+        .instance[IO](State())
         .flatMap(env =>
           for
             _ <- env.define(name, value)
@@ -27,7 +27,7 @@ class EnvTest extends CatsEffectSuite with ScalaCheckEffectSuite:
     PropF.forAllF { (xs: List[(String, LiteralType)]) =>
       val result = xs.foldLeft(Map[String, LiteralType]())((x, y) => x + y)
       Env
-        .instance[IO](Environment())
+        .instance[IO](State())
         .flatMap(env =>
           for
             _ <- xs.traverse_((x, y) => env.define(x, y))
@@ -41,7 +41,7 @@ class EnvTest extends CatsEffectSuite with ScalaCheckEffectSuite:
   test("define => define => get returns the later value") {
     PropF.forAllF { (name: String, v1: LiteralType, v2: LiteralType) =>
       Env
-        .instance[IO](Environment())
+        .instance[IO](State())
         .flatMap(env =>
           for
             _ <- env.define(name, v1)
@@ -55,7 +55,7 @@ class EnvTest extends CatsEffectSuite with ScalaCheckEffectSuite:
   test("define => assign => get returns the later value") {
     PropF.forAllF { (name: String, v1: LiteralType, v2: LiteralType) =>
       Env
-        .instance[IO](Environment())
+        .instance[IO](State())
         .flatMap(env =>
           for
             _ <- env.define(name, v1)
@@ -69,7 +69,7 @@ class EnvTest extends CatsEffectSuite with ScalaCheckEffectSuite:
   test("assign value to a not declared variable returns error") {
     PropF.forAllF { (name: String, v: LiteralType) =>
       Env
-        .instance[IO](Environment())
+        .instance[IO](State())
         .flatMap(_.assign(name, v))
         .as(false)
         .handleError(e => true)
@@ -80,7 +80,7 @@ class EnvTest extends CatsEffectSuite with ScalaCheckEffectSuite:
   test("get a value from empty Env returns error") {
     PropF.forAllF { (name: String) =>
       Env
-        .instance[IO](Environment())
+        .instance[IO](State())
         .flatMap(_.get(name))
         .as(false)
         .handleError(e => true)
@@ -91,7 +91,7 @@ class EnvTest extends CatsEffectSuite with ScalaCheckEffectSuite:
   test("we can define a variable in inner block with the same name as outer block") {
     PropF.forAllF { (name: String, v1: LiteralType, v2: LiteralType) =>
       Env
-        .instance[IO](Environment())
+        .instance[IO](State())
         .flatMap(env =>
           for
             _ <- env.define(name, v1)

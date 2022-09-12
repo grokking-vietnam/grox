@@ -9,13 +9,13 @@ trait Env[F[_]]:
   def define(name: String, value: LiteralType): F[Unit]
   def assign(name: String, value: LiteralType): F[Unit]
   def get(name: String): F[LiteralType]
-  def state: F[Environment]
+  def state: F[State]
   def startBlock(): F[Unit]
   def endBlock(): F[Unit]
 
 object Env:
 
-  def instance[F[_]: MonadThrow: Ref.Make](s: Environment): F[Env[F]] = Ref[F].of(s).map { ref =>
+  def instance[F[_]: MonadThrow: Ref.Make](s: State): F[Env[F]] = Ref[F].of(s).map { ref =>
     new Env:
       // we allowed redeclaration of variables
       def define(name: String, value: LiteralType): F[Unit] = ref.update(s => s.define(name, value))
@@ -26,16 +26,16 @@ object Env:
           _ <- ref.set(ss)
         yield ()
       def get(name: String): F[LiteralType] = ref.get.map(_.get(name).liftTo[F]).flatten
-      def state: F[Environment] = ref.get
-      def startBlock(): F[Unit] = ref.update(s => Environment(Map.empty, Some(s)))
-      def endBlock(): F[Unit] = ref.update(_.enclosing.getOrElse(Environment()))
+      def state: F[State] = ref.get
+      def startBlock(): F[Unit] = ref.update(s => State(Map.empty, Some(s)))
+      def endBlock(): F[Unit] = ref.update(_.enclosing.getOrElse(State()))
   }
 
 trait StmtExecutor[F[_]]:
   def execute(stmt: List[Stmt]): F[Unit]
 
-// Each block need to add new Environment and use the current env as enclosing
-// => we have multiple versions of env
+// Each block need to add new sub State and use the current env as enclosing
+// => we have multiple versions of State
 object StmtExecutor:
   import Stmt.*
 

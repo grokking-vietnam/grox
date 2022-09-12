@@ -33,7 +33,7 @@ object Executor:
         for
           tokens <- scanner.scan(str)
           expr <- parser.parseExpr(tokens)
-          result <- interpreter.evaluate(Environment(), expr)
+          result <- interpreter.evaluate(State(), expr)
         yield result
 
       def execute(str: String): F[Unit] =
@@ -49,6 +49,6 @@ object Executor:
     given Parser[F] = Parser.instance[F]
     given Interpreter[F] = Interpreter.instance[F]
     for
-      given Env[F] <- Env.instance[F](Environment()).toResource
+      given Env[F] <- Env.instance[F](State()).toResource
       given StmtExecutor[F] = StmtExecutor.instance[F]
     yield instance[F]

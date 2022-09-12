@@ -461,7 +461,7 @@ class ParserCheck extends ScalaCheckSuite:
   }
 
   val interpreter = Interpreter.instance[Either[Throwable, *]]
-  val evaluate = (x: Expr) => interpreter.evaluate(Environment(), x)
+  val evaluate = (x: Expr) => interpreter.evaluate(State(), x)
 
   property("produce an equal numeric expression") {
     Prop.forAll(numericGen) { expr =>

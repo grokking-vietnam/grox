@@ -6,7 +6,7 @@ import cats.*
 import cats.syntax.all.*
 
 trait Interpreter[F[_]]:
-  def evaluate(env: Environment, expr: Expr): F[LiteralType]
+  def evaluate(env: State, expr: Expr): F[LiteralType]
 
 object Interpreter:
   def instance[F[_]: MonadThrow]: Interpreter[F] = (env, expr) => evaluate(env)(expr)
@@ -39,7 +39,7 @@ object Interpreter:
     def `unary_!` : EvaluationResult = Right(!value.isTruthy)
 
   def evaluateBinary[F[_]: MonadThrow](
-    env: Environment
+    env: State
   )(
     eval: Evaluate
   )(
@@ -100,7 +100,7 @@ object Interpreter:
     right: LiteralType,
   ): EvaluationResult = equal(left, right).flatMap(r => !r)
 
-  def evaluate[F[_]: MonadThrow](env: Environment)(expr: Expr): F[LiteralType] =
+  def evaluate[F[_]: MonadThrow](env: State)(expr: Expr): F[LiteralType] =
     expr match
       case Expr.Literal(_, value)   => value.pure[F]
       case Expr.Grouping(e)         => evaluate(env)(e)
