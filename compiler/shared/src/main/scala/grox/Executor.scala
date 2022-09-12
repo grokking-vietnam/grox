@@ -45,12 +45,10 @@ object Executor:
 
   def module[F[_]: MonadThrow: Sync: Console]: Resource[F, Executor[F]] =
 
-    val unit = Applicative[F].unit.toResource
     given Scanner[F] = Scanner.instance[F]
     given Parser[F] = Parser.instance[F]
     given Interpreter[F] = Interpreter.instance[F]
     for
       given Env[F] <- Env.instance[F](Environment()).toResource
-      _ <- unit
       given StmtExecutor[F] = StmtExecutor.instance[F]
     yield instance[F]
