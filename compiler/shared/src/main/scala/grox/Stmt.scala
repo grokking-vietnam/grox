@@ -11,5 +11,4 @@ enum Stmt:
   case While(cond: Expr, body: Stmt)
   case Assign(name: String, value: Expr)
 
-
 object Stmt {}

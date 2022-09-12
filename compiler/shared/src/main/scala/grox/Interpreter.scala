@@ -127,4 +127,3 @@ object Interpreter:
           .left
           .map(_ => RuntimeError.VariableNotFound(tag, name))
           .liftTo[F]
-

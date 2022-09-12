@@ -81,7 +81,6 @@ object Expr:
 
       case Variable(_, name) => name
 
-
   private def formatNestedExpr(expr: Expr, exprShow: String): String =
     expr match
       case Literal(_, _) => exprShow

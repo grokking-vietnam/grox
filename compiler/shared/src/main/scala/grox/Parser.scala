@@ -99,7 +99,6 @@ object Parser:
 
   def expression(tokens: List[Token[Span]]): ExprParser = or(tokens)
 
-
   def or: List[Token[Span]] => ExprParser = binary(orOp, and)
 
   def and: List[Token[Span]] => ExprParser = binary(andOp, equality)
@@ -107,16 +106,15 @@ object Parser:
   def assignmentExpr(
     tokens: List[Token[Span]]
   ): StmtParser =
-      for {
-        (identifer, restTokens) <- consume[Identifier[Span]](tokens)
-        iden <-
-          identifer match
-            case a: Identifier[Span] => Right(a)
-            case _                => Left(Error.UnexpectedToken(tokens))
-        (equalToken, afterEqualToken) <- consume[Equal[Span]](restTokens)
-        (valueExpr, afterValue) <- expression(afterEqualToken)
-      } yield (Stmt.Assign(iden.lexeme, valueExpr), afterValue)
-
+    for {
+      (identifer, restTokens) <- consume[Identifier[Span]](tokens)
+      iden <-
+        identifer match
+          case a: Identifier[Span] => Right(a)
+          case _                   => Left(Error.UnexpectedToken(tokens))
+      (equalToken, afterEqualToken) <- consume[Equal[Span]](restTokens)
+      (valueExpr, afterValue) <- expression(afterEqualToken)
+    } yield (Stmt.Assign(iden.lexeme, valueExpr), afterValue)
 
   def assignment(
     tokens: List[Token[Span]]
@@ -127,7 +125,7 @@ object Parser:
         iden <-
           identifer match
             case a: Identifier[Span] => Right(a)
-            case _                => Left(Error.UnexpectedToken(tokens))
+            case _                   => Left(Error.UnexpectedToken(tokens))
         (equalToken, afterEqualToken) <- consume[Equal[Span]](restTokens)
         (valueExpr, afterValue) <- expression(afterEqualToken)
         semicolonCnsm <- consume[Semicolon[Span]](afterValue)
@@ -135,7 +133,6 @@ object Parser:
       } yield (Stmt.Assign(iden.lexeme, valueExpr), semicolonCnsm._2)
 
     attemptToParseAssignment.recoverWith { case error => expressionStmt(tokens) }
-
 
   def statement(tokens: List[Token[Span]]): StmtParser =
     tokens.headOption match
@@ -218,13 +215,12 @@ object Parser:
           case Some(_: Var[Span]) =>
             declaration(afterLeftParenTokens).map((declareStmt, toks) => (declareStmt.some, toks))
           case _ =>
-            assignment(afterLeftParenTokens).map((declareStmt, toks) =>
-              (declareStmt.some, toks)
-            )
+            assignment(afterLeftParenTokens).map((declareStmt, toks) => (declareStmt.some, toks))
 
       (conditionalExprOption, afterConditionStmtTokens): (Option[Expr], List[Token[Span]]) <-
         afterInitializerTokens.headOption match
-          case Some(_: Semicolon[Span]) => (None, afterInitializerTokens).asRight // todo afterInitializerTokens.tail?
+          case Some(_: Semicolon[Span]) =>
+            (None, afterInitializerTokens).asRight // todo afterInitializerTokens.tail?
           case _ =>
             expression(afterInitializerTokens).map((declareStmt, tokens) =>
               (declareStmt.some, tokens)
@@ -254,11 +250,10 @@ object Parser:
           Stmt.Block(List(body, incrementExprOption.get))
         else
           body
-      desugarCondition =
-        Stmt.While(
-          conditionalExprOption.getOrElse(Expr.Literal(Span.empty, true)),
-          desugarIncrement,
-        )
+      desugarCondition = Stmt.While(
+        conditionalExprOption.getOrElse(Expr.Literal(Span.empty, true)),
+        desugarIncrement,
+      )
 
       desugarInitializer = initializerStmtOption
         .map(initializer => Stmt.Block(List(initializer, desugarCondition)))
