@@ -119,20 +119,15 @@ object Parser:
   def assignment(
     tokens: List[Token[Span]]
   ): StmtParser =
-    val attemptToParseAssignment =
+
+    val attemptToParseAssignmentExpr =
       for {
-        (identifer, restTokens) <- consume[Identifier[Span]](tokens)
-        iden <-
-          identifer match
-            case a: Identifier[Span] => Right(a)
-            case _                   => Left(Error.UnexpectedToken(tokens))
-        (equalToken, afterEqualToken) <- consume[Equal[Span]](restTokens)
-        (valueExpr, afterValue) <- expression(afterEqualToken)
+        (assingExpr, afterValue) <- assignmentExpr(tokens)
         semicolonCnsm <- consume[Semicolon[Span]](afterValue)
 
-      } yield (Stmt.Assign(iden.lexeme, valueExpr), semicolonCnsm._2)
+      } yield (assingExpr, semicolonCnsm._2)
 
-    attemptToParseAssignment.recoverWith { case error => expressionStmt(tokens) }
+    attemptToParseAssignmentExpr.recoverWith { case error => expressionStmt(tokens) }
 
   def statement(tokens: List[Token[Span]]): StmtParser =
     tokens.headOption match
