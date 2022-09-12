@@ -118,7 +118,7 @@ object Parser:
         (valueExpr, afterValue) <- expression(afterEqualToken)
         semicolonCnsm <- consume[Semicolon[Span]](afterValue)
 
-      } yield (Stmt.Assign(iden, valueExpr), semicolonCnsm._2)
+      } yield (Stmt.Assign(iden.lexeme, valueExpr), semicolonCnsm._2)
 
     attemptToParseAssignment.recoverWith { case error => expressionStmt(tokens) }
 

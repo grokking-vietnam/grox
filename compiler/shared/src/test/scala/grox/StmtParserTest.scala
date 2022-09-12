@@ -185,11 +185,11 @@ class StmtParserTest extends munit.FunSuite:
             Some(Expr.Literal(empty, 1)),
           ),
           Stmt.Assign(
-              Identifier(empty, "a"),
-              Expr.Add(
-                Expr.Variable(empty, "a"),
-                Expr.Variable(empty, "a"),                
-              ),
+            "a",
+            Expr.Add(
+              empty,
+              Expr.Variable(empty, "a"),
+              Expr.Variable(empty, "a"),
             ),
           ),
         )
@@ -252,12 +252,13 @@ class StmtParserTest extends munit.FunSuite:
         List(
           Stmt.Print(Expr.Variable(empty, "i")),
           Stmt.Assign(
-              ivar,
-              Expr.Add(
-                Expr.Variable(empty, "i"),
-                Expr.Literal(empty, 1),
-              ),
+            "i",
+            Expr.Add(
+              empty,
+              Expr.Variable(empty, "i"),
+              Expr.Literal(empty, 1),
             ),
+          ),
         )
       ),
     )
@@ -265,7 +266,6 @@ class StmtParserTest extends munit.FunSuite:
     val inspector = Inspector().copy(tokens = ts)
 
     val expectedStmts = Stmt.Block(List(varStmt, whileStmts))
-
 
     val expectedInspector = Inspector().copy(
       stmts = List(expectedStmts)

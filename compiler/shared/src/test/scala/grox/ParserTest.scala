@@ -355,7 +355,6 @@ class ParserTest extends munit.FunSuite:
       Semicolon(empty),
     )
 
-
     val expectedStmt = Stmt.Var(
       avar,
       Some(expr42),
@@ -401,12 +400,11 @@ class ParserTest extends munit.FunSuite:
             Some(expr42),
           ),
           Stmt.Assign(
-              "a",
-              Expr.Add(
-                Expr.Variable(empty, "a"),
-                Expr.Variable(empty, "a")
-                ),
-              ),
+            "a",
+            Expr.Add(
+              empty,
+              Expr.Variable(empty, "a"),
+              Expr.Variable(empty, "a"),
             ),
           ),
         )
