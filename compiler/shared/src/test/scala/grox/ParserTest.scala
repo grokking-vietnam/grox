@@ -271,15 +271,6 @@ class ParserTest extends munit.FunSuite:
 
   }
 
-  test("assignment statement") {
-    val ts = List(avar, Equal(empty), num1)
-    val want = Stmt.Assign("a", expr1)
-    assertEquals(
-      assignment(ts),
-      Right(want, Nil),
-    )
-  }
-
   test("error: expect expression") {
     // 1 + 2 / (3 - )
     val ts = List(

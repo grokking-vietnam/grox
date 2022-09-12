@@ -124,6 +124,15 @@ class StmtParserTest extends munit.FunSuite:
     )
   }
 
+  test("assignment statement") {
+    val ts = List(avar, Equal(empty), num1, Semicolon(empty))
+    val want = Stmt.Assign("a", expr1)
+    assertEquals(
+      assignment(ts),
+      Right(want, Nil),
+    )
+  }
+
   test("Val declaration") {
     val ts = List(
       Var(empty),
@@ -207,7 +216,7 @@ class StmtParserTest extends munit.FunSuite:
   }
 
   test("For loop statement") {
-    // for (var i = 0; i < 10; i = i + 1) print i
+    // for (var i = 0; i < 10; i = i + 1) print i;
     val ivar: Identifier[Span] = Identifier("i", empty)
 
     val ts = List(
@@ -263,14 +272,15 @@ class StmtParserTest extends munit.FunSuite:
       ),
     )
 
-    val inspector = Inspector().copy(tokens = ts)
-
     val expectedStmts = Stmt.Block(List(varStmt, whileStmts))
+
+    val inspector = Inspector().copy(tokens = ts)
 
     val expectedInspector = Inspector().copy(
       stmts = List(expectedStmts)
     )
 
+    println(parseStmt(inspector))
     assertEquals(parseStmt(inspector), expectedInspector)
 
   }
