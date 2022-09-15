@@ -35,16 +35,18 @@ object Main
   given FileReader[IO] = FileReader.instance[IO]
   val exec = Executor.module[IO]
 
-  // todo add config to cli
-  // Logger.root.clearHandlers().withHandler(minimumLevel = Some(Level.Info)).replace()
-  override def main: Opts[IO[ExitCode]] = CLI.parse.map {
-    convertCommand[IO](_)
-      .flatMap { cmd =>
-        eval(exec)(cmd)
-      }
-      .flatMap(IO.println)
-      .handleErrorWith { err =>
-        IO.println(s"Error: ${err.toString}")
-      }
-      .as(ExitCode.Success)
-  }
+  override def main: Opts[IO[ExitCode]] = CLI
+    .parse
+    .map(config =>
+      val level = if config.debug then Level.Debug else Level.Error
+      Logger.root.clearHandlers().withHandler(minimumLevel = Some(level)).replace()
+      convertCommand[IO](config.command)
+        .flatMap { cmd =>
+          eval(exec)(cmd)
+        }
+        .flatMap(IO.println)
+        .handleErrorWith { err =>
+          IO.println(s"Error: ${err.toString}")
+        }
+        .as(ExitCode.Success)
+    )

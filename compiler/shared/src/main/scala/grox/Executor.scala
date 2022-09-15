@@ -30,7 +30,9 @@ object Executor:
       def evaluate(str: String): F[LiteralType] =
         for
           tokens <- scanner.scan(str)
+          _ <- Scribe[F].warn(s"Tokens $tokens")
           expr <- parser.parse(tokens)
+          _ <- Scribe[F].warn(s"Expr $expr")
           result <- interpreter.evaluate(env, expr)
         yield result
 
