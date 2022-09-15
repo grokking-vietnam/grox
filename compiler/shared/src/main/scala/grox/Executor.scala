@@ -1,7 +1,8 @@
 package grox
 
 import cats.MonadThrow
-import cats.implicits.*
+import cats.syntax.all.*
+import scribe.Scribe
 
 trait Executor[F[_]]:
   def scan(str: String): F[List[Token[Span]]]
@@ -10,7 +11,7 @@ trait Executor[F[_]]:
 
 object Executor:
 
-  def instance[F[_]: MonadThrow](
+  def instance[F[_]: MonadThrow: Scribe](
     using scanner: Scanner[F],
     parser: Parser[F],
     interpreter: Interpreter[F],
@@ -22,6 +23,7 @@ object Executor:
       def parse(str: String): F[Expr] =
         for
           tokens <- scanner.scan(str)
+          _ <- Scribe[F].info(s"Tokens $tokens")
           expr <- parser.parse(tokens)
         yield expr
 
@@ -32,7 +34,7 @@ object Executor:
           result <- interpreter.evaluate(env, expr)
         yield result
 
-  def module[F[_]: MonadThrow]: Executor[F] =
+  def module[F[_]: MonadThrow: Scribe]: Executor[F] =
     given Scanner[F] = Scanner.instance[F]
     given Parser[F] = Parser.instance[F]
     given Interpreter[F] = Interpreter.instance[F]

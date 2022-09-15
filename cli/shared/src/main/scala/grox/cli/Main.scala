@@ -3,10 +3,11 @@ package grox.cli
 import cats.Functor
 import cats.effect.*
 import cats.syntax.all.*
-
+import scribe.cats.*
 import com.monovore.decline.*
 import com.monovore.decline.effect.*
 import grox.Executor
+import scribe.Level
 
 object Main
   extends CommandIOApp(

@@ -56,6 +56,8 @@ val commonSettings = Seq(
   scalacOptions += "-Yexplicit-nulls",
   libraryDependencies ++= Seq(
     Dependencies.catsCore.value,
+    Dependencies.scribe.value,
+    Dependencies.scribeCats.value,
     Dependencies.munit.value,
     Dependencies.munitCatsEffect.value,
     Dependencies.munitScalaCheck.value,
