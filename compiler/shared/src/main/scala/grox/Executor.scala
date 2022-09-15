@@ -23,7 +23,7 @@ object Executor:
       def parse(str: String): F[Expr] =
         for
           tokens <- scanner.scan(str)
-          _ <- Scribe[F].info(s"Tokens $tokens")
+          _ <- Scribe[F].warn(s"Tokens $tokens")
           expr <- parser.parse(tokens)
         yield expr
 
