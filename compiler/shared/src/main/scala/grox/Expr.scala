@@ -23,10 +23,6 @@ enum Expr:
   case Equal(tag: Span, left: Expr, right: Expr)
   case NotEqual(tag: Span, left: Expr, right: Expr)
 
-  // assignment
-
-  case Assign(tag: Span, name: String, value: Expr)
-
   // logic
   case Or(tag: Span, left: Expr, right: Expr)
   case And(tag: Span, left: Expr, right: Expr)
