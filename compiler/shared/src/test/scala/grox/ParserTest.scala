@@ -271,15 +271,6 @@ class ParserTest extends munit.FunSuite:
 
   }
 
-  test("assignment statement") {
-    val ts = List(avar, Equal(empty), num1)
-    val want = Expr.Assign(empty, "a", expr1)
-    assertEquals(
-      assignment(ts),
-      Right(want, Nil),
-    )
-  }
-
   test("error: expect expression") {
     // 1 + 2 / (3 - )
     val ts = List(
@@ -399,16 +390,13 @@ class ParserTest extends munit.FunSuite:
             avar,
             Some(expr42),
           ),
-          Stmt.Expression(
-            Expr.Assign(
+          Stmt.Assign(
+            "a",
+            Expr.Add(
               empty,
-              "a",
-              Expr.Add(
-                empty,
-                Expr.Variable(empty, "a"),
-                Expr.Variable(empty, "a"),
-              ),
-            )
+              Expr.Variable(empty, "a"),
+              Expr.Variable(empty, "a"),
+            ),
           ),
         )
       ),
