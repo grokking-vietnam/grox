@@ -1,8 +1,8 @@
 package grox
 
+import cats.MonadThrow
 import cats.effect.kernel.Ref
 import cats.syntax.all.*
-import cats.MonadThrow
 
 trait Env[F[_]]:
   def define(name: String, value: LiteralType): F[Unit]
