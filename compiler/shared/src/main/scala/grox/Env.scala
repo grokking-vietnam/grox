@@ -69,10 +69,10 @@ object StmtExecutor:
             yield ()
 
           case Print(expr) =>
-            println(s"EXECUTING PRINT $expr")
+            // println(s"EXECUTING PRINT $expr")
             for
               state <- env.state
-              _ = println(s"ENV PRINT $expr")
+              // _ = println(s"ENV PRINT $expr")
               result <- interpreter.evaluate(state, expr)
               _ <- Console[F].println(result)
             yield ()
@@ -99,11 +99,6 @@ object StmtExecutor:
               yield r.isTruthy
             val b = executeStmt(body)
             Monad[F].whileM_(c)(b)
-          // for
-          //   state <- env.state
-          //   r <- interpreter.evaluate(state, cond)
-          //   _ <- executeStmt(body) if r.isTruthy
-          // yield ()
 
           case If(cond, thenBranch, elseBranch) =>
             for
