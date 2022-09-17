@@ -18,6 +18,6 @@ class CLITest extends munit.FunSuite:
     assertEquals(testCommand("evaluate", "."), Right(CLI.Command.Evaluate(".")))
   }
 
-  test("execute command") {
-    assertEquals(testCommand("execute", "."), Right(CLI.Command.Execute(".")))
+  test("run command") {
+    assertEquals(testCommand("run", "."), Right(CLI.Command.Run(".")))
   }

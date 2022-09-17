@@ -25,7 +25,7 @@ object Main
     case CLI.Command.Scan(file)     => reader.read(file).map(Command.Scan(_))
     case CLI.Command.Parse(file)    => reader.read(file).map(Command.Parse(_))
     case CLI.Command.Evaluate(file) => reader.read(file).map(Command.Evaluate(_))
-    case CLI.Command.Execute(file)  => reader.read(file).map(Command.Execute(_))
+    case CLI.Command.Run(file)      => reader.read(file).map(Command.Execute(_))
 
   def eval[F[_]: Functor](exec: Executor[F]): Command => F[String] =
     case Command.Scan(str)     => exec.scan(str).map(tokens => tokens.mkString("\n"))
