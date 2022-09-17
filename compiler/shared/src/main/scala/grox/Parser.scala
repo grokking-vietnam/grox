@@ -109,28 +109,37 @@ object Parser:
       .getOrElse(Left(Error.ExpectVarIdentifier(tokens)))
   )
 
-  def expression(tokens: List[Token[Span]]): ExprParser = assignment(tokens)
+  def expression(tokens: List[Token[Span]]): ExprParser = or(tokens)
 
   def or: List[Token[Span]] => ExprParser = binary(orOp, and)
 
   def and: List[Token[Span]] => ExprParser = binary(andOp, equality)
 
+  def assignmentExpr(
+    tokens: List[Token[Span]]
+  ): StmtParser =
+    for {
+      (identifer, restTokens) <- consume[Identifier[Span]](tokens)
+      iden <-
+        identifer match
+          case a: Identifier[Span] => Right(a)
+          case _                   => Left(Error.UnexpectedToken(tokens))
+      (equalToken, afterEqualToken) <- consume[Equal[Span]](restTokens)
+      (valueExpr, afterValue) <- expression(afterEqualToken)
+    } yield (Stmt.Assign(iden.lexeme, valueExpr), afterValue)
+
   def assignment(
     tokens: List[Token[Span]]
-  ): ExprParser = or(tokens).flatMap((expr: Expr, restTokens: List[Token[Span]]) =>
-    restTokens.headOption match {
-      case Some(equalToken @ Equal(tag)) =>
-        expr match {
-          case Expr.Variable(_, name) =>
-            assignment(restTokens.tail).flatMap((value, tokens) =>
-              Right((Expr.Assign(tag, name, value), tokens)),
-            )
-          case _ => Left(Error.InvalidAssignmentTarget(equalToken))
-        }
+  ): StmtParser =
 
-      case _ => Right((expr, restTokens))
-    },
-  )
+    val attemptToParseAssignmentExpr =
+      for {
+        (assingExpr, afterValue) <- assignmentExpr(tokens)
+        semicolonCnsm <- consume[Semicolon[Span]](afterValue)
+
+      } yield (assingExpr, semicolonCnsm._2)
+
+    attemptToParseAssignmentExpr.recoverWith { case error => expressionStmt(tokens) }
 
   def statement(tokens: List[Token[Span]]): StmtParser =
     tokens.headOption match
@@ -142,8 +151,8 @@ object Parser:
           case For(_)       => forStmt(tokens.tail)
           case Return(_)    => returnStmt(token, tokens.tail)
           case While(_)     => whileStmt(tokens.tail)
-          case _            => expressionStmt(tokens)
-      case _ => expressionStmt(tokens)
+          case _            => assignment(tokens)
+      case _ => assignment(tokens)
 
   def expressionStmt(tokens: List[Token[Span]]): StmtParser =
     for {
@@ -213,13 +222,12 @@ object Parser:
           case Some(_: Var[Span]) =>
             declaration(afterLeftParenTokens).map((declareStmt, toks) => (declareStmt.some, toks))
           case _ =>
-            expressionStmt(afterLeftParenTokens).map((declareStmt, toks) =>
-              (declareStmt.some, toks)
-            )
+            assignment(afterLeftParenTokens).map((declareStmt, toks) => (declareStmt.some, toks))
 
       (conditionalExprOption, afterConditionStmtTokens): (Option[Expr], List[Token[Span]]) <-
         afterInitializerTokens.headOption match
-          case Some(_: Semicolon[Span]) => (None, afterInitializerTokens).asRight
+          case Some(_: Semicolon[Span]) =>
+            (None, afterInitializerTokens).asRight // todo afterInitializerTokens.tail?
           case _ =>
             expression(afterInitializerTokens).map((declareStmt, tokens) =>
               (declareStmt.some, tokens)
@@ -229,12 +237,12 @@ object Parser:
         afterConditionStmtTokens
       )
 
-      (incrementExprOption, afterIncrementStmtTokens): (Option[Expr], List[Token[Span]]) <-
+      (incrementExprOption, afterIncrementStmtTokens): (Option[Stmt], List[Token[Span]]) <-
         afterConditionStmtAndSemiColonTokens.headOption match
           case Some(_: RightParen[Span]) =>
             (None, afterConditionStmtAndSemiColonTokens.tail).asRight
           case _ =>
-            expression(afterConditionStmtAndSemiColonTokens).map((declareStmt, tokens) =>
+            assignmentExpr(afterConditionStmtAndSemiColonTokens).map((declareStmt, tokens) =>
               (declareStmt.some, tokens)
             )
 
@@ -246,17 +254,16 @@ object Parser:
 
       desugarIncrement =
         if (incrementExprOption.isDefined)
-          new Stmt.Block(List(body, new Stmt.Expression(incrementExprOption.get)))
+          Stmt.Block(List(body, incrementExprOption.get))
         else
           body
-      desugarCondition =
-        new Stmt.While(
-          conditionalExprOption.getOrElse(Expr.Literal(Span.empty, true)),
-          desugarIncrement,
-        )
+      desugarCondition = Stmt.While(
+        conditionalExprOption.getOrElse(Expr.Literal(Span.empty, true)),
+        desugarIncrement,
+      )
 
       desugarInitializer = initializerStmtOption
-        .map(initializer => new Stmt.Block(List(initializer, desugarCondition)))
+        .map(initializer => Stmt.Block(List(initializer, desugarCondition)))
         .getOrElse(desugarCondition)
 
     } yield (desugarInitializer, afterBodyTokens)

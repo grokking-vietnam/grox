@@ -19,11 +19,9 @@ operator       -> "==" | "!=" | "<" | "<=" | ">" | ">="
 
 ## Expression (ordered grammar, for parser)
 ```
-expression    -> IDENTIFIER "=" assignment
-               | logic_or ;
+expression    -> logic_or ;
 logic_or      -> logic_and ( "or" logic_and )* ;
 logic_and     -> equality ( "and" equality )* ;
-assignment    -> IDENTIFIER "=" assignment | equality
 equality      -> comparison (("!=" | "==") comparison)*
 comparison    -> factor (("<" | "<=" | ">" | ">=") factor)*
 factor        -> term (("+" | "-") term)*
@@ -39,35 +37,39 @@ grouping     -> "(" expression ")"
 
 ## Statements
 ```
-statement      → exprStmt
+statement      -> exprStmt
                | forStmt
                | ifStmt
                | printStmt
                | returnStmt
                | whileStmt
+               | assignStmt
                | block ;
 
-exprStmt       → expression ";" ;
-forStmt        → "for" "(" ( varDecl | exprStmt | ";" )
-                           expression? ";"
-                           expression? ")" statement ;
-ifStmt         → "if" "(" expression ")" statement
-                 ( "else" statement )? ;
-printStmt      → "print" expression ";" ;
-returnStmt     → "return" expression? ";" ;
-whileStmt      → "while" "(" expression ")" statement ;
+assignmentExpr -> IDENTIFIER "=" expression
+assignmentStmt -> assignmentExpr ";"
 
-block          → "{" declaration* "}" ;
-declaration    → classDecl
+exprStmt       -> expression ";" ;
+forStmt        -> "for" "(" ( varDecl | exprStmt | ";" )
+                           expression? ";"
+                           assignmentExpr? ")" statement ;
+ifStmt         -> "if" "(" expression ")" statement
+                 ( "else" statement )? ;
+printStmt      -> "print" expression ";" ;
+returnStmt     -> "return" expression? ";" ;
+whileStmt      -> "while" "(" expression ")" statement ;
+
+block          -> "{" declaration* "}" ;
+declaration    -> classDecl
                | funDecl
                | varDecl
                | statement ;
-classDecl      → "class" IDENTIFIER ( "<" IDENTIFIER )?
+classDecl      -> "class" IDENTIFIER ( "<" IDENTIFIER )?
                  "{" function* "}" ;
-funDecl        → "fun" function ;
-varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
+funDecl        -> "fun" function ;
+varDecl        -> "var" IDENTIFIER ( "=" expression )? ";" ;
 
-function       → IDENTIFIER "(" parameters? ")" block ;
-parameters     → IDENTIFIER ( "," IDENTIFIER )* ;
-arguments      → expression ( "," expression )* ;
+function       -> IDENTIFIER "(" parameters? ")" block ;
+parameters     -> IDENTIFIER ( "," IDENTIFIER )* ;
+arguments      -> expression ( "," expression )* ;
 ```
