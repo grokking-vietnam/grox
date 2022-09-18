@@ -10,14 +10,7 @@ trait StmtExecutor[F[_]]:
 
 object StmtExecutor:
   import Stmt.*
-
-  extension (value: LiteralType)
-
-    def isTruthy: Boolean =
-      value match
-        case _: Unit    => false
-        case v: Boolean => v
-        case _          => true
+  import LiteralType.*
 
   def instance[F[_]: MonadThrow: Console](
     using env: Env[F],
@@ -41,10 +34,8 @@ object StmtExecutor:
             yield ()
 
           case Print(expr) =>
-            // println(s"EXECUTING PRINT $expr")
             for
               state <- env.state
-              // _ = println(s"ENV PRINT $expr")
               result <- interpreter.evaluate(state, expr)
               _ <- Console[F].println(result)
             yield ()

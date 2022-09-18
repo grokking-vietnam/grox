@@ -4,6 +4,7 @@ import scala.util.control.NoStackTrace
 
 import cats.*
 import cats.syntax.all.*
+import LiteralType.*
 
 trait Interpreter[F[_]]:
   def evaluate(env: State, expr: Expr): F[LiteralType]
@@ -29,12 +30,6 @@ object Interpreter:
       value match
         case v: Double => Right(-v)
         case _         => Left(RuntimeError.MustBeNumbers(tag))
-
-    def isTruthy: Boolean =
-      value match
-        case _: Unit    => false
-        case v: Boolean => v
-        case _          => true
 
     def `unary_!` : EvaluationResult = Right(!value.isTruthy)
 
