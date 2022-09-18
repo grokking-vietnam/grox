@@ -4,6 +4,7 @@ import scala.util.control.NoStackTrace
 
 import cats.*
 import cats.syntax.all.*
+
 import LiteralType.*
 
 trait Interpreter[F[_]]:

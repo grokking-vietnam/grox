@@ -6,7 +6,9 @@ import cats.Show
 type LiteralType = Double | String | Boolean | Unit
 
 object LiteralType:
+
   extension (value: LiteralType)
+
     def isTruthy: Boolean =
       value match
         case _: Unit    => false
