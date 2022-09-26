@@ -15,7 +15,7 @@ object Dependencies {
   val decline = Def.setting("com.monovore" %%% "decline" % declineVersion)
   val declineEffect = Def.setting("com.monovore" %%% "decline-effect" % declineVersion)
 
-  val tyrian = Def.setting("io.indigoengine" %%% "tyrian-io" % "0.5.1")
+  val tyrian = Def.setting("io.indigoengine" %%% "tyrian-io" % "0.6.0")
 
   val munit = Def.setting("org.scalameta" %%% "munit" % "0.7.29" % Test)
   val munitCatsEffect = Def.setting("org.typelevel" %%% "munit-cats-effect-3" % "1.0.7" % Test)
