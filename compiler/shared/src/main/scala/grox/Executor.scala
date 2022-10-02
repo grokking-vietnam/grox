@@ -1,12 +1,12 @@
 package grox
 
-import cats.MonadThrow
-import cats.syntax.all.*
-import scribe.Scribe
+import cats.effect.implicits.*
 import cats.effect.kernel.{Resource, Sync}
 import cats.effect.std.Console
 import cats.syntax.all.*
 import cats.{Applicative, MonadThrow}
+
+import scribe.Scribe
 
 trait Executor[F[_]]:
   def scan(str: String): F[List[Token[Span]]]
@@ -36,9 +36,9 @@ object Executor:
         for
           tokens <- scanner.scan(str)
           _ <- Scribe[F].warn(s"Tokens $tokens")
-          expr <- parser.parse(tokens)
+          expr <- parser.parseExpr(tokens)
           _ <- Scribe[F].warn(s"Expr $expr")
-          result <- interpreter.evaluate(env, expr)
+          result <- interpreter.evaluate(State(), expr)
         yield result
 
       def execute(str: String): F[Unit] =

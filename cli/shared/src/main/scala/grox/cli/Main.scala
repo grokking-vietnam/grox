@@ -3,12 +3,12 @@ package grox.cli
 import cats.Functor
 import cats.effect.*
 import cats.syntax.all.*
-import scribe.cats.*
+
 import com.monovore.decline.*
 import com.monovore.decline.effect.*
 import grox.Executor
-import scribe.Level
-import scribe.Logger
+import scribe.cats.*
+import scribe.{Level, Logger}
 
 object Main
   extends CommandIOApp(
@@ -43,13 +43,17 @@ object Main
     .map(config =>
       val level = if config.debug then Level.Debug else Level.Error
       Logger.root.clearHandlers().withHandler(minimumLevel = Some(level)).replace()
-      convertCommand[IO](config.command)
-        .flatMap { cmd =>
-          eval(exec)(cmd)
-        }
-        .flatMap(IO.println)
-        .handleErrorWith { err =>
-          IO.println(s"Error: ${err.toString}")
-        }
+      Executor
+        .module[IO]
+        .use(exec =>
+          convertCommand[IO](config.command)
+            .flatMap { cmd =>
+              eval(exec)(cmd)
+            }
+            .flatMap(IO.println)
+            .handleErrorWith { err =>
+              IO.println(s"Error: ${err.toString}")
+            }
+        )
         .as(ExitCode.Success)
     )
