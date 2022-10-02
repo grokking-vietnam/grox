@@ -23,10 +23,9 @@ object CLI:
       .option[String]("evaluate", "Evaluate file to grox object")
       .map(Command.Evaluate(_))
 
-    val run: Opts[Command] =
-      Opts.subcommand[Command]("run", "Run grox file")(
-        Opts.argument[String]("path").map(Command.Run(_))
-      )
+    val run = Opts.
+      option[String]("run", "Run grox file")
+      .map(Command.Run(_))
 
     scan <+> parse <+> evaluate <+> run
 
