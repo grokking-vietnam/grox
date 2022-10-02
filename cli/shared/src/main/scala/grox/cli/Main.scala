@@ -21,16 +21,19 @@ object Main
     case Scan(file: String)
     case Parse(file: String)
     case Evaluate(file: String)
+    case Execute(file: String)
 
   def convertCommand[F[_]: Functor](using reader: FileReader[F]): CLI.Command => F[Command] =
     case CLI.Command.Scan(file)     => reader.read(file).map(Command.Scan(_))
     case CLI.Command.Parse(file)    => reader.read(file).map(Command.Parse(_))
     case CLI.Command.Evaluate(file) => reader.read(file).map(Command.Evaluate(_))
+    case CLI.Command.Run(file)      => reader.read(file).map(Command.Execute(_))
 
   def eval[F[_]: Functor](exec: Executor[F]): Command => F[String] =
     case Command.Scan(str)     => exec.scan(str).map(tokens => tokens.mkString("\n"))
     case Command.Parse(str)    => exec.parse(str).map(_.show)
     case Command.Evaluate(str) => exec.evaluate(str).map(_.toString)
+    case Command.Execute(str)  => exec.execute(str).as("Done")
 
   given FileReader[IO] = FileReader.instance[IO]
   val exec = Executor.module[IO]

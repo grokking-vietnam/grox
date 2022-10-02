@@ -9,7 +9,7 @@ import Span.*
 class InterpreterTest extends ScalaCheckSuite:
 
   val interpreter = Interpreter.instance[Either[Throwable, *]]
-  val evaluate = (x: Expr) => interpreter.evaluate(Environment(), x)
+  val evaluate = (x: Expr) => interpreter.evaluate(State(), x)
 
   property("addition") {
     forAll { (n1: Double, n2: Double) =>
@@ -87,14 +87,14 @@ class InterpreterTest extends ScalaCheckSuite:
   }
 
   test("variable expression") {
-    val env = Environment(Map("x" -> 0.0d), None)
+    val env = State(Map("x" -> 0.0d), None)
     val expr = Expr.Variable(empty, "x")
     assertEquals(interpreter.evaluate(env, expr), Right(0.0))
   }
 
   // from: https://www.learncbse.in/bodmas-rule/
   test("complex expression -4*(10+15/5*4-2*2)") {
-    val env = Environment(Map("x" -> 10.0), None)
+    val env = State(Map("x" -> 10.0), None)
 
     def eval(str: String) = Scanner
       .parse(str)

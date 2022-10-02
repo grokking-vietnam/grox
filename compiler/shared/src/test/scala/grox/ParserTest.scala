@@ -61,6 +61,13 @@ class ParserTest extends munit.FunSuite:
     assertEquals(parse(ts), Right(want, Nil))
   }
 
+  test("primary variable") {
+    val avar: Identifier[Span] = Identifier("a", empty)
+    val ts = List(avar)
+    val want = Expr.Variable(empty, "a")
+    assertEquals(parse(ts), Right(want, Nil))
+  }
+
   test("unary negate") {
     val ts = List(Minus(empty), Number("42", empty))
     val want = Expr.Negate(empty, expr42)
@@ -355,7 +362,7 @@ class ParserTest extends munit.FunSuite:
 
     val expectedInspector = Inspector().copy(stmts = List(expectedStmt))
 
-    assertEquals(parseStmt(inspector), expectedInspector)
+    assertEquals(_parseStmt(inspector), expectedInspector)
   }
 
   test("While: statement ") {
@@ -412,7 +419,7 @@ class ParserTest extends munit.FunSuite:
       tokens = Nil,
     )
 
-    assertEquals(parseStmt(inspector), expectedInspector)
+    assertEquals(_parseStmt(inspector), expectedInspector)
 
   }
 
@@ -442,7 +449,7 @@ class ParserCheck extends ScalaCheckSuite:
   }
 
   val interpreter = Interpreter.instance[Either[Throwable, *]]
-  val evaluate = (x: Expr) => interpreter.evaluate(Environment(), x)
+  val evaluate = (x: Expr) => interpreter.evaluate(State(), x)
 
   property("produce an equal numeric expression") {
     Prop.forAll(numericGen) { expr =>

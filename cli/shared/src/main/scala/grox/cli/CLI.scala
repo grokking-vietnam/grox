@@ -10,6 +10,7 @@ object CLI:
     case Scan(file: String)
     case Parse(file: String)
     case Evaluate(file: String)
+    case Run(file: String)
 
   val command =
     val scan = Opts.option[String]("scan", "Scan file to tokens").map(Command.Scan(_))
@@ -21,8 +22,13 @@ object CLI:
     val evaluate = Opts
       .option[String]("evaluate", "Evaluate file to grox object")
       .map(Command.Evaluate(_))
+      
+    val run: Opts[Command] =
+      Opts.subcommand[Command]("run", "Run grox file")(
+        Opts.argument[String]("path").map(Command.Run(_))
+      )
 
-    scan <+> parse <+> evaluate
+    scan <+> parse <+> evaluate <+> run
 
   val debug = Opts.flag("debug", help = "Print debug logs", short = "d").orFalse
 
