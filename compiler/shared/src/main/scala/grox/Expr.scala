@@ -5,6 +5,16 @@ import cats.Show
 // We use Unit to represent the absence of a value or nil in the language.
 type LiteralType = Double | String | Boolean | Unit
 
+object LiteralType:
+
+  extension (value: LiteralType)
+
+    def isTruthy: Boolean =
+      value match
+        case _: Unit    => false
+        case v: Boolean => v
+        case _          => true
+
 enum Expr:
 
   // Binary

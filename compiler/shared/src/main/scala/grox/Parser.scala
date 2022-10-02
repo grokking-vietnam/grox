@@ -11,7 +11,8 @@ import cats.instances.*
 import grox.Parser.ExprParser
 
 trait Parser[F[_]]:
-  def parse(tokens: List[Token[Span]]): F[Expr]
+  def parse(tokens: List[Token[Span]]): F[List[Stmt]]
+  def parseExpr(tokens: List[Token[Span]]): F[Expr]
 
 object Parser:
 
@@ -22,7 +23,15 @@ object Parser:
 
       def parse(
         tokens: List[Token[Span]]
+      ): F[List[Stmt]] = Parser.parseStmt(tokens).liftTo[F]
+
+      def parseExpr(
+        tokens: List[Token[Span]]
       ): F[Expr] = Parser.parse(tokens).map { case (exp, _) => exp }.liftTo[F]
+
+  enum ParseError extends NoStackTrace:
+    case Failure(errors: List[Error])
+    case PartialError(rest: List[Token[Span]])
 
   enum Error(msg: String, tokens: List[Token[Span]]) extends NoStackTrace:
     case ExpectExpression(tokens: List[Token[Span]]) extends Error("Expect expression", tokens)
@@ -51,17 +60,20 @@ object Parser:
   // Parse a single expression and return remaining tokens
   def parse(ts: List[Token[Span]]): ExprParser = expression(ts)
 
+  def parseStmt(ts: List[Token[Span]]): Either[ParseError, List[Stmt]] =
+    _parseStmt(Inspector(Nil, Nil, ts)).stmts.asRight
+
   @tailrec
-  def parseStmt(inspector: Inspector): Inspector =
+  def _parseStmt(inspector: Inspector): Inspector =
     inspector.tokens match
       case Nil => inspector
       case _ =>
         declaration(inspector.tokens) match
           case Right(stmt, rest) =>
             val updatedInspector = inspector.copy(tokens = rest, stmts = inspector.stmts :+ stmt)
-            parseStmt(updatedInspector)
+            _parseStmt(updatedInspector)
           case Left(err) =>
-            parseStmt(
+            _parseStmt(
               inspector.copy(
                 tokens = synchronize(inspector.tokens.tail),
                 errors = inspector.errors :+ err,
