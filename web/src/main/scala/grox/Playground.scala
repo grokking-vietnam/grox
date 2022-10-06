@@ -38,11 +38,20 @@ object Playground extends TyrianApp[Msg, Model]:
         .handleError(err => s"Error: ${err.toString}")
     )
 
+  def run(source: String): Cmd[IO, Msg] =
+    eval(source)(exec =>
+      exec
+        .execute(source)
+        .as("Done")
+        .handleError(err => s"Error: ${err.toString}")
+    )
+
   def update(model: Model): Msg => (Model, Cmd[IO, Msg]) =
     case Msg.Update(str) => (model.copy(input = str, result = ""), Cmd.None)
     case Msg.Result(str) => (model.copy(result = str), Cmd.None)
     case Msg.Scan        => (model, scan(model.input))
     case Msg.Parse       => (model, parse(model.input))
+    case Msg.Run       => (model, run(model.input))
 
   def view(model: Model): Html[Msg] = div(
     input(
@@ -52,6 +61,7 @@ object Playground extends TyrianApp[Msg, Model]:
     ),
     button(onClick(Msg.Scan))("Scan"),
     button(onClick(Msg.Parse))("Parse"),
+    button(onClick(Msg.Run))("Run"),
     p(styles("text-align" -> "center"))(text(model.result)),
   )
 
@@ -73,3 +83,4 @@ enum Msg:
   case Result(val str: String)
   case Scan
   case Parse
+  case Run
