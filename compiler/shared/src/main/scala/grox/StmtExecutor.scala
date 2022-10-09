@@ -31,8 +31,8 @@ object StmtExecutor:
           case Expression(expr) =>
             for
               state <- env.state
-              _ = interpreter.evaluate(state, expr)
-            yield ()
+              result <- interpreter.evaluate(state, expr)
+            yield result
 
           case Print(expr) =>
             for
