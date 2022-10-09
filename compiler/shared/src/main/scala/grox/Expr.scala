@@ -11,6 +11,7 @@ enum Expr:
 
   // arithmetic
   case Add(tag: Span, left: Expr, right: Expr)
+  case Call(tag: Span, callee: Expr, paren: Token[Span], arguments: List[Expr])
   case Subtract(tag: Span, left: Expr, right: Expr)
   case Multiply(tag: Span, left: Expr, right: Expr)
   case Divide(tag: Span, left: Expr, right: Expr)

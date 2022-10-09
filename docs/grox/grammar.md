@@ -19,15 +19,15 @@ operator       -> "==" | "!=" | "<" | "<=" | ">" | ">="
 
 ## Expression (ordered grammar, for parser)
 ```
-expression    -> logic_or ;
+expression    -> assignment ;
 logic_or      -> logic_and ( "or" logic_and )* ;
 logic_and     -> equality ( "and" equality )* ;
 equality      -> comparison (("!=" | "==") comparison)*
-comparison    -> factor (("<" | "<=" | ">" | ">=") factor)*
-factor        -> term (("+" | "-") term)*
-term          -> unary (("*" | "/") unary)*
-unary         -> ("-" | "!") unary
-              | primary
+comparison    -> term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
+factor        -> unary ( ( "/" | "*" ) unary )* ;
+term          -> factor ( ( "-" | "+" ) factor )* ;
+unary         -> ( "!" | "-" ) unary | call ;
+call           → primary ( "(" arguments? ")" )* ;
 primary       -> "true" | "false" | "nil"
               | NUMBER | STRING
               | "(" expression ")"
