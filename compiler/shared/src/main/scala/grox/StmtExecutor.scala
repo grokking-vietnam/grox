@@ -13,7 +13,7 @@ object StmtExecutor:
   import Stmt.*
   import LiteralType.*
 
-  def instance[F[+_]: MonadThrow: Console](
+  def instance[F[_]: MonadThrow: Console](
     using env: Env[F],
     interpreter: Interpreter[F],
   ): StmtExecutor[F] =
@@ -62,16 +62,16 @@ object StmtExecutor:
                 r <- interpreter.evaluate(state, cond)
               yield r.isTruthy
             val b = execute(body)
-            Monad[F].whileM_(c)(b)
+            Monad[F].whileM_(c)(b).widen
 
           case If(cond, thenBranch, elseBranch) =>
             for
               state <- env.state
               result <- interpreter.evaluate(state, cond)
-              _ <-
+              value <-
                 if result.isTruthy then execute(thenBranch)
-                else elseBranch.fold(Monad[F].unit)(eb => execute(eb))
-            yield ()
+                else elseBranch.fold(Monad[F].unit.widen)(eb => execute(eb))
+            yield value
 
           case Function(name, params, body) => ???
 

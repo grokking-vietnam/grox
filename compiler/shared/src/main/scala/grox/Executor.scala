@@ -14,7 +14,7 @@ trait Executor[F[_]]:
 
 object Executor:
 
-  def instance[F[+_]: MonadThrow](
+  def instance[F[_]: MonadThrow](
     using scanner: Scanner[F],
     parser: Parser[F],
     interpreter: Interpreter[F],
@@ -43,7 +43,7 @@ object Executor:
           _ <- executor.execute(stmts)
         yield ()
 
-  def module[F[+_]: MonadThrow: Sync: Console]: Resource[F, Executor[F]] =
+  def module[F[_]: MonadThrow: Sync: Console]: Resource[F, Executor[F]] =
 
     given Scanner[F] = Scanner.instance[F]
     given Parser[F] = Parser.instance[F]
