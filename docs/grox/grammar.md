@@ -19,7 +19,7 @@ operator       -> "==" | "!=" | "<" | "<=" | ">" | ">="
 
 ## Expression (ordered grammar, for parser)
 ```
-expression    -> assignment ;
+expression    -> logic_or ;
 logic_or      -> logic_and ( "or" logic_and )* ;
 logic_and     -> equality ( "and" equality )* ;
 equality      -> comparison (("!=" | "==") comparison)*
