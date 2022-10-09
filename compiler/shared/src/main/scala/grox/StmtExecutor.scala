@@ -56,13 +56,13 @@ object StmtExecutor:
             yield ()
 
           case While(cond, body) =>
-            val c =
+            val conditionStmt =
               for
                 state <- env.state
                 r <- interpreter.evaluate(state, cond)
               yield r.isTruthy
-            val b = execute(body)
-            Monad[F].whileM_(c)(b).widen
+            val bodyStmt = execute(body)
+            Monad[F].whileM_(conditionStmt)(bodyStmt).widen
 
           case If(cond, thenBranch, elseBranch) =>
             for
