@@ -37,7 +37,7 @@ object Parser:
     case InvalidAssignmentTarget(token: Token[Span])
       extends Error("Invalid assignment target.", List(token))
     case UnexpectedToken(tokens: List[Token[Span]]) extends Error("Unexpected token error", tokens)
-    case MaxNumberOfArgumentsExceeded(token: List[Token[Span]]) extends Error("Max number of arguments exceeded", tokens)
+    case MaxNumberOfArgumentsExceeded(tokens: List[Token[Span]]) extends Error("Max number of arguments exceeded", tokens)
 
   type ExprParser = Either[Error, (Expr, List[Token[Span]])]
   type StmtParser = Either[Error, (Stmt, List[Token[Span]])]
@@ -381,19 +381,19 @@ object Parser:
     }
 
   private def finishCall(callee: Expr, tokens: List[Token[Span]]): ExprParser = tokens.headOption match {
-      case Some(token@RightParen(tag)) => Right(Expr.Call(callee, token, List.empty[Expr]), tokens)
+      case Some(token@RightParen(tag)) => Right(Expr.Call(Span.empty, callee, token, List.empty[Expr]), tokens)
       case _ => parseArgs(List.empty[Expr], tokens).flatMap((args, rest) =>
         if (args.length > MAXIMUM_ARGUMENTS) {
-          Left(MaxNumberOfArgumentsExceeded(tokens))
+          Left(Error.MaxNumberOfArgumentsExceeded(tokens))
         } else rest.headOption.collectFirst {
           case close@RightParen(_) => Right(close)
-        }.getOrElse(Left(UnexpectedToken(rest))).map{rightParen => Expr.Call(callee, rightParen, args, rest.tail)}
+        }.getOrElse(Left(Error.UnexpectedToken(rest))).map{rightParen => Expr.Call(Span.empty, callee, rightParen, args)}
       )
     }
 
-  private def parseArgs(args: List[Expr], tokens: List[Token]): ArgsParser =
+  private def parseArgs(args: List[Expr], tokens: List[Token[Span]]): ArgsParser =
     expression(tokens).flatMap((expr, rest) => rest match
-        case Comma(_) :: rmn => parseArgs(args :+ arg, rmn)
-        case RightParen(_) :: rmn => Right(args :+ arg, rest)
-        case _ => Left(UnexpectedToken(rest))
-      }
+        case Comma(_) :: rmn => parseArgs(args :+ expr, rmn)
+        case RightParen(_) :: rmn => Right(args :+ expr, rest)
+        case _ => Left(Error.UnexpectedToken(rest))
+    )
