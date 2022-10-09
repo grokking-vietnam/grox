@@ -6,19 +6,20 @@ import cats.syntax.all.*
 import cats.{Monad, MonadThrow}
 
 trait StmtExecutor[F[_]]:
-  def execute(stmt: List[Stmt]): F[Unit]
+  def execute(stmts: List[Stmt]): F[Unit]
+  def execute(stmt: Stmt): F[LiteralType]
 
 object StmtExecutor:
   import Stmt.*
   import LiteralType.*
 
-  def instance[F[_]: MonadThrow: Console](
+  def instance[F[+_]: MonadThrow: Console](
     using env: Env[F],
     interpreter: Interpreter[F],
   ): StmtExecutor[F] =
     new StmtExecutor:
 
-      private def executeStmt(stmt: Stmt): F[Unit] =
+      def execute(stmt: Stmt): F[LiteralType] =
         stmt match
           case Block(stmts) =>
             for
@@ -60,7 +61,7 @@ object StmtExecutor:
                 state <- env.state
                 r <- interpreter.evaluate(state, cond)
               yield r.isTruthy
-            val b = executeStmt(body)
+            val b = execute(body)
             Monad[F].whileM_(c)(b)
 
           case If(cond, thenBranch, elseBranch) =>
@@ -68,10 +69,10 @@ object StmtExecutor:
               state <- env.state
               result <- interpreter.evaluate(state, cond)
               _ <-
-                if result.isTruthy then executeStmt(thenBranch)
-                else elseBranch.fold(Monad[F].unit)(eb => executeStmt(eb))
+                if result.isTruthy then execute(thenBranch)
+                else elseBranch.fold(Monad[F].unit)(eb => execute(eb))
             yield ()
 
           case Function(name, params, body) => ???
 
-      def execute(stmts: List[Stmt]): F[Unit] = stmts.traverse_(executeStmt)
+      def execute(stmts: List[Stmt]): F[Unit] = stmts.traverse_(execute)
