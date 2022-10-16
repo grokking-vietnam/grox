@@ -6,7 +6,8 @@ import cats.syntax.all.*
 import cats.{Monad, MonadThrow}
 
 trait StmtExecutor[F[_]]:
-  def execute(stmt: List[Stmt]): F[Unit]
+  def execute(stmts: List[Stmt]): F[Unit]
+  def execute(stmt: Stmt): F[LiteralType]
 
 object StmtExecutor:
   import Stmt.*
@@ -18,7 +19,7 @@ object StmtExecutor:
   ): StmtExecutor[F] =
     new StmtExecutor:
 
-      private def executeStmt(stmt: Stmt): F[Unit] =
+      def execute(stmt: Stmt): F[LiteralType] =
         stmt match
           case Block(stmts) =>
             for
@@ -30,15 +31,15 @@ object StmtExecutor:
           case Expression(expr) =>
             for
               state <- env.state
-              _ = interpreter.evaluate(state, expr)
-            yield ()
+              result <- interpreter.evaluate(state, expr)
+            yield result
 
           case Print(expr) =>
             for
               state <- env.state
               result <- interpreter.evaluate(state, expr)
               _ <- Console[F].println(result)
-            yield ()
+            yield result
 
           case Var(name, init) =>
             for
@@ -55,23 +56,23 @@ object StmtExecutor:
             yield ()
 
           case While(cond, body) =>
-            val c =
+            val conditionStmt =
               for
                 state <- env.state
                 r <- interpreter.evaluate(state, cond)
               yield r.isTruthy
-            val b = executeStmt(body)
-            Monad[F].whileM_(c)(b)
+            val bodyStmt = execute(body)
+            Monad[F].whileM_(conditionStmt)(bodyStmt).widen
 
           case If(cond, thenBranch, elseBranch) =>
             for
               state <- env.state
               result <- interpreter.evaluate(state, cond)
               _ <-
-                if result.isTruthy then executeStmt(thenBranch)
-                else elseBranch.fold(Monad[F].unit)(eb => executeStmt(eb))
+                if result.isTruthy then execute(thenBranch)
+                else elseBranch.fold(Monad[F].unit.widen)(eb => execute(eb))
             yield ()
 
           case Function(name, params, body) => ???
 
-      def execute(stmts: List[Stmt]): F[Unit] = stmts.traverse_(executeStmt)
+      def execute(stmts: List[Stmt]): F[Unit] = stmts.traverse_(execute)
