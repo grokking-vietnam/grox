@@ -6,6 +6,7 @@ import cats.Functor
 import cats.effect.IO
 import cats.syntax.all.*
 
+import scribe.cats.*
 import tyrian.Html.*
 import tyrian.*
 

@@ -1,6 +1,6 @@
 package grox.cli
 
-import cats.implicits.*
+import cats.syntax.all.*
 
 import com.monovore.decline.Opts
 
@@ -12,25 +12,25 @@ object CLI:
     case Evaluate(file: String)
     case Run(file: String)
 
-  val parse: Opts[Command] =
-    val scan =
-      Opts.subcommand[Command]("scan", "Scan file to tokens")(
-        Opts.argument[String]("path").map(Command.Scan(_))
-      )
+  val command =
+    val scan = Opts.option[String]("scan", "Scan file to tokens").map(Command.Scan(_))
 
-    val parse: Opts[Command] =
-      Opts.subcommand[Command]("parse", "Parse file to abstract syntax tree")(
-        Opts.argument[String]("path").map(Command.Parse(_))
-      )
+    val parse = Opts
+      .option[String]("parse", "Parse file to abstract syntax tree")
+      .map(Command.Parse(_))
 
-    val evaluate: Opts[Command] =
-      Opts.subcommand[Command]("evaluate", "Evaluate file to grox object")(
-        Opts.argument[String]("path").map(Command.Evaluate(_))
-      )
+    val evaluate = Opts
+      .option[String]("evaluate", "Evaluate file to grox object")
+      .map(Command.Evaluate(_))
 
-    val run: Opts[Command] =
-      Opts.subcommand[Command]("run", "Run grox file")(
-        Opts.argument[String]("path").map(Command.Run(_))
-      )
+    val run = Opts
+      .option[String]("run", "Run grox file")
+      .map(Command.Run(_))
 
     scan <+> parse <+> evaluate <+> run
+
+  val debug = Opts.flag("debug", help = "Print debug logs", short = "d").orFalse
+
+  case class Config(command: Command, debug: Boolean)
+
+  val parse = (command, debug).mapN(Config.apply)

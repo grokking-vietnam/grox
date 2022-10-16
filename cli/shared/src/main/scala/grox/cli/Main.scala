@@ -7,6 +7,8 @@ import cats.syntax.all.*
 import com.monovore.decline.*
 import com.monovore.decline.effect.*
 import grox.Executor
+import scribe.cats.*
+import scribe.{Level, Logger}
 
 object Main
   extends CommandIOApp(
@@ -34,19 +36,24 @@ object Main
     case Command.Execute(str)  => exec.execute(str).as("Done")
 
   given FileReader[IO] = FileReader.instance[IO]
+  val exec = Executor.module[IO]
 
-  override def main: Opts[IO[ExitCode]] = CLI.parse.map { command =>
-    Executor
-      .module[IO]
-      .use(exec =>
-        convertCommand[IO](command)
-          .flatMap { cmd =>
-            eval(exec)(cmd)
-          }
-          .flatMap(IO.println)
-          .handleErrorWith { err =>
-            IO.println(s"Error: ${err.toString}")
-          }
-      )
-      .as(ExitCode.Success)
-  }
+  override def main: Opts[IO[ExitCode]] = CLI
+    .parse
+    .map(config =>
+      val level = if config.debug then Level.Debug else Level.Error
+      Logger.root.clearHandlers().withHandler(minimumLevel = Some(level)).replace()
+      Executor
+        .module[IO]
+        .use(exec =>
+          convertCommand[IO](config.command)
+            .flatMap { cmd =>
+              eval(exec)(cmd)
+            }
+            .flatMap(IO.println)
+            .handleErrorWith { err =>
+              IO.println(s"Error: ${err.toString}")
+            }
+        )
+        .as(ExitCode.Success)
+    )

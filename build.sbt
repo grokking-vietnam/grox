@@ -57,6 +57,8 @@ val commonSettings = Seq(
   scalacOptions += "-explain",
   libraryDependencies ++= Seq(
     Dependencies.catsCore.value,
+    Dependencies.scribe.value,
+    Dependencies.scribeCats.value,
     Dependencies.catsEffect.value,
     Dependencies.scalaCheckEffect.value,
     Dependencies.munit.value,

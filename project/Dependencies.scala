@@ -5,6 +5,8 @@ object Dependencies {
 
   val declineVersion = "2.3.1"
   val fs2Version = "3.3.0"
+  val scribeVersion = "3.10.3"
+
   val catsCore = Def.setting("org.typelevel" %%% "cats-core" % "2.8.0")
   val catsEffect = Def.setting("org.typelevel" %%% "cats-effect" % "3.3.14")
   val catsParse = Def.setting("org.typelevel" %%% "cats-parse" % "0.3.8")
@@ -14,6 +16,9 @@ object Dependencies {
 
   val decline = Def.setting("com.monovore" %%% "decline" % declineVersion)
   val declineEffect = Def.setting("com.monovore" %%% "decline-effect" % declineVersion)
+
+  val scribe = Def.setting("com.outr" %%% "scribe" % scribeVersion)
+  val scribeCats = Def.setting("com.outr" %%% "scribe-cats" % scribeVersion)
 
   val tyrian = Def.setting("io.indigoengine" %%% "tyrian-io" % "0.6.0")
 

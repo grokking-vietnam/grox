@@ -6,6 +6,8 @@ import cats.effect.std.Console
 import cats.syntax.all.*
 import cats.{Applicative, MonadThrow}
 
+import scribe.Scribe
+
 trait Executor[F[_]]:
   def scan(str: String): F[List[Token[Span]]]
   def parse(str: String): F[Expr]
@@ -14,7 +16,7 @@ trait Executor[F[_]]:
 
 object Executor:
 
-  def instance[F[_]: MonadThrow](
+  def instance[F[_]: MonadThrow: Scribe](
     using scanner: Scanner[F],
     parser: Parser[F],
     interpreter: Interpreter[F],
@@ -26,13 +28,16 @@ object Executor:
       def parse(str: String): F[Expr] =
         for
           tokens <- scanner.scan(str)
+          _ <- Scribe[F].info(s"Tokens $tokens")
           expr <- parser.parseExpr(tokens)
         yield expr
 
       def evaluate(str: String): F[LiteralType] =
         for
           tokens <- scanner.scan(str)
+          _ <- Scribe[F].info(s"Tokens $tokens")
           expr <- parser.parseExpr(tokens)
+          _ <- Scribe[F].info(s"Expr $expr")
           result <- interpreter.evaluate(State(), expr)
         yield result
 
@@ -43,8 +48,7 @@ object Executor:
           _ <- executor.execute(stmts)
         yield ()
 
-  def module[F[_]: MonadThrow: Sync: Console]: Resource[F, Executor[F]] =
-
+  def module[F[_]: MonadThrow: Sync: Console: Scribe]: Resource[F, Executor[F]] =
     given Scanner[F] = Scanner.instance[F]
     given Parser[F] = Parser.instance[F]
     given Interpreter[F] = Interpreter.instance[F]
