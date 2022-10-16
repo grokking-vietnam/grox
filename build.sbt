@@ -54,6 +54,7 @@ val commonSettings = Seq(
   scalacOptions += "-rewrite",
   scalacOptions += "-indent",
   scalacOptions += "-Yexplicit-nulls",
+  scalacOptions += "-explain",
   libraryDependencies ++= Seq(
     Dependencies.catsCore.value,
     Dependencies.catsEffect.value,
