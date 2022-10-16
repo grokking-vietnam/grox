@@ -39,7 +39,7 @@ object StmtExecutor:
               state <- env.state
               result <- interpreter.evaluate(state, expr)
               _ <- Console[F].println(result)
-            yield ()
+            yield result
 
           case Var(name, init) =>
             for
