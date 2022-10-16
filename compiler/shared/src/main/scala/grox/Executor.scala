@@ -28,16 +28,16 @@ object Executor:
       def parse(str: String): F[Expr] =
         for
           tokens <- scanner.scan(str)
-          _ <- Scribe[F].warn(s"Tokens $tokens")
+          _ <- Scribe[F].info(s"Tokens $tokens")
           expr <- parser.parseExpr(tokens)
         yield expr
 
       def evaluate(str: String): F[LiteralType] =
         for
           tokens <- scanner.scan(str)
-          _ <- Scribe[F].warn(s"Tokens $tokens")
+          _ <- Scribe[F].info(s"Tokens $tokens")
           expr <- parser.parseExpr(tokens)
-          _ <- Scribe[F].warn(s"Expr $expr")
+          _ <- Scribe[F].info(s"Expr $expr")
           result <- interpreter.evaluate(State(), expr)
         yield result
 
