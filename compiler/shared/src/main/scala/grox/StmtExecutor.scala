@@ -68,10 +68,10 @@ object StmtExecutor:
             for
               state <- env.state
               result <- interpreter.evaluate(state, cond)
-              value <-
+              _ <-
                 if result.isTruthy then execute(thenBranch)
                 else elseBranch.fold(Monad[F].unit.widen)(eb => execute(eb))
-            yield value
+            yield ()
 
           case Function(name, params, body) => ???
 
