@@ -12,6 +12,10 @@ type StmtOutput[F[_]] = F[(LiteralType, Stream[F, Output])]
 object StmtOutput:
   def empty[F[_]]() = ((), Stream.empty[F])
 
+trait StmtExecutor1[F[_]]:
+  def execute(stmts: List[Stmt]): F[Unit]
+  def execute(stmt: Stmt): F[LiteralType]
+
 trait StmtExecutor[F[_]]:
   def execute(stmts: List[Stmt]): F[Unit]
   def execute(stmt: Stmt): F[LiteralType]
@@ -131,7 +135,9 @@ object StmtExecutor:
                 r <- interpreter.evaluate(state, cond)
               yield r.isTruthy
             val bodyStmt: StmtOutput[F] = execute1(body)
-            Monad[F].whileM(conditionStmt)(bodyStmt)
+            StmtOutput.empty[F]()
+            ???
+            // Monad[F].whileM(conditionStmt)(bodyStmt)
 
           case If(cond, thenBranch, elseBranch) =>
             for
@@ -141,5 +147,6 @@ object StmtExecutor:
                 if result.isTruthy then execute(thenBranch)
                 else elseBranch.fold(Monad[F].unit.widen)(eb => execute(eb))
             yield ()
+            ???
 
       def execute1(stmts: List[Stmt]): F[Stream[F, Output]] = ???
