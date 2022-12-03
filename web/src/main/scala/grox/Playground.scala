@@ -42,16 +42,11 @@ object Playground extends TyrianApp[Msg, Model]:
     eval(source)(exec =>
       exec
         .execute(source)
-        .as("Done")
+        .compile
+        .toList
+        .map(_.mkString("\n"))
         .handleError(err => s"Error: ${err.toString}")
     )
-
-  def update(model: Model): Msg => (Model, Cmd[IO, Msg]) =
-    case Msg.Update(str) => (model.copy(input = str, result = ""), Cmd.None)
-    case Msg.Result(str) => (model.copy(result = str), Cmd.None)
-    case Msg.Scan        => (model, scan(model.input))
-    case Msg.Parse       => (model, parse(model.input))
-    case Msg.Run       => (model, run(model.input))
 
   def view(model: Model): Html[Msg] = div(
     input(
@@ -65,8 +60,6 @@ object Playground extends TyrianApp[Msg, Model]:
     p(styles("text-align" -> "center"))(text(model.result)),
   )
 
-  def subscriptions(model: Model): Sub[IO, Msg] = Sub.None
-
   private val myStyle = styles(
     "width" -> "100%",
     "height" -> "40px",
@@ -75,6 +68,15 @@ object Playground extends TyrianApp[Msg, Model]:
     "text-align" -> "center",
     "margin-bottom" -> "0.25em",
   )
+
+  def update(model: Model): Msg => (Model, Cmd[IO, Msg]) =
+    case Msg.Update(str) => (model.copy(input = str, result = ""), Cmd.None)
+    case Msg.Result(str) => (model.copy(result = str), Cmd.None)
+    case Msg.Scan        => (model, scan(model.input))
+    case Msg.Parse       => (model, parse(model.input))
+    case Msg.Run         => (model, run(model.input))
+
+  def subscriptions(model: Model): Sub[IO, Msg] = Sub.None
 
 case class Model(val input: String, val result: String)
 
