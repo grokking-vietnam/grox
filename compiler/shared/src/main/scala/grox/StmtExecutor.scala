@@ -5,148 +5,85 @@ import cats.effect.std.Console
 import cats.syntax.all.*
 import cats.{Monad, MonadThrow}
 import fs2.Stream
+import fs2.Pull
 
 type Output = LiteralType
-type StmtOutput[F[_]] = F[(LiteralType, Stream[F, Output])]
 
 object StmtOutput:
   def empty[F[_]]() = ((), Stream.empty[F])
 
-trait StmtExecutor1[F[_]]:
-  def execute(stmts: List[Stmt]): F[Unit]
-  def execute(stmt: Stmt): F[LiteralType]
-
 trait StmtExecutor[F[_]]:
-  def execute(stmts: List[Stmt]): F[Unit]
-  def execute(stmt: Stmt): F[LiteralType]
-
-  def execute1(stmt: Stmt): StmtOutput[F]
-  def execute1(stmts: List[Stmt]): F[Stream[F, Output]]
+  def execute(stmt: Stmt): Pull[F, Output, Output]
+  def execute(stmts: List[Stmt]): Stream[F, Output]
 
 object StmtExecutor:
   import Stmt.*
   import LiteralType.*
 
-  def instance[F[_]: MonadThrow: Console](
+  def instance[F[_]: MonadThrow](
     using env: Env[F],
     interpreter: Interpreter[F],
   ): StmtExecutor[F] =
     new StmtExecutor:
 
-      def execute(stmt: Stmt): F[LiteralType] =
-        stmt match
+      def execute(stmts: List[Stmt]): Stream[F, Output] =
+        executePull(stmts).stream
 
-          case Block(stmts) =>
-            for
-              _ <- env.startBlock()
-              _ <- execute(stmts)
-              _ <- env.endBlock()
-            yield ()
+      def executePull(stmts: List[Stmt]): Pull[F, Output, Unit] =
+        stmts.traverse_(execute)
+
+      def execute(stmt: Stmt): Pull[F, Output, Output] =
+        stmt match
+          case Print(expr) =>
+            val o = for
+              state <- env.state
+              output <- interpreter.evaluate(state, expr)
+            yield output
+            Pull.eval(o).flatMap(Pull.output1)
 
           case Expression(expr) =>
-            for
+            val o = for
               state <- env.state
               result <- interpreter.evaluate(state, expr)
             yield result
-
-          case Print(expr) =>
-            for
-              state <- env.state
-              result <- interpreter.evaluate(state, expr)
-              _ <- Console[F].println(result)
-            yield ()
+            Pull.eval(o)
 
           case Var(name, init) =>
-            for
+            val o = for
               state <- env.state
               result <- init.map(interpreter.evaluate(state, _)).sequence
               _ <- env.define(name.lexeme, result.getOrElse(()))
             yield ()
+            Pull.eval(o)
 
           case Assign(name, value) =>
-            for
+            val o = for
               state <- env.state
               result <- interpreter.evaluate(state, value)
               _ <- env.assign(name, result)
             yield ()
+            Pull.eval(o)
 
           case While(cond, body) =>
-            val conditionStmt =
+            val o =
               for
                 state <- env.state
                 r <- interpreter.evaluate(state, cond)
               yield r.isTruthy
-            val bodyStmt = execute(body)
-            Monad[F].whileM_(conditionStmt)(bodyStmt).widen
+            val conditionStmt = Pull.eval(o)
+            val bodyStmt: Pull[F, Output, Output] = execute(body)
+            Monad[Pull[F, Output, *]].whileM_(conditionStmt)(bodyStmt).widen
 
           case If(cond, thenBranch, elseBranch) =>
-            for
+            val b = for
               state <- env.state
               result <- interpreter.evaluate(state, cond)
-              _ <-
-                if result.isTruthy then execute(thenBranch)
-                else elseBranch.fold(Monad[F].unit.widen)(eb => execute(eb))
-            yield ()
-
-          case Function(name, params, body) => ???
-
-      def execute(stmts: List[Stmt]): F[Unit] = stmts.traverse_(execute)
-
-      def execute1(stmt: Stmt): StmtOutput[F] =
-        stmt match
+            yield result.isTruthy
+            Pull.eval(b).flatMap(x =>
+                if(x) then execute(thenBranch)
+                else elseBranch.fold(Pull.done)(eb => execute(eb)))
 
           case Block(stmts) =>
-            for
-              _ <- env.startBlock()
-              result <- execute1(stmts)
-              _ <- env.endBlock()
-            yield ((), result)
+            Pull.bracketCase(Pull.eval(env.startBlock()), (_) => executePull(stmts), (_, _) => Pull.eval(env.endBlock()))
 
-          case Expression(expr) =>
-            for
-              state <- env.state
-              result <- interpreter.evaluate(state, expr)
-            yield (result, Stream.empty)
-
-          case Print(expr) =>
-            for
-              state <- env.state
-              result <- interpreter.evaluate(state, expr)
-            yield (result, Stream.eval(Monad[F].pure(result)))
-
-          case Var(name, init) =>
-            for
-              state <- env.state
-              result <- init.map(interpreter.evaluate(state, _)).sequence
-              _ <- env.define(name.lexeme, result.getOrElse(()))
-            yield ((), Stream.empty)
-
-          case Assign(name, value) =>
-            for
-              state <- env.state
-              result <- interpreter.evaluate(state, value)
-              _ <- env.assign(name, result)
-            yield StmtOutput.empty[F]()
-
-          case While(cond, body) =>
-            val conditionStmt =
-              for
-                state <- env.state
-                r <- interpreter.evaluate(state, cond)
-              yield r.isTruthy
-            val bodyStmt: StmtOutput[F] = execute1(body)
-            StmtOutput.empty[F]()
-            ???
-            // Monad[F].whileM(conditionStmt)(bodyStmt)
-
-          case If(cond, thenBranch, elseBranch) =>
-            for
-              state <- env.state
-              result <- interpreter.evaluate(state, cond)
-              _ <-
-                if result.isTruthy then execute(thenBranch)
-                else elseBranch.fold(Monad[F].unit.widen)(eb => execute(eb))
-            yield ()
-            ???
-
-      def execute1(stmts: List[Stmt]): F[Stream[F, Output]] = ???
+          case Function(name, params, body) => ???
