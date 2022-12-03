@@ -2,8 +2,8 @@ package grox.cli
 
 import cats.Functor
 import cats.effect.*
-import cats.syntax.all.*
 import cats.effect.std.Console
+import cats.syntax.all.*
 
 import com.monovore.decline.*
 import com.monovore.decline.effect.*
@@ -34,7 +34,8 @@ object Main
     case Command.Scan(str)     => exec.scan(str).map(tokens => tokens.mkString("\n"))
     case Command.Parse(str)    => exec.parse(str).map(_.show)
     case Command.Evaluate(str) => exec.evaluate(str).map(_.toString)
-    case Command.Execute(str)  => exec.execute(str).evalMap(x => Console[F].println(x.toString())).compile.drain.as("Done")
+    case Command.Execute(str) =>
+      exec.execute(str).evalMap(x => Console[F].println(x.toString())).compile.drain.as("Done")
 
   given FileReader[IO] = FileReader.instance[IO]
   val exec = Executor.module[IO]

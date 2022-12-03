@@ -2,13 +2,11 @@ package grox
 
 import cats.effect.implicits.*
 import cats.effect.kernel.{Resource, Sync}
-import cats.effect.std.Console
 import cats.syntax.all.*
 import cats.{Applicative, MonadThrow}
 
+import fs2.{Pull, Stream}
 import scribe.Scribe
-import fs2.Stream
-import fs2.Pull
 
 trait Executor[F[_]]:
   def scan(str: String): F[List[Token[Span]]]
@@ -44,10 +42,11 @@ object Executor:
         yield result
 
       def execute(str: String): Stream[F, LiteralType] =
-        val stmts = for
-          tokens <- scanner.scan(str)
-          stmts <- parser.parse(tokens)
-        yield stmts
+        val stmts =
+          for
+            tokens <- scanner.scan(str)
+            stmts <- parser.parse(tokens)
+          yield stmts
         Stream.eval(stmts).flatMap(xs => executor.execute(xs))
 
   def module[F[_]: MonadThrow: Sync: Scribe]: Resource[F, Executor[F]] =
