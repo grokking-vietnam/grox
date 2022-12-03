@@ -32,57 +32,57 @@ object StmtExecutor:
       def execute(stmt: Stmt): Pull[F, Output, Output] =
         stmt match
           case Print(expr) =>
-            val o =
+            val output =
               for
                 state <- env.state
                 output <- interpreter.evaluate(state, expr)
               yield output
-            Pull.eval(o).flatMap(Pull.output1)
+            Pull.eval(output).flatMap(Pull.output1)
 
           case Expression(expr) =>
-            val o =
+            val result =
               for
                 state <- env.state
                 result <- interpreter.evaluate(state, expr)
               yield result
-            Pull.eval(o)
+            Pull.eval(result)
 
           case Var(name, init) =>
-            val o =
+            val output =
               for
                 state <- env.state
                 result <- init.map(interpreter.evaluate(state, _)).sequence
                 _ <- env.define(name.lexeme, result.getOrElse(()))
               yield ()
-            Pull.eval(o)
+            Pull.eval(output)
 
           case Assign(name, value) =>
-            val o =
+            val output =
               for
                 state <- env.state
                 result <- interpreter.evaluate(state, value)
                 _ <- env.assign(name, result)
               yield ()
-            Pull.eval(o)
+            Pull.eval(output)
 
           case While(cond, body) =>
-            val o =
+            val output =
               for
                 state <- env.state
                 r <- interpreter.evaluate(state, cond)
               yield r.isTruthy
-            val conditionStmt = Pull.eval(o)
-            val bodyStmt: Pull[F, Output, Output] = execute(body)
+            val conditionStmt = Pull.eval(output)
+            val bodyStmt = execute(body)
             Monad[Pull[F, Output, *]].whileM_(conditionStmt)(bodyStmt).widen
 
           case If(cond, thenBranch, elseBranch) =>
-            val b =
+            val condOuput =
               for
                 state <- env.state
                 result <- interpreter.evaluate(state, cond)
               yield result.isTruthy
             Pull
-              .eval(b)
+              .eval(condOuput)
               .flatMap(x =>
                 if x then execute(thenBranch)
                 else elseBranch.fold(Pull.done)(eb => execute(eb))

@@ -35,7 +35,7 @@ object Main
     case Command.Parse(str)    => exec.parse(str).map(_.show)
     case Command.Evaluate(str) => exec.evaluate(str).map(_.toString)
     case Command.Execute(str) =>
-      exec.execute(str).evalMap(x => Console[F].println(x.toString())).compile.drain.as("Done")
+      exec.execute(str).evalMap(Console[F].println).compile.drain.as("Done")
 
   given FileReader[IO] = FileReader.instance[IO]
   val exec = Executor.module[IO]
