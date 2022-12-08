@@ -8,9 +8,6 @@ import fs2.{Pull, Stream}
 
 type Output = LiteralType
 
-object StmtOutput:
-  def empty[F[_]]() = ((), Stream.empty[F])
-
 trait StmtExecutor[F[_]]:
   def execute(stmt: Stmt): Pull[F, Output, Output]
   def execute(stmts: List[Stmt]): Stream[F, Output]
@@ -31,6 +28,7 @@ object StmtExecutor:
 
       def execute(stmt: Stmt): Pull[F, Output, Output] =
         stmt match
+
           case Print(expr) =>
             val output =
               for
