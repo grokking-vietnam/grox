@@ -29,37 +29,30 @@ object StmtExecutor:
             yield ()
 
           case Expression(expr) =>
-            for
-              state <- env.state
-              result <- interpreter.evaluate(state, expr)
-            yield result
+              interpreter.evaluate(expr)
 
           case Print(expr) =>
             for
-              state <- env.state
-              result <- interpreter.evaluate(state, expr)
+              result <- interpreter.evaluate(expr)
               _ <- Console[F].println(result)
             yield result
 
           case Var(name, init) =>
             for
-              state <- env.state
-              result <- init.map(interpreter.evaluate(state, _)).sequence
+              result <- init.map(interpreter.evaluate(_)).sequence
               _ <- env.define(name.lexeme, result.getOrElse(()))
             yield ()
 
           case Assign(name, value) =>
             for
-              state <- env.state
-              result <- interpreter.evaluate(state, value)
+              result <- interpreter.evaluate(value)
               _ <- env.assign(name, result)
             yield ()
 
           case While(cond, body) =>
             val conditionStmt =
               for
-                state <- env.state
-                r <- interpreter.evaluate(state, cond)
+                r <- interpreter.evaluate(cond)
               yield r.isTruthy
             val bodyStmt = execute(body)
             Monad[F].whileM_(conditionStmt)(bodyStmt).widen
@@ -67,7 +60,7 @@ object StmtExecutor:
           case If(cond, thenBranch, elseBranch) =>
             for
               state <- env.state
-              result <- interpreter.evaluate(state, cond)
+              result <- interpreter.evaluate(cond)
               _ <-
                 if result.isTruthy then execute(thenBranch)
                 else elseBranch.fold(Monad[F].unit.widen)(eb => execute(eb))

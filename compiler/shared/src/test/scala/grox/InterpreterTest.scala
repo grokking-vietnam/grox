@@ -1,19 +1,28 @@
 package grox
 
-import munit.ScalaCheckSuite
 import org.scalacheck.Prop.*
+import munit.CatsEffectSuite
+import munit.ScalaCheckEffectSuite
 
 import Interpreter.*
 import Span.*
 
-class InterpreterTest extends ScalaCheckSuite:
+class InterpreterTest extends CatsEffectSuite with ScalaCheckEffectSuite:
 
-  val interpreter = Interpreter.instance[Either[Throwable, *]]
-  val evaluate = (x: Expr) => interpreter.evaluate(State(), x)
+  given Env.instance[IO](State())
+  val interpreter = Interpreter.instance[IO]
+  val evaluate = Interpreter.evaluateWithState(State())
 
   property("addition") {
     forAll { (n1: Double, n2: Double) =>
-      evaluate(Expr.Add(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2))) == Right(n1 + n2)
+      Env
+        .instance[IO](State())
+        .flatMap(env =>
+          interpreter = Interpreter.instance(env)
+          interpreter.evaluate(Expr.Add(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2))) == Right(
+            n1 + n2
+          )
+        )
     }
   }
   property("addition 2 string") {
