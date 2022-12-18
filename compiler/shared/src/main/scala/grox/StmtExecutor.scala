@@ -1,78 +1,96 @@
 package grox
 
 import cats.effect.kernel.Ref
-import cats.effect.std.Console
 import cats.syntax.all.*
 import cats.{Monad, MonadThrow}
 
+import fs2.{Pull, Stream}
+
+type Output = LiteralType
+
 trait StmtExecutor[F[_]]:
-  def execute(stmts: List[Stmt]): F[Unit]
-  def execute(stmt: Stmt): F[LiteralType]
+  def execute(stmt: Stmt): Pull[F, Output, Output]
+  def execute(stmts: List[Stmt]): Stream[F, Output]
 
 object StmtExecutor:
   import Stmt.*
   import LiteralType.*
 
-  def instance[F[_]: MonadThrow: Console](
+  def instance[F[_]: MonadThrow](
     using env: Env[F],
     interpreter: Interpreter[F],
   ): StmtExecutor[F] =
     new StmtExecutor:
 
-      def execute(stmt: Stmt): F[LiteralType] =
-        stmt match
-          case Block(stmts) =>
-            for
-              _ <- env.startBlock()
-              _ <- execute(stmts)
-              _ <- env.endBlock()
-            yield ()
+      def execute(stmts: List[Stmt]): Stream[F, Output] = executePull(stmts).stream
 
-          case Expression(expr) =>
-            for
-              state <- env.state
-              result <- interpreter.evaluate(state, expr)
-            yield result
+      def executePull(stmts: List[Stmt]): Pull[F, Output, Unit] = stmts.traverse_(execute)
+
+      def execute(stmt: Stmt): Pull[F, Output, Output] =
+        stmt match
 
           case Print(expr) =>
-            for
-              state <- env.state
-              result <- interpreter.evaluate(state, expr)
-              _ <- Console[F].println(result)
-            yield result
+            val output =
+              for
+                state <- env.state
+                output <- interpreter.evaluate(state, expr)
+              yield output
+            Pull.eval(output).flatMap(Pull.output1)
+
+          case Expression(expr) =>
+            val result =
+              for
+                state <- env.state
+                result <- interpreter.evaluate(state, expr)
+              yield result
+            Pull.eval(result)
 
           case Var(name, init) =>
-            for
-              state <- env.state
-              result <- init.map(interpreter.evaluate(state, _)).sequence
-              _ <- env.define(name.lexeme, result.getOrElse(()))
-            yield ()
+            val output =
+              for
+                state <- env.state
+                result <- init.map(interpreter.evaluate(state, _)).sequence
+                _ <- env.define(name.lexeme, result.getOrElse(()))
+              yield ()
+            Pull.eval(output)
 
           case Assign(name, value) =>
-            for
-              state <- env.state
-              result <- interpreter.evaluate(state, value)
-              _ <- env.assign(name, result)
-            yield ()
+            val output =
+              for
+                state <- env.state
+                result <- interpreter.evaluate(state, value)
+                _ <- env.assign(name, result)
+              yield ()
+            Pull.eval(output)
 
           case While(cond, body) =>
-            val conditionStmt =
+            val output =
               for
                 state <- env.state
                 r <- interpreter.evaluate(state, cond)
               yield r.isTruthy
+            val conditionStmt = Pull.eval(output)
             val bodyStmt = execute(body)
-            Monad[F].whileM_(conditionStmt)(bodyStmt).widen
+            Monad[Pull[F, Output, *]].whileM_(conditionStmt)(bodyStmt).widen
 
           case If(cond, thenBranch, elseBranch) =>
-            for
-              state <- env.state
-              result <- interpreter.evaluate(state, cond)
-              _ <-
-                if result.isTruthy then execute(thenBranch)
-                else elseBranch.fold(Monad[F].unit.widen)(eb => execute(eb))
-            yield ()
+            val condOuput =
+              for
+                state <- env.state
+                result <- interpreter.evaluate(state, cond)
+              yield result.isTruthy
+            Pull
+              .eval(condOuput)
+              .flatMap(x =>
+                if x then execute(thenBranch)
+                else elseBranch.fold(Pull.done)(eb => execute(eb))
+              )
+
+          case Block(stmts) =>
+            Pull.bracketCase(
+              Pull.eval(env.startBlock()),
+              _ => executePull(stmts),
+              (_, _) => Pull.eval(env.endBlock()),
+            )
 
           case Function(name, params, body) => ???
-
-      def execute(stmts: List[Stmt]): F[Unit] = stmts.traverse_(execute)

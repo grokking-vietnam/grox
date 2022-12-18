@@ -2,17 +2,17 @@ package grox
 
 import cats.effect.implicits.*
 import cats.effect.kernel.{Resource, Sync}
-import cats.effect.std.Console
 import cats.syntax.all.*
 import cats.{Applicative, MonadThrow}
 
+import fs2.{Pull, Stream}
 import scribe.Scribe
 
 trait Executor[F[_]]:
   def scan(str: String): F[List[Token[Span]]]
   def parse(str: String): F[Expr]
   def evaluate(str: String): F[LiteralType]
-  def execute(str: String): F[Unit]
+  def execute(str: String): Stream[F, LiteralType]
 
 object Executor:
 
@@ -41,14 +41,15 @@ object Executor:
           result <- interpreter.evaluate(State(), expr)
         yield result
 
-      def execute(str: String): F[Unit] =
-        for
-          tokens <- scanner.scan(str)
-          stmts <- parser.parse(tokens)
-          _ <- executor.execute(stmts)
-        yield ()
+      def execute(str: String): Stream[F, LiteralType] =
+        val stmts =
+          for
+            tokens <- scanner.scan(str)
+            stmts <- parser.parse(tokens)
+          yield stmts
+        Stream.eval(stmts).flatMap(xs => executor.execute(xs))
 
-  def module[F[_]: MonadThrow: Sync: Console: Scribe]: Resource[F, Executor[F]] =
+  def module[F[_]: MonadThrow: Sync: Scribe]: Resource[F, Executor[F]] =
     given Scanner[F] = Scanner.instance[F]
     given Parser[F] = Parser.instance[F]
     given Interpreter[F] = Interpreter.instance[F]
