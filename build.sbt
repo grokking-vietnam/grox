@@ -60,6 +60,7 @@ val commonSettings = Seq(
     Dependencies.scribe.value,
     Dependencies.scribeCats.value,
     Dependencies.catsEffect.value,
+    Dependencies.fs2.value,
     Dependencies.scalaCheckEffect.value,
     Dependencies.munit.value,
     Dependencies.munitCatsEffect.value,
@@ -86,7 +87,6 @@ val cli = crossProject(JSPlatform, JVMPlatform)
   .settings(
     commonSettings,
     libraryDependencies ++= Seq(
-      Dependencies.fs2.value,
       Dependencies.fs2IO.value,
       Dependencies.decline.value,
       Dependencies.declineEffect.value,
@@ -101,7 +101,6 @@ val web = project
     commonSettings,
     commonJsSettings,
     libraryDependencies ++= Seq(
-      Dependencies.fs2.value,
       Dependencies.fs2IO.value,
       Dependencies.tyrian.value,
     ),
