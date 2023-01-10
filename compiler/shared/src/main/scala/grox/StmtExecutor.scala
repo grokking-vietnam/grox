@@ -29,7 +29,7 @@ object StmtExecutor:
         stmt match
 
           case Expression(expr) =>
-            interpreter.evaluate(expr)
+            val result = interpreter.evaluate(expr)
             Pull.eval(result)
 
           case Print(expr) =>
@@ -37,14 +37,14 @@ object StmtExecutor:
             Pull.eval(output).flatMap(Pull.output1)
 
           case Var(name, init) =>
-            for
+            val output = for
               result <- init.map(interpreter.evaluate(_)).sequence
               _ <- env.define(name.lexeme, result.getOrElse(()))
             yield ()
             Pull.eval(output)
 
           case Assign(name, value) =>
-            for
+            val output = for
               result <- interpreter.evaluate(value)
               _ <- env.assign(name, result)
             yield ()
@@ -57,7 +57,7 @@ object StmtExecutor:
             Monad[Pull[F, Output, *]].whileM_(conditionStmt)(bodyStmt).widen
 
           case If(cond, thenBranch, elseBranch) =>
-            val condOuput = interpreter.evaluate(state, cond).map(_.isTruthy)
+            val condOuput = interpreter.evaluate(cond).map(_.isTruthy)
             Pull
               .eval(condOuput)
               .flatMap(x =>
