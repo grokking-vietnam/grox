@@ -37,17 +37,19 @@ object StmtExecutor:
             Pull.eval(output).flatMap(Pull.output1)
 
           case Var(name, init) =>
-            val output = for
-              result <- init.map(interpreter.evaluate(_)).sequence
-              _ <- env.define(name.lexeme, result.getOrElse(()))
-            yield ()
+            val output =
+              for
+                result <- init.map(interpreter.evaluate(_)).sequence
+                _ <- env.define(name.lexeme, result.getOrElse(()))
+              yield ()
             Pull.eval(output)
 
           case Assign(name, value) =>
-            val output = for
-              result <- interpreter.evaluate(value)
-              _ <- env.assign(name, result)
-            yield ()
+            val output =
+              for
+                result <- interpreter.evaluate(value)
+                _ <- env.assign(name, result)
+              yield ()
             Pull.eval(output)
 
           case While(cond, body) =>
