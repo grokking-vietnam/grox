@@ -2,10 +2,10 @@ package grox
 
 import cats.effect.IO
 import cats.syntax.all.*
-import org.scalacheck.effect.PropF.forAllF
+
+import munit.{CatsEffectSuite, ScalaCheckEffectSuite}
 import org.scalacheck.Prop.*
-import munit.CatsEffectSuite
-import munit.ScalaCheckEffectSuite
+import org.scalacheck.effect.PropF.forAllF
 
 import Interpreter.*
 import Span.*

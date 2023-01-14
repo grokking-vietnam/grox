@@ -1,15 +1,16 @@
 package grox
 
-import munit.ScalaCheckSuite
-import org.scalacheck.{Arbitrary, Gen, Prop}
-import org.scalacheck.effect.PropF.forAllF
+import cats.effect.IO
 import cats.syntax.all.*
+
+import munit.ScalaCheckSuite
+import org.scalacheck.effect.PropF.forAllF
+import org.scalacheck.{Arbitrary, Gen, Prop}
 
 import Parser.*
 import ExprGen.*
 import Token.*
 import Span.*
-import cats.effect.IO
 
 class ParserTest extends munit.CatsEffectSuite with ScalaCheckSuite:
 
