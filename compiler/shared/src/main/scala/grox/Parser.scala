@@ -62,9 +62,11 @@ object Parser:
 
   def parseStmt(ts: List[Token[Span]]): Either[ParseError, List[Stmt]] =
     val inspector = _parseStmt(Inspector(Nil, Nil, ts))
-    inspector.errors.match
-      case Nil => inspector.stmts.asRight
-      case _   => ParseError.Failure(inspector.errors).asLeft
+    inspector
+      .errors
+      .match
+        case Nil => inspector.stmts.asRight
+        case _   => ParseError.Failure(inspector.errors).asLeft
 
   @tailrec
   def _parseStmt(inspector: Inspector): Inspector =
