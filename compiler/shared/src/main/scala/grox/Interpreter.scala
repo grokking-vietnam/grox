@@ -8,10 +8,18 @@ import cats.syntax.all.*
 import LiteralType.*
 
 trait Interpreter[F[_]]:
-  def evaluate(env: State, expr: Expr): F[LiteralType]
+  def evaluate(expr: Expr): F[LiteralType]
 
 object Interpreter:
-  def instance[F[_]: MonadThrow]: Interpreter[F] = (env, expr) => evaluate(env)(expr)
+
+  def instance[F[_]: MonadThrow](using env: Env[F]): Interpreter[F] =
+    new:
+
+      def evaluate(expr: Expr): F[LiteralType] =
+        for
+          state <- env.state
+          result <- evaluateWithState(state)(expr)
+        yield result
 
   enum RuntimeError(location: Span, msg: String) extends NoStackTrace:
     override def toString = msg
@@ -42,7 +50,10 @@ object Interpreter:
     left: Expr,
     right: Expr,
   ): F[LiteralType] =
-    (evaluate(env)(left), evaluate(env)(right)).mapN(eval).map(_.liftTo[F]).flatten
+    (evaluateWithState(env)(left), evaluateWithState(env)(right))
+      .mapN(eval)
+      .map(_.liftTo[F])
+      .flatten
 
   def add(span: Span)(left: LiteralType, right: LiteralType): EvaluationResult =
     (left, right) match
@@ -96,13 +107,13 @@ object Interpreter:
     right: LiteralType,
   ): EvaluationResult = equal(left, right).flatMap(r => !r)
 
-  def evaluate[F[_]: MonadThrow](env: State)(expr: Expr): F[LiteralType] =
+  def evaluateWithState[F[_]: MonadThrow](env: State)(expr: Expr): F[LiteralType] =
     expr match
-      case Expr.Literal(_, value)   => value.pure[F]
-      case Expr.Grouping(e)         => evaluate(env)(e)
-      case Expr.Negate(tag, e)      => evaluate(env)(e).flatMap(x => x.negate(tag).liftTo[F])
-      case Expr.Not(_, e)           => evaluate(env)(e).flatMap(x => (!x).liftTo[F])
-      case Expr.Add(tag, l, r)      => evaluateBinary(env)(add(tag))(l, r)
+      case Expr.Literal(_, value) => value.pure[F]
+      case Expr.Grouping(e)       => evaluateWithState(env)(e)
+      case Expr.Negate(tag, e)    => evaluateWithState(env)(e).flatMap(x => x.negate(tag).liftTo[F])
+      case Expr.Not(_, e)         => evaluateWithState(env)(e).flatMap(x => (!x).liftTo[F])
+      case Expr.Add(tag, l, r)    => evaluateBinary(env)(add(tag))(l, r)
       case Expr.Subtract(tag, l, r) => evaluateBinary(env)(subtract(tag))(l, r)
       case Expr.Multiply(tag, l, r) => evaluateBinary(env)(multiply(tag))(l, r)
       case Expr.Divide(tag, l, r)   => evaluateBinary(env)(divide(tag))(l, r)
@@ -114,9 +125,13 @@ object Interpreter:
       case Expr.Equal(tag, l, r)        => evaluateBinary(env)(equal)(l, r)
       case Expr.NotEqual(tag, l, r)     => evaluateBinary(env)(notEqual)(l, r)
       case Expr.And(_, l, r) =>
-        evaluate(env)(l).flatMap(lres => if !lres.isTruthy then lres.pure[F] else evaluate(env)(r))
+        evaluateWithState(env)(l).flatMap(lres =>
+          if !lres.isTruthy then lres.pure[F] else evaluateWithState(env)(r)
+        )
       case Expr.Or(_, l, r) =>
-        evaluate(env)(l).flatMap(lres => if lres.isTruthy then lres.pure[F] else evaluate(env)(r))
+        evaluateWithState(env)(l).flatMap(lres =>
+          if lres.isTruthy then lres.pure[F] else evaluateWithState(env)(r)
+        )
       case Expr.Variable(tag, name) =>
         env
           .get(name)

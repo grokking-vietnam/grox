@@ -1,95 +1,104 @@
 package grox
 
-import munit.ScalaCheckSuite
+import cats.effect.IO
+import cats.syntax.all.*
+
+import munit.{CatsEffectSuite, ScalaCheckEffectSuite}
 import org.scalacheck.Prop.*
+import org.scalacheck.effect.PropF.forAllF
 
 import Interpreter.*
 import Span.*
+import Env.*
 
-class InterpreterTest extends ScalaCheckSuite:
+class InterpreterTest extends CatsEffectSuite with ScalaCheckEffectSuite:
 
-  val interpreter = Interpreter.instance[Either[Throwable, *]]
-  val evaluate = (x: Expr) => interpreter.evaluate(State(), x)
+  def evaluate(expr: Expr, state: State = State()): IO[LiteralType] =
+    for
+      given Env[IO] <- Env.instance[IO](state)
+      interpreter = Interpreter.instance[IO]
+      result <- interpreter.evaluate(expr)
+    yield result
 
-  property("addition") {
-    forAll { (n1: Double, n2: Double) =>
-      evaluate(Expr.Add(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2))) == Right(n1 + n2)
-    }
-  }
-  property("addition 2 string") {
-    forAll { (n1: String, n2: String) =>
-      evaluate(Expr.Add(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2))) == Right(n1 + n2)
-    }
-  }
-
-  property("subtraction") {
-    forAll { (n1: Double, n2: Double) =>
-      evaluate(Expr.Subtract(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2))) == Right(
-        n1 - n2
-      )
-    }
-  }
-  property("multiplication") {
-    forAll { (n1: Double, n2: Double) =>
-      evaluate(Expr.Multiply(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2))) == Right(
-        n1 * n2
-      )
-    }
-  }
-  property("division") {
-    forAll { (n1: Double, n2: Double) =>
-      n2 != 0 ==>
-        (evaluate(Expr.Divide(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2))) == Right(
-          n1 / n2
-        ))
+  test("addition") {
+    forAllF { (n1: Double, n2: Double) =>
+      evaluate(Expr.Add(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
+        .map(x => assert(x == n1 + n2))
     }
   }
 
-  property("greater") {
-    forAll { (n1: Double, n2: Double) =>
-      evaluate(Expr.Greater(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2))) == Right(
-        n1 > n2
-      )
+  test("addition 2 string") {
+    forAllF { (n1: String, n2: String) =>
+      evaluate(Expr.Add(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
+        .map(x => assert(x == n1 + n2))
     }
   }
-  property("greater or equal") {
-    forAll { (n1: Double, n2: Double) =>
-      evaluate(Expr.GreaterEqual(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2))) == Right(
-        n1 >= n2
-      )
+
+  test("subtraction") {
+    forAllF { (n1: Double, n2: Double) =>
+      evaluate(Expr.Subtract(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
+        .map(x => assert(x == n1 - n2))
     }
   }
-  property("less") {
-    forAll { (n1: Double, n2: Double) =>
-      evaluate(Expr.Less(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2))) == Right(n1 < n2)
+
+  test("multiplication") {
+    forAllF { (n1: Double, n2: Double) =>
+      evaluate(Expr.Multiply(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
+        .map(x => assert(x == n1 * n2))
     }
   }
-  property("less or equal") {
-    forAll { (n1: Double, n2: Double) =>
-      evaluate(Expr.LessEqual(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2))) == Right(
-        n1 <= n2
-      )
+  test("division") {
+    forAllF { (n1: Double, n2: Double) =>
+      if n2 != 0 then
+        evaluate(Expr.Divide(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
+          .map(x => assert(x == n1 / n2))
+      else IO(assert(true))
     }
   }
-  property("equal") {
-    forAll { (n1: Double, n2: Double) =>
-      evaluate(Expr.Equal(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2))) == Right(
-        n1 == n2
-      )
+
+  test("greater") {
+    forAllF { (n1: Double, n2: Double) =>
+      evaluate(Expr.Greater(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
+        .map(x => assert(x == n1 > n2))
     }
   }
-  property("not equal") {
-    forAll { (n1: Double, n2: Double) =>
-      evaluate(Expr.NotEqual(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2))) == Right(
-        n1 != n2
-      )
+
+  test("greater or equal") {
+    forAllF { (n1: Double, n2: Double) =>
+      evaluate(Expr.GreaterEqual(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
+        .map(x => assert(x == n1 >= n2))
+    }
+  }
+  test("less") {
+    forAllF { (n1: Double, n2: Double) =>
+      evaluate(Expr.Less(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
+        .map(x => assert(x == n1 < n2))
+    }
+  }
+
+  test("less or equal") {
+    forAllF { (n1: Double, n2: Double) =>
+      evaluate(Expr.LessEqual(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
+        .map(x => assert(x == n1 <= n2))
+    }
+  }
+  test("equal") {
+    forAllF { (n1: Double, n2: Double) =>
+      evaluate(Expr.Equal(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
+        .map(x => assert(x == (n1 == n2)))
+    }
+  }
+  test("not equal") {
+    forAllF { (n1: Double, n2: Double) =>
+      evaluate(Expr.NotEqual(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
+        .map(x => assert(x == (n1 != n2)))
     }
   }
 
   test("variable expression") {
-    val env = State(Map("x" -> 0.0d), None)
+    val state = State(Map("x" -> 0.0d), None)
     val expr = Expr.Variable(empty, "x")
-    assertEquals(interpreter.evaluate(env, expr), Right(0.0))
+    evaluate(expr, state).map(x => assert(x == 0.0d))
   }
 
   // from: https://www.learncbse.in/bodmas-rule/
@@ -99,7 +108,8 @@ class InterpreterTest extends ScalaCheckSuite:
     def eval(str: String) = Scanner
       .parse(str)
       .flatMap(Parser.parse(_))
-      .flatMap(x => interpreter.evaluate(env, x._1))
+      .liftTo[IO]
+      .flatMap(x => evaluate(x._1, env))
 
     val expr = eval("-4*(10+15/5*4-2*2)")
     val division = eval("-4*(10+3*4-2*2)")
@@ -110,92 +120,77 @@ class InterpreterTest extends ScalaCheckSuite:
     val exprWithX = eval("-4*(x+15/5*4-2*2)")
     val divisionWithX = eval("-4*(x+3*4-2*2)")
 
-    assertEquals(expr, division)
-    assertEquals(division, multiplication)
-    assertEquals(multiplication, addition)
-    assertEquals(addition, subtraction)
-    assertEquals(subtraction, answer)
-    assertEquals(exprWithX, answer)
-    assertEquals(divisionWithX, answer)
+    (expr, division).mapN((x, y) => assert(x == y))
+    (division, multiplication).mapN((x, y) => assert(x == y))
+    (multiplication, addition).mapN((x, y) => assert(x == y))
+    (addition, subtraction).mapN((x, y) => assert(x == y))
+    (subtraction, answer).mapN((x, y) => assert(x == y))
+    (exprWithX, answer).mapN((x, y) => assert(x == y))
+    (divisionWithX, answer).mapN((x, y) => assert(x == y))
   }
 
   test("division by zero error") {
-    assertEquals(
-      evaluate(Expr.Divide(empty, Expr.Literal(empty, 1), Expr.Literal(empty, 0))),
-      Left(RuntimeError.DivisionByZero(empty)),
-    )
+    evaluate(Expr.Divide(empty, Expr.Literal(empty, 1), Expr.Literal(empty, 0)))
+      .attempt
+      .map(x => assert(x == Left(RuntimeError.DivisionByZero(empty))))
   }
 
   test("logical or") {
-    assertEquals(
-      evaluate(Expr.Or(empty, Expr.Literal(empty, true), Expr.Literal(empty, false))),
-      Right(true),
-    )
-    assertEquals(
-      evaluate(Expr.Or(empty, Expr.Literal(empty, false), Expr.Literal(empty, false))),
-      Right(false),
-    )
+    evaluate(Expr.Or(empty, Expr.Literal(empty, true), Expr.Literal(empty, false)))
+      .map(x => assert(x == true))
+    evaluate(Expr.Or(empty, Expr.Literal(empty, false), Expr.Literal(empty, false)))
+      .map(x => assert(x == false))
   }
 
   test("logical and") {
-    assertEquals(
-      evaluate(Expr.And(empty, Expr.Literal(empty, true), Expr.Literal(empty, false))),
-      Right(false),
-    )
-    assertEquals(
-      evaluate(Expr.And(empty, Expr.Literal(empty, false), Expr.Literal(empty, false))),
-      Right(false),
-    )
+    evaluate(Expr.And(empty, Expr.Literal(empty, true), Expr.Literal(empty, false)))
+      .map(x => assert(x == false))
+    evaluate(Expr.And(empty, Expr.Literal(empty, false), Expr.Literal(empty, false)))
+      .map(x => assert(x == false))
   }
 
   test("must be numbers or strings runtime error") {
-    assertEquals(
-      evaluate(Expr.Add(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string"))),
-      Left(RuntimeError.MustBeNumbersOrStrings(empty)),
-    )
+    evaluate(Expr.Add(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string")))
+      .attempt
+      .map(x => assert(x == Left(RuntimeError.MustBeNumbersOrStrings(empty))))
   }
 
   test("Two nulls should be equal") {
-    assertEquals(
-      evaluate(Expr.Equal(empty, Expr.Literal(empty, ()), Expr.Literal(empty, ()))),
-      Right(true),
-    )
+    evaluate(Expr.Equal(empty, Expr.Literal(empty, ()), Expr.Literal(empty, ())))
+      .map(x => assert(x == true))
   }
 
   test("Two operators which are different in type should not be equal") {
-    assertEquals(
-      evaluate(Expr.Equal(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string"))),
-      Right(false),
-    )
+    evaluate(Expr.Equal(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string")))
+      .map(x => assert(x == false))
   }
 
   test("must be numbers runtime error") {
-    assertEquals(
-      evaluate(Expr.Subtract(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string"))),
-      Left(RuntimeError.MustBeNumbers(empty)),
-    )
-    assertEquals(
-      evaluate(Expr.Divide(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string"))),
-      Left(RuntimeError.MustBeNumbers(empty)),
-    )
-    assertEquals(
-      evaluate(Expr.Multiply(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string"))),
-      Left(RuntimeError.MustBeNumbers(empty)),
-    )
-    assertEquals(
-      evaluate(Expr.Greater(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string"))),
-      Left(RuntimeError.MustBeNumbers(empty)),
-    )
-    assertEquals(
-      evaluate(Expr.GreaterEqual(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string"))),
-      Left(RuntimeError.MustBeNumbers(empty)),
-    )
-    assertEquals(
-      evaluate(Expr.Less(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string"))),
-      Left(RuntimeError.MustBeNumbers(empty)),
-    )
-    assertEquals(
-      evaluate(Expr.LessEqual(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string"))),
-      Left(RuntimeError.MustBeNumbers(empty)),
-    )
+    evaluate(Expr.Subtract(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string")))
+      .attempt
+      .map(x => assert(x == Left(RuntimeError.MustBeNumbers(empty))))
+
+    evaluate(Expr.Divide(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string")))
+      .attempt
+      .map(x => assert(x == Left(RuntimeError.MustBeNumbers(empty))))
+
+    evaluate(Expr.Multiply(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string")))
+      .attempt
+      .map(x => assert(x == Left(RuntimeError.MustBeNumbers(empty))))
+
+    evaluate(Expr.Greater(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string")))
+      .attempt
+      .map(x => assert(x == Left(RuntimeError.MustBeNumbers(empty))))
+
+    evaluate(Expr.GreaterEqual(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string")))
+      .attempt
+      .map(x => assert(x == Left(RuntimeError.MustBeNumbers(empty))))
+
+    evaluate(Expr.Less(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string")))
+      .attempt
+      .map(x => assert(x == Left(RuntimeError.MustBeNumbers(empty))))
+
+    evaluate(Expr.LessEqual(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string")))
+      .attempt
+      .map(x => assert(x == Left(RuntimeError.MustBeNumbers(empty))))
   }

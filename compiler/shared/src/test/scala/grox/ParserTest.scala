@@ -1,6 +1,10 @@
 package grox
 
+import cats.effect.IO
+import cats.syntax.all.*
+
 import munit.ScalaCheckSuite
+import org.scalacheck.effect.PropF.forAllF
 import org.scalacheck.{Arbitrary, Gen, Prop}
 
 import Parser.*
@@ -8,7 +12,7 @@ import ExprGen.*
 import Token.*
 import Span.*
 
-class ParserTest extends munit.FunSuite:
+class ParserTest extends munit.CatsEffectSuite with ScalaCheckSuite:
 
   val num1 = Number("1", empty)
   val num2 = Number("2", empty)
@@ -448,26 +452,32 @@ class ParserCheck extends ScalaCheckSuite:
     }
   }
 
-  val interpreter = Interpreter.instance[Either[Throwable, *]]
-  val evaluate = (x: Expr) => interpreter.evaluate(State(), x)
+  def evaluate(expr: Expr, state: State = State()): IO[LiteralType] =
+    for
+      given Env[IO] <- Env.instance[IO](State())
+      interpreter = Interpreter.instance[IO]
+      result <- interpreter.evaluate(expr)
+    yield result
 
-  property("produce an equal numeric expression") {
-    Prop.forAll(numericGen) { expr =>
+  test("produce an equal numeric expression") {
+    forAllF(numericGen) { expr =>
       parse(expr.flatten) match
-        case Left(_) => false
+        case Left(_) => IO(assert(false))
         case Right(parsedExpr, _) =>
-          (evaluate(expr), evaluate(parsedExpr)) match
-            case (Left(e1), Left(e2))                   => e1 == e2
-            case (Right(v1: Double), Right(v2: Double)) => math.abs(v1 - v2) < 0.01
-            case _                                      => false
+          (evaluate(expr).attempt, evaluate(parsedExpr).attempt).mapN {
+            case (Left(e1), Left(e2))                   => assert(e1 == e2)
+            case (Right(v1: Double), Right(v2: Double)) => assert(math.abs(v1 - v2) < 0.01)
+            case _                                      => assert(false)
+          }
     }
   }
 
-  property("produce an equal logical expression") {
-    Prop.forAll(logicalGen) { expr =>
+  test("produce an equal logical expression") {
+    forAllF(logicalGen) { expr =>
       parse(expr.flatten) match
-        case Left(_)              => false
-        case Right(parsedExpr, _) => evaluate(expr) == evaluate(parsedExpr)
+        case Left(_) => IO(assert(false))
+        case Right(parsedExpr, _) =>
+          (evaluate(expr), evaluate(parsedExpr)).mapN((x, y) => assert(x == y))
     }
   }
 

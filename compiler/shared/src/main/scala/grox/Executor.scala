@@ -38,7 +38,7 @@ object Executor:
           _ <- Scribe[F].info(s"Tokens $tokens")
           expr <- parser.parseExpr(tokens)
           _ <- Scribe[F].info(s"Expr $expr")
-          result <- interpreter.evaluate(State(), expr)
+          result <- interpreter.evaluate(expr)
         yield result
 
       def execute(str: String): Stream[F, LiteralType] =
@@ -52,8 +52,8 @@ object Executor:
   def module[F[_]: MonadThrow: Sync: Scribe]: Resource[F, Executor[F]] =
     given Scanner[F] = Scanner.instance[F]
     given Parser[F] = Parser.instance[F]
-    given Interpreter[F] = Interpreter.instance[F]
     for
       given Env[F] <- Env.instance[F](State()).toResource
+      given Interpreter[F] = Interpreter.instance[F]
       given StmtExecutor[F] = StmtExecutor.instance[F]
     yield instance[F]
