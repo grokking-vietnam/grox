@@ -15,7 +15,7 @@ trait Env[F[_]]:
 object Env:
 
   def instance[F[_]: MonadThrow: Ref.Make](s: State): F[Env[F]] = Ref[F].of(s).map { ref =>
-    new Env:
+    new:
       // we allowed redeclaration of variables
       def define(name: String, value: LiteralType): F[Unit] = ref.update(s => s.define(name, value))
       def assign(name: String, value: LiteralType): F[Unit] =

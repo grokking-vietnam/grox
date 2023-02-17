@@ -19,7 +19,7 @@ object Parser:
   import Token.*
 
   def instance[F[_]: MonadThrow]: Parser[F] =
-    new Parser[F]:
+    new:
 
       def parse(
         tokens: List[Token[Span]]
