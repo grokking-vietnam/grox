@@ -8,34 +8,64 @@ import cats.syntax.all.*
 import LiteralType.*
 
 trait Interpreter[F[_]]:
-  def evaluate(expr: Expr): F[LiteralType]
+
+  def evaluate(
+    expr: Expr
+  ): F[LiteralType]
 
 object Interpreter:
 
-  def instance[F[_]: MonadThrow](using env: Env[F]): Interpreter[F] =
+  def instance[F[_]: MonadThrow](
+    using env: Env[F]
+  ): Interpreter[F] =
     new:
 
-      def evaluate(expr: Expr): F[LiteralType] =
+      def evaluate(
+        expr: Expr
+      ): F[LiteralType] =
         for
           state <- env.state
           result <- evaluateWithState(state)(expr)
         yield result
 
-  enum RuntimeError(location: Span, msg: String) extends NoStackTrace:
+  enum RuntimeError(
+    location: Span,
+    msg: String,
+  ) extends NoStackTrace:
     override def toString = msg
-    case MustBeNumbers(location: Span) extends RuntimeError(location, "Operands must be numbers.")
-    case MustBeNumbersOrStrings(location: Span)
-      extends RuntimeError(location, "Operands must be two numbers or two strings")
-    case DivisionByZero(location: Span) extends RuntimeError(location, "Division by zerro")
-    case VariableNotFound(location: Span, name: String)
-      extends RuntimeError(location, "Variable not found")
+
+    case MustBeNumbers(
+      location: Span
+    ) extends RuntimeError(location, "Operands must be numbers.")
+
+    case MustBeNumbersOrStrings(
+      location: Span
+    ) extends RuntimeError(location, "Operands must be two numbers or two strings")
+
+    case DivisionByZero(
+      location: Span
+    ) extends RuntimeError(location, "Division by zerro")
+
+    case VariableNotFound(
+      location: Span,
+      name: String,
+    ) extends RuntimeError(location, "Variable not found")
 
   type EvaluationResult = Either[RuntimeError, LiteralType]
-  type Evaluate = (LiteralType, LiteralType) => EvaluationResult
 
-  extension (value: LiteralType)
+  type Evaluate =
+    (
+      LiteralType,
+      LiteralType,
+    ) => EvaluationResult
 
-    def negate(tag: Span): EvaluationResult =
+  extension (
+    value: LiteralType
+  )
+
+    def negate(
+      tag: Span
+    ): EvaluationResult =
       value match
         case v: Double => Right(-v)
         case _         => Left(RuntimeError.MustBeNumbers(tag))
@@ -55,23 +85,43 @@ object Interpreter:
       .map(_.liftTo[F])
       .flatten
 
-  def add(span: Span)(left: LiteralType, right: LiteralType): EvaluationResult =
+  def add(
+    span: Span
+  )(
+    left: LiteralType,
+    right: LiteralType,
+  ): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l + r)
       case (l: String, r: String) => Right(l + r)
       case (_, _)                 => Left(RuntimeError.MustBeNumbersOrStrings(span))
 
-  def subtract(span: Span)(left: LiteralType, right: LiteralType): EvaluationResult =
+  def subtract(
+    span: Span
+  )(
+    left: LiteralType,
+    right: LiteralType,
+  ): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l - r)
       case _                      => Left(RuntimeError.MustBeNumbers(span))
 
-  def multiply(span: Span)(left: LiteralType, right: LiteralType): EvaluationResult =
+  def multiply(
+    span: Span
+  )(
+    left: LiteralType,
+    right: LiteralType,
+  ): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l * r)
       case _                      => Left(RuntimeError.MustBeNumbers(span))
 
-  def divide(span: Span)(left: LiteralType, right: LiteralType): EvaluationResult =
+  def divide(
+    span: Span
+  )(
+    left: LiteralType,
+    right: LiteralType,
+  ): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) =>
         if (r != 0)
@@ -80,34 +130,61 @@ object Interpreter:
           Left(RuntimeError.DivisionByZero(span))
       case _ => Left(RuntimeError.MustBeNumbers(span))
 
-  def greater(span: Span)(left: LiteralType, right: LiteralType): EvaluationResult =
+  def greater(
+    span: Span
+  )(
+    left: LiteralType,
+    right: LiteralType,
+  ): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l > r)
       case _                      => Left(RuntimeError.MustBeNumbers(span))
 
-  def greaterOrEqual(span: Span)(left: LiteralType, right: LiteralType): EvaluationResult =
+  def greaterOrEqual(
+    span: Span
+  )(
+    left: LiteralType,
+    right: LiteralType,
+  ): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l >= r)
       case _                      => Left(RuntimeError.MustBeNumbers(span))
 
-  def less(span: Span)(left: LiteralType, right: LiteralType): EvaluationResult =
+  def less(
+    span: Span
+  )(
+    left: LiteralType,
+    right: LiteralType,
+  ): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l < r)
       case _                      => Left(RuntimeError.MustBeNumbers(span))
 
-  def lessOrEqual(span: Span)(left: LiteralType, right: LiteralType): EvaluationResult =
+  def lessOrEqual(
+    span: Span
+  )(
+    left: LiteralType,
+    right: LiteralType,
+  ): EvaluationResult =
     (left, right) match
       case (l: Double, r: Double) => Right(l <= r)
       case _                      => Left(RuntimeError.MustBeNumbers(span))
 
-  def equal(left: LiteralType, right: LiteralType): EvaluationResult = Right(left == right)
+  def equal(
+    left: LiteralType,
+    right: LiteralType,
+  ): EvaluationResult = Right(left == right)
 
   def notEqual(
     left: LiteralType,
     right: LiteralType,
   ): EvaluationResult = equal(left, right).flatMap(r => !r)
 
-  def evaluateWithState[F[_]: MonadThrow](env: State)(expr: Expr): F[LiteralType] =
+  def evaluateWithState[F[_]: MonadThrow](
+    env: State
+  )(
+    expr: Expr
+  ): F[LiteralType] =
     expr match
       case Expr.Literal(_, value) => value.pure[F]
       case Expr.Grouping(e)       => evaluateWithState(env)(e)

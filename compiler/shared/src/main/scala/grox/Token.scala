@@ -2,8 +2,16 @@ package grox
 
 import cats.Functor
 
-case class Location(val line: Int, val col: Int, val offset: Int)
-case class Span(start: Location, end: Location)
+case class Location(
+  val line: Int,
+  val col: Int,
+  val offset: Int,
+)
+
+case class Span(
+  start: Location,
+  end: Location,
+)
 
 object Span:
   val empty = Span(Location(0, 0, 0), Location(0, 0, 0))
@@ -11,54 +19,178 @@ object Span:
 object Location:
   val empty = Location(0, 0, 0)
 
-enum Token[+T](val lexeme: String, val tag: T):
-  case Identifier(override val lexeme: String, override val tag: T) extends Token(lexeme, tag)
-  case Str(override val lexeme: String, override val tag: T) extends Token(lexeme, tag)
-  case Number(override val lexeme: String, override val tag: T) extends Token(lexeme, tag)
+enum Token[+T](
+  val lexeme: String,
+  val tag: T,
+):
+
+  case Identifier(
+    override val lexeme: String,
+    override val tag: T,
+  ) extends Token(lexeme, tag)
+
+  case Str(
+    override val lexeme: String,
+    override val tag: T,
+  ) extends Token(lexeme, tag)
+
+  case Number(
+    override val lexeme: String,
+    override val tag: T,
+  ) extends Token(lexeme, tag)
 
   // Single character token
-  case LeftParen(override val tag: T) extends Token("(", tag)
-  case RightParen(override val tag: T) extends Token(")", tag)
-  case LeftBrace(override val tag: T) extends Token("{", tag)
-  case RightBrace(override val tag: T) extends Token("}", tag)
-  case Comma(override val tag: T) extends Token(",", tag)
-  case Dot(override val tag: T) extends Token(".", tag)
-  case Minus(override val tag: T) extends Token("-", tag)
-  case Plus(override val tag: T) extends Token("+", tag)
-  case Semicolon(override val tag: T) extends Token(";", tag)
-  case Slash(override val tag: T) extends Token("/", tag)
-  case Star(override val tag: T) extends Token("*", tag)
+  case LeftParen(
+    override val tag: T
+  ) extends Token("(", tag)
+
+  case RightParen(
+    override val tag: T
+  ) extends Token(")", tag)
+
+  case LeftBrace(
+    override val tag: T
+  ) extends Token("{", tag)
+
+  case RightBrace(
+    override val tag: T
+  ) extends Token("}", tag)
+
+  case Comma(
+    override val tag: T
+  ) extends Token(",", tag)
+
+  case Dot(
+    override val tag: T
+  ) extends Token(".", tag)
+
+  case Minus(
+    override val tag: T
+  ) extends Token("-", tag)
+
+  case Plus(
+    override val tag: T
+  ) extends Token("+", tag)
+
+  case Semicolon(
+    override val tag: T
+  ) extends Token(";", tag)
+
+  case Slash(
+    override val tag: T
+  ) extends Token("/", tag)
+
+  case Star(
+    override val tag: T
+  ) extends Token("*", tag)
 
   // One or two character token
-  case Bang(override val tag: T) extends Token("!", tag)
-  case BangEqual(override val tag: T) extends Token("!=", tag)
-  case Equal(override val tag: T) extends Token("=", tag)
-  case EqualEqual(override val tag: T) extends Token("==", tag)
-  case Greater(override val tag: T) extends Token(">", tag)
-  case GreaterEqual(override val tag: T) extends Token(">=", tag)
-  case Less(override val tag: T) extends Token("<", tag)
-  case LessEqual(override val tag: T) extends Token("<=", tag)
+  case Bang(
+    override val tag: T
+  ) extends Token("!", tag)
+
+  case BangEqual(
+    override val tag: T
+  ) extends Token("!=", tag)
+
+  case Equal(
+    override val tag: T
+  ) extends Token("=", tag)
+
+  case EqualEqual(
+    override val tag: T
+  ) extends Token("==", tag)
+
+  case Greater(
+    override val tag: T
+  ) extends Token(">", tag)
+
+  case GreaterEqual(
+    override val tag: T
+  ) extends Token(">=", tag)
+
+  case Less(
+    override val tag: T
+  ) extends Token("<", tag)
+
+  case LessEqual(
+    override val tag: T
+  ) extends Token("<=", tag)
 
   // keywords
-  case And(override val tag: T) extends Token("and", tag)
-  case Class(override val tag: T) extends Token("class", tag)
-  case Else(override val tag: T) extends Token("else", tag)
-  case False(override val tag: T) extends Token("false", tag)
-  case For(override val tag: T) extends Token("for", tag)
-  case Fun(override val tag: T) extends Token("fun", tag)
-  case If(override val tag: T) extends Token("if", tag)
-  case Null(override val tag: T) extends Token("nil", tag)
-  case Or(override val tag: T) extends Token("or", tag)
-  case Print(override val tag: T) extends Token("print", tag)
-  case Return(override val tag: T) extends Token("return", tag)
-  case Super(override val tag: T) extends Token("super", tag)
-  case This(override val tag: T) extends Token("this", tag)
-  case True(override val tag: T) extends Token("true", tag)
-  case Var(override val tag: T) extends Token("var", tag)
-  case While(override val tag: T) extends Token("while", tag)
+  case And(
+    override val tag: T
+  ) extends Token("and", tag)
 
-  case SingleLine(override val lexeme: String, override val tag: T) extends Token(lexeme, tag)
-  case Block(override val lexeme: String, override val tag: T) extends Token(lexeme, tag)
+  case Class(
+    override val tag: T
+  ) extends Token("class", tag)
+
+  case Else(
+    override val tag: T
+  ) extends Token("else", tag)
+
+  case False(
+    override val tag: T
+  ) extends Token("false", tag)
+
+  case For(
+    override val tag: T
+  ) extends Token("for", tag)
+
+  case Fun(
+    override val tag: T
+  ) extends Token("fun", tag)
+
+  case If(
+    override val tag: T
+  ) extends Token("if", tag)
+
+  case Null(
+    override val tag: T
+  ) extends Token("nil", tag)
+
+  case Or(
+    override val tag: T
+  ) extends Token("or", tag)
+
+  case Print(
+    override val tag: T
+  ) extends Token("print", tag)
+
+  case Return(
+    override val tag: T
+  ) extends Token("return", tag)
+
+  case Super(
+    override val tag: T
+  ) extends Token("super", tag)
+
+  case This(
+    override val tag: T
+  ) extends Token("this", tag)
+
+  case True(
+    override val tag: T
+  ) extends Token("true", tag)
+
+  case Var(
+    override val tag: T
+  ) extends Token("var", tag)
+
+  case While(
+    override val tag: T
+  ) extends Token("while", tag)
+
+  case SingleLine(
+    override val lexeme: String,
+    override val tag: T,
+  ) extends Token(lexeme, tag)
+
+  case Block(
+    override val lexeme: String,
+    override val tag: T,
+  ) extends Token(lexeme, tag)
 
 object Token:
 
@@ -107,7 +239,11 @@ object Token:
 
   given Functor[Token] with
 
-    def map[A, B](token: Token[A])(f: A => B): Token[B] =
+    def map[A, B](
+      token: Token[A]
+    )(
+      f: A => B
+    ): Token[B] =
       token match
         case Identifier(l, a) => Identifier(l, f(a))
         case Number(l, a)     => Number(l, f(a))

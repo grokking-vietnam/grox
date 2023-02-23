@@ -10,7 +10,10 @@ import cats.syntax.all.*
 import Token.*
 
 trait Scanner[F[_]]:
-  def scan(str: String): F[List[Token[Span]]]
+
+  def scan(
+    str: String
+  ): F[List[Token[Span]]]
 
 object Scanner:
 
@@ -101,7 +104,9 @@ object Scanner:
 
   val parser = token.rep.map(_.toList)
 
-  def parse(str: String): Either[Error, List[Token[Span]]] =
+  def parse(
+    str: String
+  ): Either[Error, List[Token[Span]]] =
     parser.parse(str) match
       case Right("", ls) => Right(ls)
       case Right(rest, ls) =>
@@ -114,19 +119,31 @@ object Scanner:
         Left(Error.ParseFailure(idx, lm))
 
   enum Error extends NoStackTrace:
-    case PartialParse[A](got: A, position: Int, locations: LocationMap) extends Error
-    case ParseFailure(position: Int, locations: LocationMap) extends Error
+
+    case PartialParse[A](
+      got: A,
+      position: Int,
+      locations: LocationMap,
+    ) extends Error
+
+    case ParseFailure(
+      position: Int,
+      locations: LocationMap,
+    ) extends Error
 
     override def toString: String =
       this match
         case PartialParse(_, pos, _) => s"PartialParse at $pos"
         case ParseFailure(pos, _)    => s"ParseFailure at $pos"
 
-  extension (t: Token[Unit])
+  extension (
+    t: Token[Unit]
+  )
     def operator = P.string(t.lexeme).as(t)
 
     // A keyword should be followed by a non-alphanumberic character.
     def keyword = (P.string(t.lexeme).as(t) <* (!alphaNumeric).peek).backtrack
 
-  extension (p: P[Token[Unit]])
-    def span = (location.with1 ~ p ~ location).map { case ((s, t), e) => t.as(Span(s, e)) }
+  extension (
+    p: P[Token[Unit]]
+  ) def span = (location.with1 ~ p ~ location).map { case ((s, t), e) => t.as(Span(s, e)) }

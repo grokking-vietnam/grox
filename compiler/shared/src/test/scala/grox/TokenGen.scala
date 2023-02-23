@@ -6,7 +6,10 @@ import Token.*
 
 object TokenGen:
 
-  def nelString(g: Gen[Char]) = Gen.nonEmptyListOf[Char](g).map(_.mkString)
+  def nelString(
+    g: Gen[Char]
+  ) = Gen.nonEmptyListOf[Char](g).map(_.mkString)
+
   val identifierGen = nelString(Gen.alphaChar).map(Identifier(_, ()))
   val numberGen = nelString(Gen.numChar).map(Number(_, ()))
   val strGen = nelString(Gen.alphaChar).map(s => Str(s"\"$s\"", ()))

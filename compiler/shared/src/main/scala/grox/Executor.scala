@@ -9,10 +9,22 @@ import fs2.{Pull, Stream}
 import scribe.Scribe
 
 trait Executor[F[_]]:
-  def scan(str: String): F[List[Token[Span]]]
-  def parse(str: String): F[Expr]
-  def evaluate(str: String): F[LiteralType]
-  def execute(str: String): Stream[F, LiteralType]
+
+  def scan(
+    str: String
+  ): F[List[Token[Span]]]
+
+  def parse(
+    str: String
+  ): F[Expr]
+
+  def evaluate(
+    str: String
+  ): F[LiteralType]
+
+  def execute(
+    str: String
+  ): Stream[F, LiteralType]
 
 object Executor:
 
@@ -23,16 +35,23 @@ object Executor:
     executor: StmtExecutor[F],
   ): Executor[F] =
     new Executor[F]:
-      def scan(str: String): F[List[Token[Span]]] = scanner.scan(str)
 
-      def parse(str: String): F[Expr] =
+      def scan(
+        str: String
+      ): F[List[Token[Span]]] = scanner.scan(str)
+
+      def parse(
+        str: String
+      ): F[Expr] =
         for
           tokens <- scanner.scan(str)
           _ <- Scribe[F].info(s"Tokens $tokens")
           expr <- parser.parseExpr(tokens)
         yield expr
 
-      def evaluate(str: String): F[LiteralType] =
+      def evaluate(
+        str: String
+      ): F[LiteralType] =
         for
           tokens <- scanner.scan(str)
           _ <- Scribe[F].info(s"Tokens $tokens")
@@ -41,7 +60,9 @@ object Executor:
           result <- interpreter.evaluate(expr)
         yield result
 
-      def execute(str: String): Stream[F, LiteralType] =
+      def execute(
+        str: String
+      ): Stream[F, LiteralType] =
         val stmts =
           for
             tokens <- scanner.scan(str)

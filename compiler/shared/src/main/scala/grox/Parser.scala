@@ -11,8 +11,14 @@ import cats.instances.*
 import grox.Parser.ExprParser
 
 trait Parser[F[_]]:
-  def parse(tokens: List[Token[Span]]): F[List[Stmt]]
-  def parseExpr(tokens: List[Token[Span]]): F[Expr]
+
+  def parse(
+    tokens: List[Token[Span]]
+  ): F[List[Stmt]]
+
+  def parseExpr(
+    tokens: List[Token[Span]]
+  ): F[Expr]
 
 object Parser:
 
@@ -30,37 +36,85 @@ object Parser:
       ): F[Expr] = Parser.parse(tokens).map { case (exp, _) => exp }.liftTo[F]
 
   enum ParseError extends NoStackTrace:
-    case Failure(errors: List[Error])
-    case PartialError(rest: List[Token[Span]])
 
-  enum Error(msg: String, tokens: List[Token[Span]]) extends NoStackTrace:
-    case ExpectExpression(tokens: List[Token[Span]]) extends Error("Expect expression", tokens)
-    case ExpectClosing(tokens: List[Token[Span]])
-      extends Error("Expect ')' after expression", tokens)
-    case ExpectSemicolon(tokens: List[Token[Span]])
-      extends Error("Expect ';' after statement", tokens)
-    case ExpectRightBrace(tokens: List[Token[Span]])
-      extends Error("Expect '}' after statement", tokens)
-    case ExpectVarIdentifier(tokens: List[Token[Span]])
-      extends Error("Expect var identifier after 'var' declaration", tokens)
-    case InvalidAssignmentTarget(token: Token[Span])
-      extends Error("Invalid assignment target.", List(token))
-    case UnexpectedToken(tokens: List[Token[Span]]) extends Error("Unexpected token error", tokens)
+    case Failure(
+      errors: List[Error]
+    )
 
-  type ExprParser = Either[Error, (Expr, List[Token[Span]])]
-  type StmtParser = Either[Error, (Stmt, List[Token[Span]])]
+    case PartialError(
+      rest: List[Token[Span]]
+    )
+
+  enum Error(
+    msg: String,
+    tokens: List[Token[Span]],
+  ) extends NoStackTrace:
+
+    case ExpectExpression(
+      tokens: List[Token[Span]]
+    ) extends Error("Expect expression", tokens)
+
+    case ExpectClosing(
+      tokens: List[Token[Span]]
+    ) extends Error("Expect ')' after expression", tokens)
+
+    case ExpectSemicolon(
+      tokens: List[Token[Span]]
+    ) extends Error("Expect ';' after statement", tokens)
+
+    case ExpectRightBrace(
+      tokens: List[Token[Span]]
+    ) extends Error("Expect '}' after statement", tokens)
+
+    case ExpectVarIdentifier(
+      tokens: List[Token[Span]]
+    ) extends Error("Expect var identifier after 'var' declaration", tokens)
+
+    case InvalidAssignmentTarget(
+      token: Token[Span]
+    ) extends Error("Invalid assignment target.", List(token))
+
+    case UnexpectedToken(
+      tokens: List[Token[Span]]
+    ) extends Error("Unexpected token error", tokens)
+
+  type ExprParser = Either[
+    Error,
+    (
+      Expr,
+      List[Token[Span]],
+    ),
+  ]
+
+  type StmtParser = Either[
+    Error,
+    (
+      Stmt,
+      List[Token[Span]],
+    ),
+  ]
 
   type BinaryOp = Token[Span] => Option[Expr => Expr => Expr]
   type UnaryOp = Token[Span] => Option[Expr => Expr]
 
-  case class Inspector(errors: List[Error], stmts: List[Stmt], tokens: List[Token[Span]])
+  case class Inspector(
+    errors: List[Error],
+    stmts: List[Stmt],
+    tokens: List[Token[Span]],
+  )
+
   object Inspector:
-    def apply(): Inspector = Inspector(Nil, Nil, Nil)
+    def apply(
+    ): Inspector = Inspector(Nil, Nil, Nil)
 
   // Parse a single expression and return remaining tokens
-  def parse(ts: List[Token[Span]]): ExprParser = expression(ts)
+  def parse(
+    ts: List[Token[Span]]
+  ): ExprParser = expression(ts)
 
-  def parseStmt(ts: List[Token[Span]]): Either[ParseError, List[Stmt]] =
+  def parseStmt(
+    ts: List[Token[Span]]
+  ): Either[ParseError, List[Stmt]] =
     val inspector = _parseStmt(Inspector(Nil, Nil, ts))
     inspector
       .errors
@@ -69,7 +123,9 @@ object Parser:
         case _   => ParseError.Failure(inspector.errors).asLeft
 
   @tailrec
-  def _parseStmt(inspector: Inspector): Inspector =
+  def _parseStmt(
+    inspector: Inspector
+  ): Inspector =
     inspector.tokens match
       case Nil => inspector
       case _ =>
@@ -85,7 +141,9 @@ object Parser:
               )
             )
 
-  def declaration(tokens: List[Token[Span]]): StmtParser =
+  def declaration(
+    tokens: List[Token[Span]]
+  ): StmtParser =
     tokens.headOption match
       case Some(Class(_)) => ???
       case Some(Fun(_))   => ???
@@ -94,27 +152,33 @@ object Parser:
 
   def varDeclaration(
     tokens: List[Token[Span]]
-  ): StmtParser = consume[Var[Span]](tokens).flatMap((varToken, tokensAfterVar) =>
-    tokensAfterVar
-      .headOption
-      .collectFirst { case token: Identifier[Span] =>
-        for {
-          initializer <-
-            consume[Equal[Span]](tokensAfterVar.tail) match {
-              case Left(_) => Right((None, tokensAfterVar.tail))
-              case Right(equalToken, afterEqual) =>
-                expression(afterEqual).map { case (value, afterValue) =>
-                  (Option(value), afterValue)
-                }
-            }
-          (maybeInitializer, afterInitializer) = initializer
-          semicolonCnsm <- consume[Semicolon[Span]](afterInitializer)
-        } yield (Stmt.Var(token, maybeInitializer), semicolonCnsm._2)
-      }
-      .getOrElse(Left(Error.ExpectVarIdentifier(tokens)))
+  ): StmtParser = consume[Var[Span]](tokens).flatMap(
+    (
+      varToken,
+      tokensAfterVar,
+    ) =>
+      tokensAfterVar
+        .headOption
+        .collectFirst { case token: Identifier[Span] =>
+          for {
+            initializer <-
+              consume[Equal[Span]](tokensAfterVar.tail) match {
+                case Left(_) => Right((None, tokensAfterVar.tail))
+                case Right(equalToken, afterEqual) =>
+                  expression(afterEqual).map { case (value, afterValue) =>
+                    (Option(value), afterValue)
+                  }
+              }
+            (maybeInitializer, afterInitializer) = initializer
+            semicolonCnsm <- consume[Semicolon[Span]](afterInitializer)
+          } yield (Stmt.Var(token, maybeInitializer), semicolonCnsm._2)
+        }
+        .getOrElse(Left(Error.ExpectVarIdentifier(tokens)))
   )
 
-  def expression(tokens: List[Token[Span]]): ExprParser = or(tokens)
+  def expression(
+    tokens: List[Token[Span]]
+  ): ExprParser = or(tokens)
 
   def or: List[Token[Span]] => ExprParser = binary(orOp, and)
 
@@ -146,7 +210,9 @@ object Parser:
 
     attemptToParseAssignmentExpr.recoverWith { case error => expressionStmt(tokens) }
 
-  def statement(tokens: List[Token[Span]]): StmtParser =
+  def statement(
+    tokens: List[Token[Span]]
+  ): StmtParser =
     tokens.headOption match
       case Some(token) =>
         token match
@@ -159,13 +225,17 @@ object Parser:
           case _            => assignment(tokens)
       case _ => assignment(tokens)
 
-  def expressionStmt(tokens: List[Token[Span]]): StmtParser =
+  def expressionStmt(
+    tokens: List[Token[Span]]
+  ): StmtParser =
     for {
       pr <- expression(tokens)
       cnsm <- consume[Semicolon[Span]](pr._2)
     } yield (Stmt.Expression(pr._1), cnsm._2)
 
-  def printStmt(tokens: List[Token[Span]]): StmtParser =
+  def printStmt(
+    tokens: List[Token[Span]]
+  ): StmtParser =
     for {
       pr <- expression(tokens)
       cnsm <- consume[Semicolon[Span]](pr._2)
@@ -173,16 +243,30 @@ object Parser:
 
   def consume[TokenType <: Token[Span]: ClassTag](
     tokens: List[Token[Span]]
-  ): Either[Error, (Token[Span], List[Token[Span]])] =
+  ): Either[
+    Error,
+    (
+      Token[Span],
+      List[Token[Span]],
+    ),
+  ] =
     tokens match
       case (head: TokenType) :: _ => Right(head, tokens.tail)
       case _                      => Left(Error.UnexpectedToken(tokens))
 
-  def blockStmt(tokens: List[Token[Span]]): StmtParser =
+  def blockStmt(
+    tokens: List[Token[Span]]
+  ): StmtParser =
     def block(
       ts: List[Token[Span]],
       stmts: List[Stmt] = List.empty[Stmt],
-    ): Either[Error, (List[Stmt], List[Token[Span]])] =
+    ): Either[
+      Error,
+      (
+        List[Stmt],
+        List[Token[Span]],
+      ),
+    ] =
       ts.headOption match
         case Some(token) =>
           token match
@@ -191,12 +275,25 @@ object Parser:
               declaration(ts) match
                 case Right(dclr, rest) => block(rest, stmts :+ dclr)
                 case left @ Left(_) =>
-                  left.asInstanceOf[Left[Error, (List[Stmt], List[Token[Span]])]]
+                  left.asInstanceOf[Left[
+                    Error,
+                    (
+                      List[Stmt],
+                      List[Token[Span]],
+                    ),
+                  ]]
         case _ => Left(Error.ExpectRightBrace(ts))
 
-    block(tokens).map((stmts, rest) => (Stmt.Block(stmts), rest))
+    block(tokens).map(
+      (
+        stmts,
+        rest,
+      ) => (Stmt.Block(stmts), rest)
+    )
 
-  def ifStmt(tokens: List[Token[Span]]): StmtParser =
+  def ifStmt(
+    tokens: List[Token[Span]]
+  ): StmtParser =
     for {
       leftParenCnsm <- consume[LeftParen[Span]](tokens)
       afterLeftParen <- expression(leftParenCnsm._2)
@@ -213,42 +310,72 @@ object Parser:
       (elseBranch, afterElse) = maybeElseBranch
     } yield (Stmt.If(condition, thenBranch, elseBranch), afterElse)
 
-  def returnStmt(keyword: Token[Span], tokens: List[Token[Span]]): StmtParser = ???
+  def returnStmt(
+    keyword: Token[Span],
+    tokens: List[Token[Span]],
+  ): StmtParser = ???
 
-  def forStmt(tokens: List[Token[Span]]): StmtParser =
+  def forStmt(
+    tokens: List[Token[Span]]
+  ): StmtParser =
     for {
 
       (leftParen, afterLeftParenTokens) <- consume[LeftParen[Span]](tokens)
 
-      (initializerStmtOption, afterInitializerTokens): (Option[Stmt], List[Token[Span]]) <-
+      (initializerStmtOption, afterInitializerTokens): (
+        Option[Stmt],
+        List[Token[Span]],
+      ) <-
         afterLeftParenTokens.headOption match
 
           case Some(_: Semicolon[Span]) => (None, afterLeftParenTokens.tail).asRight
           case Some(_: Var[Span]) =>
-            declaration(afterLeftParenTokens).map((declareStmt, toks) => (declareStmt.some, toks))
+            declaration(afterLeftParenTokens).map(
+              (
+                declareStmt,
+                toks,
+              ) => (declareStmt.some, toks)
+            )
           case _ =>
-            assignment(afterLeftParenTokens).map((declareStmt, toks) => (declareStmt.some, toks))
+            assignment(afterLeftParenTokens).map(
+              (
+                declareStmt,
+                toks,
+              ) => (declareStmt.some, toks)
+            )
 
-      (conditionalExprOption, afterConditionStmtTokens): (Option[Expr], List[Token[Span]]) <-
+      (conditionalExprOption, afterConditionStmtTokens): (
+        Option[Expr],
+        List[Token[Span]],
+      ) <-
         afterInitializerTokens.headOption match
           case Some(_: Semicolon[Span]) =>
             (None, afterInitializerTokens).asRight // todo afterInitializerTokens.tail?
           case _ =>
-            expression(afterInitializerTokens).map((declareStmt, tokens) =>
-              (declareStmt.some, tokens)
+            expression(afterInitializerTokens).map(
+              (
+                declareStmt,
+                tokens,
+              ) => (declareStmt.some, tokens)
             )
 
       (_, afterConditionStmtAndSemiColonTokens) <- consume[Semicolon[Span]](
         afterConditionStmtTokens
       )
 
-      (incrementExprOption, afterIncrementStmtTokens): (Option[Stmt], List[Token[Span]]) <-
+      (incrementExprOption, afterIncrementStmtTokens): (
+        Option[Stmt],
+        List[Token[Span]],
+      ) <-
         afterConditionStmtAndSemiColonTokens.headOption match
           case Some(_: RightParen[Span]) =>
             (None, afterConditionStmtAndSemiColonTokens.tail).asRight
           case _ =>
-            assignmentExpr(afterConditionStmtAndSemiColonTokens).map((declareStmt, tokens) =>
-              (declareStmt.some, tokens)
+            assignmentExpr(afterConditionStmtAndSemiColonTokens).map(
+              (
+                declareStmt,
+                tokens,
+              ) => (declareStmt.some, tokens)
             )
 
       (_, afterIncrementStmtAndRightParenTokens) <- consume[RightParen[Span]](
@@ -273,7 +400,9 @@ object Parser:
 
     } yield (desugarInitializer, afterBodyTokens)
 
-  def whileStmt(tokens: List[Token[Span]]): StmtParser =
+  def whileStmt(
+    tokens: List[Token[Span]]
+  ): StmtParser =
     for {
       (leftParen, afterLeftParenTokens) <- consume[LeftParen[Span]](tokens)
       (conditionExpr, afterExpressionTokens) <- expression(afterLeftParenTokens)
@@ -293,15 +422,29 @@ object Parser:
   )(
     tokens: List[Token[Span]]
   ): ExprParser =
-    def matchOp(ts: List[Token[Span]], l: Expr): ExprParser =
+    def matchOp(
+      ts: List[Token[Span]],
+      l: Expr,
+    ): ExprParser =
       ts match
         case token :: rest =>
           op(token) match
-            case Some(fn) => descendant(rest).flatMap((r, rmn) => matchOp(rmn, fn(l)(r)))
-            case None     => Right(l, ts)
+            case Some(fn) =>
+              descendant(rest).flatMap(
+                (
+                  r,
+                  rmn,
+                ) => matchOp(rmn, fn(l)(r))
+              )
+            case None => Right(l, ts)
         case _ => Right(l, ts)
 
-    descendant(tokens).flatMap((expr, rest) => matchOp(rest, expr))
+    descendant(tokens).flatMap(
+      (
+        expr,
+        rest,
+      ) => matchOp(rest, expr)
+    )
 
   def orOp: BinaryOp =
     case Or(t) => Some(Expr.Or.apply.curried(t))
@@ -343,15 +486,25 @@ object Parser:
   def term = binary(termOp, factor)
   def factor = binary(factorOp, unary)
 
-  def unary(tokens: List[Token[Span]]): ExprParser =
+  def unary(
+    tokens: List[Token[Span]]
+  ): ExprParser =
     tokens match
       case token :: rest =>
         unaryOp(token) match
-          case Some(fn) => unary(rest).flatMap((expr, rmn) => Right(fn(expr), rmn))
-          case None     => primary(tokens)
+          case Some(fn) =>
+            unary(rest).flatMap(
+              (
+                expr,
+                rmn,
+              ) => Right(fn(expr), rmn)
+            )
+          case None => primary(tokens)
       case _ => primary(tokens)
 
-  def primary(tokens: List[Token[Span]]): ExprParser =
+  def primary(
+    tokens: List[Token[Span]]
+  ): ExprParser =
     tokens match
       case Number(l, tag) :: rest        => Right(Expr.Literal(tag, l.toDouble), rest)
       case Str(l, tag) :: rest           => Right(Expr.Literal(tag, l), rest)
@@ -365,14 +518,20 @@ object Parser:
   // Parse the body within a pair of parentheses (the part after "(")
   def parenBody(
     tokens: List[Token[Span]]
-  ): ExprParser = expression(tokens).flatMap((expr, rest) =>
-    rest match
-      case RightParen(_) :: rmn => Right(Expr.Grouping(expr), rmn)
-      case _                    => Left(Error.ExpectClosing(rest))
+  ): ExprParser = expression(tokens).flatMap(
+    (
+      expr,
+      rest,
+    ) =>
+      rest match
+        case RightParen(_) :: rmn => Right(Expr.Grouping(expr), rmn)
+        case _                    => Left(Error.ExpectClosing(rest))
   )
 
   // Discard tokens until a new expression/statement is found
-  def synchronize(tokens: List[Token[Span]]): List[Token[Span]] =
+  def synchronize(
+    tokens: List[Token[Span]]
+  ): List[Token[Span]] =
     tokens match
       case t :: rest =>
         t match

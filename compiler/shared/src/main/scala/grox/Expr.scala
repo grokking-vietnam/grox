@@ -7,7 +7,9 @@ type LiteralType = Double | String | Boolean | Unit
 
 object LiteralType:
 
-  extension (value: LiteralType)
+  extension (
+    value: LiteralType
+  )
 
     def isTruthy: Boolean =
       value match
@@ -20,36 +22,110 @@ enum Expr:
   // Binary
 
   // arithmetic
-  case Add(tag: Span, left: Expr, right: Expr)
-  case Subtract(tag: Span, left: Expr, right: Expr)
-  case Multiply(tag: Span, left: Expr, right: Expr)
-  case Divide(tag: Span, left: Expr, right: Expr)
+  case Add(
+    tag: Span,
+    left: Expr,
+    right: Expr,
+  )
+
+  case Subtract(
+    tag: Span,
+    left: Expr,
+    right: Expr,
+  )
+
+  case Multiply(
+    tag: Span,
+    left: Expr,
+    right: Expr,
+  )
+
+  case Divide(
+    tag: Span,
+    left: Expr,
+    right: Expr,
+  )
 
   // comparison
-  case Greater(tag: Span, left: Expr, right: Expr)
-  case GreaterEqual(tag: Span, left: Expr, right: Expr)
-  case Less(tag: Span, left: Expr, right: Expr)
-  case LessEqual(tag: Span, left: Expr, right: Expr)
-  case Equal(tag: Span, left: Expr, right: Expr)
-  case NotEqual(tag: Span, left: Expr, right: Expr)
+  case Greater(
+    tag: Span,
+    left: Expr,
+    right: Expr,
+  )
+
+  case GreaterEqual(
+    tag: Span,
+    left: Expr,
+    right: Expr,
+  )
+
+  case Less(
+    tag: Span,
+    left: Expr,
+    right: Expr,
+  )
+
+  case LessEqual(
+    tag: Span,
+    left: Expr,
+    right: Expr,
+  )
+
+  case Equal(
+    tag: Span,
+    left: Expr,
+    right: Expr,
+  )
+
+  case NotEqual(
+    tag: Span,
+    left: Expr,
+    right: Expr,
+  )
 
   // logic
-  case Or(tag: Span, left: Expr, right: Expr)
-  case And(tag: Span, left: Expr, right: Expr)
+  case Or(
+    tag: Span,
+    left: Expr,
+    right: Expr,
+  )
+
+  case And(
+    tag: Span,
+    left: Expr,
+    right: Expr,
+  )
 
   // Unary
-  case Negate(tag: Span, expr: Expr)
-  case Not(tag: Span, expr: Expr)
+  case Negate(
+    tag: Span,
+    expr: Expr,
+  )
 
-  case Literal(tag: Span, value: LiteralType)
+  case Not(
+    tag: Span,
+    expr: Expr,
+  )
 
-  case Grouping(expr: Expr)
+  case Literal(
+    tag: Span,
+    value: LiteralType,
+  )
 
-  case Variable(tag: Span, name: String)
+  case Grouping(
+    expr: Expr
+  )
+
+  case Variable(
+    tag: Span,
+    name: String,
+  )
 
 object Expr:
 
-  def show(expr: Expr): String =
+  def show(
+    expr: Expr
+  ): String =
     expr match
       case Add(_, left, right) =>
         s"${formatNestedExpr(left, show(left))} + ${formatNestedExpr(right, show(right))}"
@@ -91,7 +167,10 @@ object Expr:
 
       case Variable(_, name) => name
 
-  private def formatNestedExpr(expr: Expr, exprShow: String): String =
+  private def formatNestedExpr(
+    expr: Expr,
+    exprShow: String,
+  ): String =
     expr match
       case Literal(_, _) => exprShow
       case _             => s"($exprShow)"

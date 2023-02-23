@@ -6,7 +6,9 @@ import CLI.*
 
 class CLITest extends munit.FunSuite:
 
-  def testCommand(args: String*) = decline.Command("test", "Test Command")(CLI.parse).parse(args)
+  def testCommand(
+    args: String*
+  ) = decline.Command("test", "Test Command")(CLI.parse).parse(args)
 
   test("scan option") {
     assertEquals(testCommand("--scan", "."), Right(Config(Command.Scan("."), false)))

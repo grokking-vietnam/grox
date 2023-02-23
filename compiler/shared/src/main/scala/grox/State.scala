@@ -5,11 +5,16 @@ import scala.util.control.NoStackTrace
 import cats.implicits.catsSyntaxEither
 
 object State:
-  def apply(): State = State(Map.empty[String, LiteralType], enclosing = None)
+  def apply(
+  ): State = State(Map.empty[String, LiteralType], enclosing = None)
 
-enum StateError(msg: String) extends NoStackTrace:
-  case UndefinedVariableError(variable: String)
-    extends StateError(s"Undefined variable: '$variable'.")
+enum StateError(
+  msg: String
+) extends NoStackTrace:
+
+  case UndefinedVariableError(
+    variable: String
+  ) extends StateError(s"Undefined variable: '$variable'.")
 
 case class State(
   val values: Map[String, LiteralType] = Map.empty[String, LiteralType],
@@ -32,7 +37,10 @@ case class State(
     .get(name)
     .orElse(enclosing.flatMap(_._get(name)))
 
-  def assign(name: String, value: LiteralType): Either[StateError, State] =
+  def assign(
+    name: String,
+    value: LiteralType,
+  ): Either[StateError, State] =
     val assignEither =
       if values.contains(name) then Right(State(values + (name -> value), enclosing))
       else Left(StateError.UndefinedVariableError(name))

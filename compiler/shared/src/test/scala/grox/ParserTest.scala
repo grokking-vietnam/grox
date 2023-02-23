@@ -452,7 +452,10 @@ class ParserCheck extends ScalaCheckSuite:
     }
   }
 
-  def evaluate(expr: Expr, state: State = State()): IO[LiteralType] =
+  def evaluate(
+    expr: Expr,
+    state: State = State(),
+  ): IO[LiteralType] =
     for
       given Env[IO] <- Env.instance[IO](State())
       interpreter = Interpreter.instance[IO]
@@ -477,7 +480,12 @@ class ParserCheck extends ScalaCheckSuite:
       parse(expr.flatten) match
         case Left(_) => IO(assert(false))
         case Right(parsedExpr, _) =>
-          (evaluate(expr), evaluate(parsedExpr)).mapN((x, y) => assert(x == y))
+          (evaluate(expr), evaluate(parsedExpr)).mapN(
+            (
+              x,
+              y,
+            ) => assert(x == y)
+          )
     }
   }
 

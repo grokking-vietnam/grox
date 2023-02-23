@@ -13,7 +13,10 @@ import Env.*
 
 class InterpreterTest extends CatsEffectSuite with ScalaCheckEffectSuite:
 
-  def evaluate(expr: Expr, state: State = State()): IO[LiteralType] =
+  def evaluate(
+    expr: Expr,
+    state: State = State(),
+  ): IO[LiteralType] =
     for
       given Env[IO] <- Env.instance[IO](state)
       interpreter = Interpreter.instance[IO]
@@ -21,77 +24,121 @@ class InterpreterTest extends CatsEffectSuite with ScalaCheckEffectSuite:
     yield result
 
   test("addition") {
-    forAllF { (n1: Double, n2: Double) =>
-      evaluate(Expr.Add(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
-        .map(x => assert(x == n1 + n2))
+    forAllF {
+      (
+        n1: Double,
+        n2: Double,
+      ) =>
+        evaluate(Expr.Add(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
+          .map(x => assert(x == n1 + n2))
     }
   }
 
   test("addition 2 string") {
-    forAllF { (n1: String, n2: String) =>
-      evaluate(Expr.Add(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
-        .map(x => assert(x == n1 + n2))
+    forAllF {
+      (
+        n1: String,
+        n2: String,
+      ) =>
+        evaluate(Expr.Add(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
+          .map(x => assert(x == n1 + n2))
     }
   }
 
   test("subtraction") {
-    forAllF { (n1: Double, n2: Double) =>
-      evaluate(Expr.Subtract(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
-        .map(x => assert(x == n1 - n2))
+    forAllF {
+      (
+        n1: Double,
+        n2: Double,
+      ) =>
+        evaluate(Expr.Subtract(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
+          .map(x => assert(x == n1 - n2))
     }
   }
 
   test("multiplication") {
-    forAllF { (n1: Double, n2: Double) =>
-      evaluate(Expr.Multiply(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
-        .map(x => assert(x == n1 * n2))
+    forAllF {
+      (
+        n1: Double,
+        n2: Double,
+      ) =>
+        evaluate(Expr.Multiply(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
+          .map(x => assert(x == n1 * n2))
     }
   }
   test("division") {
-    forAllF { (n1: Double, n2: Double) =>
-      if n2 != 0 then
-        evaluate(Expr.Divide(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
-          .map(x => assert(x == n1 / n2))
-      else IO(assert(true))
+    forAllF {
+      (
+        n1: Double,
+        n2: Double,
+      ) =>
+        if n2 != 0 then
+          evaluate(Expr.Divide(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
+            .map(x => assert(x == n1 / n2))
+        else IO(assert(true))
     }
   }
 
   test("greater") {
-    forAllF { (n1: Double, n2: Double) =>
-      evaluate(Expr.Greater(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
-        .map(x => assert(x == n1 > n2))
+    forAllF {
+      (
+        n1: Double,
+        n2: Double,
+      ) =>
+        evaluate(Expr.Greater(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
+          .map(x => assert(x == n1 > n2))
     }
   }
 
   test("greater or equal") {
-    forAllF { (n1: Double, n2: Double) =>
-      evaluate(Expr.GreaterEqual(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
-        .map(x => assert(x == n1 >= n2))
+    forAllF {
+      (
+        n1: Double,
+        n2: Double,
+      ) =>
+        evaluate(Expr.GreaterEqual(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
+          .map(x => assert(x == n1 >= n2))
     }
   }
   test("less") {
-    forAllF { (n1: Double, n2: Double) =>
-      evaluate(Expr.Less(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
-        .map(x => assert(x == n1 < n2))
+    forAllF {
+      (
+        n1: Double,
+        n2: Double,
+      ) =>
+        evaluate(Expr.Less(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
+          .map(x => assert(x == n1 < n2))
     }
   }
 
   test("less or equal") {
-    forAllF { (n1: Double, n2: Double) =>
-      evaluate(Expr.LessEqual(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
-        .map(x => assert(x == n1 <= n2))
+    forAllF {
+      (
+        n1: Double,
+        n2: Double,
+      ) =>
+        evaluate(Expr.LessEqual(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
+          .map(x => assert(x == n1 <= n2))
     }
   }
   test("equal") {
-    forAllF { (n1: Double, n2: Double) =>
-      evaluate(Expr.Equal(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
-        .map(x => assert(x == (n1 == n2)))
+    forAllF {
+      (
+        n1: Double,
+        n2: Double,
+      ) =>
+        evaluate(Expr.Equal(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
+          .map(x => assert(x == (n1 == n2)))
     }
   }
   test("not equal") {
-    forAllF { (n1: Double, n2: Double) =>
-      evaluate(Expr.NotEqual(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
-        .map(x => assert(x == (n1 != n2)))
+    forAllF {
+      (
+        n1: Double,
+        n2: Double,
+      ) =>
+        evaluate(Expr.NotEqual(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
+          .map(x => assert(x == (n1 != n2)))
     }
   }
 
@@ -105,7 +152,9 @@ class InterpreterTest extends CatsEffectSuite with ScalaCheckEffectSuite:
   test("complex expression -4*(10+15/5*4-2*2)") {
     val env = State(Map("x" -> 10.0), None)
 
-    def eval(str: String) = Scanner
+    def eval(
+      str: String
+    ) = Scanner
       .parse(str)
       .flatMap(Parser.parse(_))
       .liftTo[IO]
@@ -120,13 +169,48 @@ class InterpreterTest extends CatsEffectSuite with ScalaCheckEffectSuite:
     val exprWithX = eval("-4*(x+15/5*4-2*2)")
     val divisionWithX = eval("-4*(x+3*4-2*2)")
 
-    (expr, division).mapN((x, y) => assert(x == y))
-    (division, multiplication).mapN((x, y) => assert(x == y))
-    (multiplication, addition).mapN((x, y) => assert(x == y))
-    (addition, subtraction).mapN((x, y) => assert(x == y))
-    (subtraction, answer).mapN((x, y) => assert(x == y))
-    (exprWithX, answer).mapN((x, y) => assert(x == y))
-    (divisionWithX, answer).mapN((x, y) => assert(x == y))
+    (expr, division).mapN(
+      (
+        x,
+        y,
+      ) => assert(x == y)
+    )
+    (division, multiplication).mapN(
+      (
+        x,
+        y,
+      ) => assert(x == y)
+    )
+    (multiplication, addition).mapN(
+      (
+        x,
+        y,
+      ) => assert(x == y)
+    )
+    (addition, subtraction).mapN(
+      (
+        x,
+        y,
+      ) => assert(x == y)
+    )
+    (subtraction, answer).mapN(
+      (
+        x,
+        y,
+      ) => assert(x == y)
+    )
+    (exprWithX, answer).mapN(
+      (
+        x,
+        y,
+      ) => assert(x == y)
+    )
+    (divisionWithX, answer).mapN(
+      (
+        x,
+        y,
+      ) => assert(x == y)
+    )
   }
 
   test("division by zero error") {

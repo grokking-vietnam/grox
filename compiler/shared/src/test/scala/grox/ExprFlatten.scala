@@ -3,9 +3,15 @@ package grox
 import Token.*
 import Span.*
 
-extension (e: Expr)
+extension (
+  e: Expr
+)
 
-  def binary(operator: Token[Span], l: Expr, r: Expr) = l.flatten ::: List(operator) ::: r.flatten
+  def binary(
+    operator: Token[Span],
+    l: Expr,
+    r: Expr,
+  ) = l.flatten ::: List(operator) ::: r.flatten
 
   def flatten: List[Token[Span]] =
     e match

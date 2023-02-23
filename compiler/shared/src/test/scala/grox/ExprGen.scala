@@ -30,41 +30,64 @@ object ExprGen:
   type Factor = Expr.Multiply | Expr.Divide
   type Equality = Expr.Equal | Expr.NotEqual
 
-  def group[T: Typeable](expr: Expr): Expr =
+  def group[T: Typeable](
+    expr: Expr
+  ): Expr =
     expr match
       case _: T => Expr.Grouping(expr)
       case _    => expr
 
-  def binaryGen(operator: BinOperator)(operand: => Gen[Expr]): Gen[Expr] =
+  def binaryGen(
+    operator: BinOperator
+  )(
+    operand: => Gen[Expr]
+  ): Gen[Expr] =
     for
       left <- operand
       right <- operand
     yield operator(left)(right)
 
-  def treeGen(operator: BinOperator, operand: => Gen[Expr]): Gen[Expr] = Gen.sized(size =>
+  def treeGen(
+    operator: BinOperator,
+    operand: => Gen[Expr],
+  ): Gen[Expr] = Gen.sized(size =>
     for
       left <- Gen.resize((size - 1) / 2, operand)
       right <- Gen.resize((size - 1) / 2, operand)
     yield operator(left)(right)
   )
 
-  def addOperator(left: Expr, right: Expr): Expr = Expr.Add(empty, left, right)
+  def addOperator(
+    left: Expr,
+    right: Expr,
+  ): Expr = Expr.Add(empty, left, right)
 
-  def subtractOperator(left: Expr, right: Expr): Expr =
+  def subtractOperator(
+    left: Expr,
+    right: Expr,
+  ): Expr =
     val gRight = group[Term](right)
     Expr.Subtract(empty, left, gRight)
 
-  def multiplyOperator(left: Expr, right: Expr): Expr =
+  def multiplyOperator(
+    left: Expr,
+    right: Expr,
+  ): Expr =
     val gLeft = group[Term](left)
     val gRight = group[Term](right)
     Expr.Multiply(empty, gLeft, gRight)
 
-  def divideOperator(left: Expr, right: Expr): Expr =
+  def divideOperator(
+    left: Expr,
+    right: Expr,
+  ): Expr =
     val gLeft = group[Term](left)
     val gRight = group[Term | Factor](right)
     Expr.Divide(empty, gLeft, gRight)
 
-  def negateOperator(left: Expr): Expr =
+  def negateOperator(
+    left: Expr
+  ): Expr =
     left match
       case _: Expr.Literal => Expr.Negate(empty, left)
       case _               => Expr.Negate(empty, Expr.Grouping(left))
@@ -86,17 +109,25 @@ object ExprGen:
       Gen.oneOf(addGen, subtractGen, multiplyGen, divideGen, negateGen)
   )
 
-  def equalOperator(left: Expr, right: Expr): Expr =
+  def equalOperator(
+    left: Expr,
+    right: Expr,
+  ): Expr =
     val gLeft = group[Equality](left)
     val gRight = group[Equality](right)
     Expr.Equal(empty, gLeft, gRight)
 
-  def notEqualOperator(left: Expr, right: Expr): Expr =
+  def notEqualOperator(
+    left: Expr,
+    right: Expr,
+  ): Expr =
     val gLeft = group[Equality](left)
     val gRight = group[Equality](right)
     Expr.NotEqual(empty, gLeft, gRight)
 
-  def notOperator(left: Expr): Expr =
+  def notOperator(
+    left: Expr
+  ): Expr =
     left match
       case _: Expr.Literal => Expr.Not(empty, left)
       case _               => Expr.Not(empty, Expr.Grouping(left))

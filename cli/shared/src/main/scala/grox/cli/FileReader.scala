@@ -6,7 +6,10 @@ import cats.syntax.all.*
 import fs2.io.file.Files
 
 trait FileReader[F[_]]:
-  def read(path: String): F[String]
+
+  def read(
+    path: String
+  ): F[String]
 
 object FileReader:
 

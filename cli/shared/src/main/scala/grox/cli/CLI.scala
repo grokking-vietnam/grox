@@ -7,10 +7,22 @@ import com.monovore.decline.Opts
 object CLI:
 
   enum Command:
-    case Scan(file: String)
-    case Parse(file: String)
-    case Evaluate(file: String)
-    case Run(file: String)
+
+    case Scan(
+      file: String
+    )
+
+    case Parse(
+      file: String
+    )
+
+    case Evaluate(
+      file: String
+    )
+
+    case Run(
+      file: String
+    )
 
   val command =
     val scan = Opts.option[String]("scan", "Scan file to tokens").map(Command.Scan(_))
@@ -31,6 +43,9 @@ object CLI:
 
   val debug = Opts.flag("debug", help = "Print debug logs", short = "d").orFalse
 
-  case class Config(command: Command, debug: Boolean)
+  case class Config(
+    command: Command,
+    debug: Boolean,
+  )
 
   val parse = (command, debug).mapN(Config.apply)

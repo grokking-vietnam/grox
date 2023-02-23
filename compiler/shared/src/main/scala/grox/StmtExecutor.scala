@@ -9,8 +9,14 @@ import fs2.{Pull, Stream}
 type Output = LiteralType
 
 trait StmtExecutor[F[_]]:
-  def execute(stmt: Stmt): Pull[F, Output, Output]
-  def execute(stmts: List[Stmt]): Stream[F, Output]
+
+  def execute(
+    stmt: Stmt
+  ): Pull[F, Output, Output]
+
+  def execute(
+    stmts: List[Stmt]
+  ): Stream[F, Output]
 
 object StmtExecutor:
   import Stmt.*
@@ -22,10 +28,17 @@ object StmtExecutor:
   ): StmtExecutor[F] =
     new StmtExecutor:
 
-      def executePull(stmts: List[Stmt]): Pull[F, Output, Unit] = stmts.traverse_(execute)
-      def execute(stmts: List[Stmt]): Stream[F, Output] = executePull(stmts).stream
+      def executePull(
+        stmts: List[Stmt]
+      ): Pull[F, Output, Unit] = stmts.traverse_(execute)
 
-      def execute(stmt: Stmt): Pull[F, Output, Output] =
+      def execute(
+        stmts: List[Stmt]
+      ): Stream[F, Output] = executePull(stmts).stream
+
+      def execute(
+        stmt: Stmt
+      ): Pull[F, Output, Output] =
         stmt match
 
           case Expression(expr) =>
@@ -71,7 +84,10 @@ object StmtExecutor:
             Pull.bracketCase(
               Pull.eval(env.startBlock()),
               _ => executePull(stmts),
-              (_, _) => Pull.eval(env.endBlock()),
+              (
+                _,
+                _,
+              ) => Pull.eval(env.endBlock()),
             )
 
           case Function(name, params, body) => ???
