@@ -20,7 +20,7 @@ object StmtExecutor:
     using env: Env[F],
     interpreter: Interpreter[F],
   ): StmtExecutor[F] =
-    new StmtExecutor:
+    new:
 
       def executePull(stmts: List[Stmt]): Pull[F, Output, Unit] = stmts.traverse_(execute)
       def execute(stmts: List[Stmt]): Stream[F, Output] = executePull(stmts).stream

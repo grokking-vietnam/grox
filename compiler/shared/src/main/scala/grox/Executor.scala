@@ -22,7 +22,7 @@ object Executor:
     interpreter: Interpreter[F],
     executor: StmtExecutor[F],
   ): Executor[F] =
-    new Executor[F]:
+    new:
       def scan(str: String): F[List[Token[Span]]] = scanner.scan(str)
 
       def parse(str: String): F[Expr] =
