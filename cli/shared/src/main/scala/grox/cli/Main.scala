@@ -24,7 +24,9 @@ object Main
     case Evaluate(file: String)
     case Execute(file: String)
 
-  def convertCommand[F[_]: Functor](using reader: FileReader[F]): CLI.Command => F[Command] =
+  def convertCommand[F[_]: Functor](
+    using reader: FileReader[F]
+  ): CLI.Command => F[Command] =
     case CLI.Command.Scan(file)     => reader.read(file).map(Command.Scan(_))
     case CLI.Command.Parse(file)    => reader.read(file).map(Command.Parse(_))
     case CLI.Command.Evaluate(file) => reader.read(file).map(Command.Evaluate(_))
