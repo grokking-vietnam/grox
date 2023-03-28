@@ -12,7 +12,9 @@ trait Interpreter[F[_]]:
 
 object Interpreter:
 
-  def instance[F[_]: MonadThrow](using env: Env[F]): Interpreter[F] =
+  def instance[F[_]: MonadThrow](
+    using env: Env[F]
+  ): Interpreter[F] =
     new:
 
       def evaluate(expr: Expr): F[LiteralType] =
