@@ -5,6 +5,7 @@ inThisBuild(
 
     // Github Workflow
     githubWorkflowPublishTargetBranches := Seq(), // Don't publish anywhere
+    githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17")),
     githubWorkflowUseSbtThinClient := true,
     githubWorkflowEnv := Map("SBT_OPTS" -> "-Xmx2048M"),
     githubWorkflowBuild ++= Seq(
