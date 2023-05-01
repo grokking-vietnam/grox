@@ -220,7 +220,7 @@ object Parser:
 
       (leftParen, afterLeftParenTokens) <- consume[LeftParen[Span]](tokens)
 
-      (initializerStmtOption, afterInitializerTokens): (Option[Stmt], List[Token[Span]]) <-
+      (initializerStmtOption, afterInitializerTokens) <-
         afterLeftParenTokens.headOption match
 
           case Some(_: Semicolon[Span]) => (None, afterLeftParenTokens.tail).asRight
@@ -229,7 +229,7 @@ object Parser:
           case _ =>
             assignment(afterLeftParenTokens).map((declareStmt, toks) => (declareStmt.some, toks))
 
-      (conditionalExprOption, afterConditionStmtTokens): (Option[Expr], List[Token[Span]]) <-
+      (conditionalExprOption, afterConditionStmtTokens) <-
         afterInitializerTokens.headOption match
           case Some(_: Semicolon[Span]) =>
             (None, afterInitializerTokens).asRight // todo afterInitializerTokens.tail?
@@ -242,7 +242,7 @@ object Parser:
         afterConditionStmtTokens
       )
 
-      (incrementExprOption, afterIncrementStmtTokens): (Option[Stmt], List[Token[Span]]) <-
+      (incrementExprOption, afterIncrementStmtTokens) <-
         afterConditionStmtAndSemiColonTokens.headOption match
           case Some(_: RightParen[Span]) =>
             (None, afterConditionStmtAndSemiColonTokens.tail).asRight
