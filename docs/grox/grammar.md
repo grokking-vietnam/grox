@@ -26,8 +26,8 @@ equality      -> comparison (("!=" | "==") comparison)*
 comparison    -> factor (("<" | "<=" | ">" | ">=") factor)*
 factor        -> term (("+" | "-") term)*
 term          -> unary (("*" | "/") unary)*
-unary         -> ("-" | "!") unary
-              | primary
+unary         -> ( "!" | "-" ) unary | call ;
+call           → primary ( "(" arguments? ")" )* ;
 primary       -> "true" | "false" | "nil"
               | NUMBER | STRING
               | "(" expression ")"

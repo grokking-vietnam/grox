@@ -46,9 +46,11 @@ object Parser:
     case InvalidAssignmentTarget(token: Token[Span])
       extends Error("Invalid assignment target.", List(token))
     case UnexpectedToken(tokens: List[Token[Span]]) extends Error("Unexpected token error", tokens)
+    case MaxNumberOfArgumentsExceeded(tokens: List[Token[Span]]) extends Error("Max number of arguments exceeded", tokens)
 
   type ExprParser = Either[Error, (Expr, List[Token[Span]])]
   type StmtParser = Either[Error, (Stmt, List[Token[Span]])]
+  type ArgsParser = Either[Error, (List[Expr], List[Token[Span]])]
 
   type BinaryOp = Token[Span] => Option[Expr => Expr => Expr]
   type UnaryOp = Token[Span] => Option[Expr => Expr]
@@ -348,8 +350,11 @@ object Parser:
       case token :: rest =>
         unaryOp(token) match
           case Some(fn) => unary(rest).flatMap((expr, rmn) => Right(fn(expr), rmn))
-          case None     => primary(tokens)
-      case _ => primary(tokens)
+          case None     => call(tokens)
+      case _ => call(tokens)
+
+  def call(tokens: List[Token[Span]]): ExprParser =
+    primary(tokens).flatMap((expr, rest) => handleCall(expr, rest))
 
   def primary(tokens: List[Token[Span]]): ExprParser =
     tokens match
@@ -381,3 +386,31 @@ object Parser:
             tokens
           case _ => synchronize(rest)
       case List() => List()
+
+
+  private def handleCall(expr: Expr, tokens: List[Token[Span]]): ExprParser =
+    tokens.headOption match {
+      case Some(LeftParen(tag)) => finishCall(expr, tokens.tail) match {
+        case Right((expr_, tokens_)) => handleCall(expr_, tokens_)
+        case l => l
+      }
+      case _ => Right(expr -> tokens)
+    }
+
+  private def finishCall(callee: Expr, tokens: List[Token[Span]]): ExprParser = tokens.headOption match {
+      case Some(token@RightParen(tag)) => Right(Expr.Call(Span.empty, callee, token, List.empty[Expr]), tokens)
+      case _ => parseArgs(List.empty[Expr], tokens).flatMap((args, rest) =>
+        if (args.length > MAXIMUM_ARGUMENTS) {
+          Left(Error.MaxNumberOfArgumentsExceeded(tokens))
+        } else rest.headOption.collectFirst {
+          case close@RightParen(_) => Right(close)
+        }.getOrElse(Left(Error.UnexpectedToken(rest))).map{rightParen => Expr.Call(Span.empty, callee, rightParen, args)}
+      )
+    }
+
+  private def parseArgs(args: List[Expr], tokens: List[Token[Span]]): ArgsParser =
+    expression(tokens).flatMap((expr, rest) => rest match
+        case Comma(_) :: rmn => parseArgs(args :+ expr, rmn)
+        case RightParen(_) :: rmn => Right(args :+ expr, rest)
+        case _ => Left(Error.UnexpectedToken(rest))
+    )
