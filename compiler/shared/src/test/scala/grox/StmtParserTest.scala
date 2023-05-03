@@ -97,6 +97,31 @@ class StmtParserTest extends munit.FunSuite:
     )
   }
 
+  test("Parse print stmt should return err when missing closing ')'") {
+    val tokensMissingRightParent = List(
+      Print(Span(Location(0, 0, 0), Location(0, 5, 5))),
+      LeftParen(Span(Location(0, 5, 5), Location(0, 6, 6))),
+      Str("Hello world", Span(Location(0, 6, 6), Location(0, 19, 19))))
+
+    //    current return Right(List())
+    parseStmt(tokensMissingRightParent) match
+      case Left(e) =>
+        assert(e.getMessage.equals("Expect ')' after expression"))
+  }
+
+  test("Parse print stmt should return err when wrong closing '}'") {
+    val tokensMissingRightParent = List(
+      Print(Span(Location(0, 0, 0), Location(0, 5, 5))),
+      LeftParen(Span(Location(0, 5, 5), Location(0, 6, 6))),
+      Str("Hello world", Span(Location(0, 6, 6), Location(0, 19, 19))),
+      RightBrace(Span(Location(0,19,19), Location(0,20,20))))
+
+    //    current return Right(List())
+    parseStmt(tokensMissingRightParent) match
+      case Left(e) =>
+        assert(e.getMessage.equals("Expect ')' after expression"))
+  }
+
   test("Test consume Var") {
     val ts = List(Var(span), identifierX, Semicolon(span))
     val want = Right((Var(span), ts.tail))
