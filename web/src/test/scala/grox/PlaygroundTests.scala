@@ -2,6 +2,5 @@ package grox
 
 class PlaygroundTests extends munit.FunSuite:
 
-  test("dummy test") {
+  test("dummy test"):
     assert(1 == 1)
-  }

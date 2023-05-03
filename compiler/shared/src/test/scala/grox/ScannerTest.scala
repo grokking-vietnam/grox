@@ -11,137 +11,110 @@ import Token.*
 
 class ScannerTest extends munit.FunSuite:
 
-  test("whitespaces empty") {
+  test("whitespaces empty"):
     assertEquals(Scanner.whitespaces.parseAll(""), Right(()))
-  }
 
-  test("whitespaces") {
+  test("whitespaces"):
     assertEquals(Scanner.whitespaces.parseAll(" \t"), Right(()))
-  }
 
-  test("whitespaces") {
+  test("whitespaces"):
     assertEquals(Scanner.whitespaces.parseAll("  "), Right(()))
-  }
-  test("equalOrEqualEqual ==") {
+  test("equalOrEqualEqual =="):
     assertEquals(Scanner.equalEqualOrEqual.parseAll("="), Right(Equal(())))
-  }
 
-  test("equalOrEqualEqual =") {
+  test("equalOrEqualEqual ="):
     assertEquals(Scanner.equalEqualOrEqual.parseAll("=="), Right(EqualEqual(())))
-  }
 
-  test("bangEqualOrBang !=") {
+  test("bangEqualOrBang !="):
     assertEquals(Scanner.bangEqualOrBang.parseAll("!="), Right(BangEqual(())))
-  }
 
-  test("bangEqualOrBang !") {
+  test("bangEqualOrBang !"):
     assertEquals(Scanner.bangEqualOrBang.parseAll("!"), Right(Bang(())))
-  }
 
-  test("greaterEqualOrGreater >=") {
+  test("greaterEqualOrGreater >="):
     assertEquals(Scanner.greaterEqualOrGreater.parseAll(">="), Right(GreaterEqual(())))
-  }
 
-  test("greaterEqualOrGreater >") {
+  test("greaterEqualOrGreater >"):
     assertEquals(Scanner.greaterEqualOrGreater.parseAll(">"), Right(Greater(())))
-  }
 
-  test("lessEqualOrLess <=") {
+  test("lessEqualOrLess <="):
     assertEquals(Scanner.lessEqualOrLess.parseAll("<="), Right(LessEqual(())))
-  }
 
-  test("lessEqualOrLess <") {
+  test("lessEqualOrLess <"):
     assertEquals(Scanner.lessEqualOrLess.parseAll("<"), Right(Less(())))
-  }
 
-  test("single line comment") {
+  test("single line comment"):
     val comment = "// this is a comment"
     assertEquals(Scanner.singleLineComment.parseAll(comment), Right(SingleLine(comment, ())))
-  }
 
-  test("empty block comment") {
+  test("empty block comment"):
     val comment = "/**/"
     assertEquals(Scanner.blockComment.parseAll(comment), Right(Block(comment, ())))
-  }
 
-  test("block comment") {
+  test("block comment"):
     val comment = "/* this is a block comment */"
     assertEquals(Scanner.blockComment.parseAll(comment), Right(Block(comment, ())))
-  }
 
-  test("nested block comment") {
+  test("nested block comment"):
     val comment = "/* this is a /*nested*/ block /*comment*/ */"
     assertEquals(Scanner.blockComment.parseAll(comment), Right(Block(comment, ())))
-  }
 
-  test("single line comment empty") {
+  test("single line comment empty"):
     val comment = "//"
     assertEquals(Scanner.singleLineComment.parseAll(comment), Right(SingleLine(comment, ())))
-  }
 
-  test("singleLineComment orElse Slash /") {
+  test("singleLineComment orElse Slash /"):
     assertEquals(Scanner.commentOrSlash.parseAll("/"), Right(Slash(())))
-  }
 
-  test("singleLineComment orElse Slash //") {
+  test("singleLineComment orElse Slash //"):
     val comment = "// this is a comment"
     assertEquals(
       Scanner.commentOrSlash.parseAll(comment),
       Right(SingleLine(comment, ())),
     )
-  }
 
-  test("keywords") {
+  test("keywords"):
     keywords.foreach { keyword =>
       assertEquals(Scanner.keyword.parseAll(keyword.lexeme), Right(keyword))
     }
-  }
 
-  test("identifier") {
+  test("identifier"):
     val identifier = "orchi_1231"
     assertEquals(Scanner.identifier.parseAll(identifier), Right(Identifier(identifier, ())))
-  }
 
-  test("identifier _") {
+  test("identifier _"):
     val identifier = "_"
     assertEquals(Scanner.identifier.parseAll(identifier), Right(Identifier(identifier, ())))
-  }
 
-  test("string") {
+  test("string"):
     val str = """"orchi_1231""""
     assertEquals(Scanner.str.parseAll(str), Right(Str("orchi_1231", ())))
-  }
 
-  test("number") {
+  test("number"):
     val str = "1234"
     assertEquals(Scanner.number.parseAll(str), Right(Number(str, ())))
-  }
 
-  test("fraction only failed") {
+  test("fraction only failed"):
     val str = ".1234"
     assertEquals(Scanner.number.parseAll(str).isLeft, true)
-  }
 
-  test("number with frac") {
+  test("number with frac"):
     val str = "1234.2323"
     assertEquals(Scanner.number.parseAll(str), Right(Number(str, ())))
-  }
 
-  test("number and dot failed") {
+  test("number and dot failed"):
     val str = "1234."
     assertEquals(Scanner.number.parseAll(str).isLeft, true)
-  }
 
-  test("identifiers.lox simpler") {
+  test("identifiers.lox simpler"):
     val str = "andy formless"
     val expected = List(
       Identifier("andy", Span(Location(0, 0, 0), Location(0, 4, 4))),
       Identifier("formless", Span(Location(0, 5, 5), Location(0, 13, 13))),
     )
     assertEquals(Scanner.parse(str), Right(expected))
-  }
 
-  test("identifiers.lox") {
+  test("identifiers.lox"):
     val str = """andy formless fo _ _123 _abc ab123
 
 abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
@@ -159,9 +132,8 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
       ),
     )
     assertEquals(Scanner.parse(str), Right(expected))
-  }
 
-  test("keywords.lox") {
+  test("keywords.lox"):
     val str = """and class else false for fun if nil or return super this true var while"""
     val expected = List(
       And(Span(Location(0, 0, 0), Location(0, 3, 3))),
@@ -181,9 +153,8 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
       While(Span(Location(0, 66, 66), Location(0, 71, 71))),
     )
     assertEquals(Scanner.parse(str), Right(expected))
-  }
 
-  test("(true)") {
+  test("(true)"):
     val str = "(true)"
     val expected = List(
       LeftParen(Span(Location(0, 0, 0), Location(0, 1, 1))),
@@ -196,9 +167,8 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
       RightParen(Span(Location(0, 5, 5), Location(0, 6, 6))),
     )
     assertEquals(Scanner.parse(str), Right(expected))
-  }
 
-  test("numbers.lox") {
+  test("numbers.lox"):
     val str = """123
   123.456
   .456
@@ -212,9 +182,8 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
       Dot(Span(Location(3, 5, 26), Location(3, 6, 27))),
     )
     assertEquals(Scanner.parse(str), Right(expected))
-  }
 
-  test("punctuators.lox") {
+  test("punctuators.lox"):
     val str = """(){};,+-*!===<=>=!=<>/."""
     val expected = List(
       LeftParen(Span(Location(0, 0, 0), Location(0, 1, 1))),
@@ -237,9 +206,8 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
       Dot(Span(Location(0, 22, 22), Location(0, 23, 23))),
     )
     assertEquals(Scanner.parse(str), Right(expected))
-  }
 
-  test("strings.lox") {
+  test("strings.lox"):
     val str = """""
   "string"
   """
@@ -248,9 +216,8 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
       Str("string", Span(Location(1, 2, 5), Location(1, 10, 13))),
     )
     assertEquals(Scanner.parse(str), Right(expected))
-  }
 
-  test("spaces.lox") {
+  test("spaces.lox"):
     val str = """
   space    tabs				newlines
 
@@ -264,9 +231,8 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
       Identifier("end", Span(Location(3, 2, 32), Location(3, 5, 35))),
     )
     assertEquals(Scanner.parse(str), Right(expected))
-  }
 
-  test("multiline.lox") {
+  test("multiline.lox"):
     val str = """
   var a = "1
   2
@@ -295,9 +261,8 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
       SingleLine("// expect: 3", Span(Location(7, 2, 67), Location(7, 14, 79))),
     )
     assertEquals(Scanner.parse(str), Right(expected))
-  }
 
-  test("return_in_nested_function.lox") {
+  test("return_in_nested_function.lox"):
     val str = """
   class Foo {
   init() {
@@ -342,4 +307,3 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"""
       SingleLine("// expect: Foo instance", Span(Location(10, 15, 116), Location(10, 38, 139))),
     )
     assertEquals(Scanner.parse(str), Right(expected))
-  }
