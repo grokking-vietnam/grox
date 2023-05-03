@@ -10,7 +10,7 @@ import Arbitraries.given
 
 class EnvTest extends CatsEffectSuite with ScalaCheckEffectSuite:
 
-  test("define => get returns the same value") {
+  test("define => get returns the same value"):
     PropF.forAllF { (name: String, value: LiteralType) =>
       Env
         .instance[IO](State())
@@ -21,9 +21,8 @@ class EnvTest extends CatsEffectSuite with ScalaCheckEffectSuite:
           yield assert(result == value)
         )
     }
-  }
 
-  test("define => state") {
+  test("define => state"):
     PropF.forAllF { (xs: List[(String, LiteralType)]) =>
       val result = xs.foldLeft(Map[String, LiteralType]())((x, y) => x + y)
       Env
@@ -36,9 +35,8 @@ class EnvTest extends CatsEffectSuite with ScalaCheckEffectSuite:
           yield assert(map == result)
         )
     }
-  }
 
-  test("define => define => get returns the later value") {
+  test("define => define => get returns the later value"):
     PropF.forAllF { (name: String, v1: LiteralType, v2: LiteralType) =>
       Env
         .instance[IO](State())
@@ -50,9 +48,8 @@ class EnvTest extends CatsEffectSuite with ScalaCheckEffectSuite:
           yield assert(result == v2)
         )
     }
-  }
 
-  test("define => assign => get returns the later value") {
+  test("define => assign => get returns the later value"):
     PropF.forAllF { (name: String, v1: LiteralType, v2: LiteralType) =>
       Env
         .instance[IO](State())
@@ -64,9 +61,8 @@ class EnvTest extends CatsEffectSuite with ScalaCheckEffectSuite:
           yield assert(result == v2)
         )
     }
-  }
 
-  test("assign value to a not declared variable returns error") {
+  test("assign value to a not declared variable returns error"):
     PropF.forAllF { (name: String, v: LiteralType) =>
       Env
         .instance[IO](State())
@@ -75,9 +71,8 @@ class EnvTest extends CatsEffectSuite with ScalaCheckEffectSuite:
         .handleError(e => true)
         .map(assert(_))
     }
-  }
 
-  test("get a value from empty Env returns error") {
+  test("get a value from empty Env returns error"):
     PropF.forAllF { (name: String) =>
       Env
         .instance[IO](State())
@@ -86,9 +81,8 @@ class EnvTest extends CatsEffectSuite with ScalaCheckEffectSuite:
         .handleError(e => true)
         .map(assert(_))
     }
-  }
 
-  test("we can define a variable in inner block with the same name as outer block") {
+  test("we can define a variable in inner block with the same name as outer block"):
     PropF.forAllF { (name: String, v1: LiteralType, v2: LiteralType) =>
       Env
         .instance[IO](State())
@@ -103,6 +97,5 @@ class EnvTest extends CatsEffectSuite with ScalaCheckEffectSuite:
           yield assert(v11 == v1 && v21 == v2)
         )
     }
-  }
 
 end EnvTest

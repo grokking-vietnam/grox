@@ -32,71 +32,60 @@ class ParserTest extends munit.CatsEffectSuite with ScalaCheckSuite:
 
   val expr42 = Expr.Literal(empty, 42)
 
-  test("empty") {
+  test("empty"):
     assertEquals(parse(Nil), Left(Error.ExpectExpression(Nil)))
-  }
 
-  test("primary number") {
+  test("primary number"):
     val ts = List(Number("42", empty))
     assertEquals(parse(ts), Right(expr42, Nil))
-  }
 
-  test("primary string") {
+  test("primary string"):
     val ts = List(Str("you rox!", empty))
     val want = Expr.Literal(empty, "you rox!")
     assertEquals(parse(ts), Right(want, Nil))
-  }
 
-  test("primary true") {
+  test("primary true"):
     val ts = List(True(empty))
     val want = Expr.Literal(empty, true)
     assertEquals(parse(ts), Right(want, Nil))
-  }
 
-  test("primary true") {
+  test("primary true"):
     val ts = List(False(empty))
     val want = Expr.Literal(empty, false)
     assertEquals(parse(ts), Right(want, List()))
-  }
 
-  test("primary nil") {
+  test("primary nil"):
     val ts = List(Null(empty))
     val want = Expr.Literal(empty, ())
     assertEquals(parse(ts), Right(want, Nil))
-  }
 
-  test("primary variable") {
+  test("primary variable"):
     val avar: Identifier[Span] = Identifier("a", empty)
     val ts = List(avar)
     val want = Expr.Variable(empty, "a")
     assertEquals(parse(ts), Right(want, Nil))
-  }
 
-  test("unary negate") {
+  test("unary negate"):
     val ts = List(Minus(empty), Number("42", empty))
     val want = Expr.Negate(empty, expr42)
     assertEquals(parse(ts), Right(want, Nil))
-  }
 
-  test("unary not") {
+  test("unary not"):
     val ts = List(Bang(empty), False(empty))
     val want = Expr.Not(empty, Expr.Literal(empty, false))
     assertEquals(parse(ts), Right(want, Nil))
-  }
 
-  test("unary multiple minus") {
+  test("unary multiple minus"):
     val ts = List(Minus(empty), Minus(empty), Minus(empty), Number("1", empty))
     val want = Expr.Negate(empty, Expr.Negate(empty, Expr.Negate(empty, Expr.Literal(empty, 1))))
     assertEquals(parse(ts), Right(want, Nil))
-  }
 
-  test("factor 2 numbers") {
+  test("factor 2 numbers"):
     val ts = List(num2, Star(empty), num5)
     val want = Expr.Multiply(empty, expr2, expr5)
     assertEquals(parse(ts), Right(want, Nil))
-  }
 
-  test("factor 4 numbers") {
+  test("factor 4 numbers"):
     // 2 * 5 * 1 / 42
     val ts = List(num2, Star(empty), num5, Star(empty), num1, Slash(empty), num42)
     val want = Expr.Divide(
@@ -105,9 +94,8 @@ class ParserTest extends munit.CatsEffectSuite with ScalaCheckSuite:
       expr42,
     )
     assertEquals(parse(ts), Right(want, Nil))
-  }
 
-  test("factor with unary") {
+  test("factor with unary"):
     // -1 * 2 * -3
     val ts = List(Minus(empty), num1, Star(empty), num2, Star(empty), Minus(empty), num3)
     val want = Expr.Multiply(
@@ -116,15 +104,13 @@ class ParserTest extends munit.CatsEffectSuite with ScalaCheckSuite:
       Expr.Negate(empty, expr3),
     )
     assertEquals(parse(ts), Right(want, Nil))
-  }
 
-  test("term 2 numbers") {
+  test("term 2 numbers"):
     val ts = List(num2, Minus(empty), Minus(empty), num3)
     val want = Expr.Subtract(empty, expr2, Expr.Negate(empty, expr3))
     assertEquals(parse(ts), Right(want, Nil))
-  }
 
-  test("term 4 numbers") {
+  test("term 4 numbers"):
     // 1 * -2 * 3 - 4
     val ts = List(
       num1,
@@ -146,9 +132,8 @@ class ParserTest extends munit.CatsEffectSuite with ScalaCheckSuite:
       expr4,
     )
     assertEquals(parse(ts), Right(want, Nil))
-  }
 
-  test("comparison") {
+  test("comparison"):
     // 1 * 2 > -3 * 4
     val ts = List(
       num1,
@@ -166,9 +151,8 @@ class ParserTest extends munit.CatsEffectSuite with ScalaCheckSuite:
       Expr.Add(empty, Expr.Negate(empty, expr3), expr4),
     )
     assertEquals(parse(ts), Right(want, Nil))
-  }
 
-  test("equality") {
+  test("equality"):
     // false != 1 * 2 > -3 * 4
     val ts = List(
       False(empty),
@@ -192,9 +176,8 @@ class ParserTest extends munit.CatsEffectSuite with ScalaCheckSuite:
       ),
     )
     assertEquals(parse(ts), Right(want, Nil))
-  }
 
-  test("combination") {
+  test("combination"):
     // false == !(1 * 2 > -3 + 4 / 5)
     val ts = List(
       False(empty),
@@ -237,9 +220,8 @@ class ParserTest extends munit.CatsEffectSuite with ScalaCheckSuite:
     val rmn = List(num1, EqualEqual(empty), num2)
 
     assertEquals(parse(ts), Right(want, rmn))
-  }
 
-  test("AND OR logic") {
+  test("AND OR logic"):
     // True OR (3 >= 4) AND (5 < 6)
     val ts = List(
       True(empty),
@@ -280,9 +262,7 @@ class ParserTest extends munit.CatsEffectSuite with ScalaCheckSuite:
 
     assertEquals(parse(ts), Right(want, Nil))
 
-  }
-
-  test("error: expect expression") {
+  test("error: expect expression"):
     // 1 + 2 / (3 - )
     val ts = List(
       num1,
@@ -295,9 +275,8 @@ class ParserTest extends munit.CatsEffectSuite with ScalaCheckSuite:
       RightParen(empty),
     )
     assertEquals(parse(ts), Left(Error.ExpectExpression(List(RightParen(empty)))))
-  }
 
-  test("error: expect closing paren") {
+  test("error: expect closing paren"):
     // 1 + 2 / (3 - 4  true false
     val ts = List(
       num1,
@@ -312,9 +291,8 @@ class ParserTest extends munit.CatsEffectSuite with ScalaCheckSuite:
       False(empty),
     )
     assertEquals(parse(ts), Left(Error.ExpectClosing(List(True(empty), False(empty)))))
-  }
 
-  test("synchronize: until statement") {
+  test("synchronize: until statement"):
     // a = a + 1) { print a; }
     val ts = List(
       avar,
@@ -331,9 +309,8 @@ class ParserTest extends munit.CatsEffectSuite with ScalaCheckSuite:
     )
     val remaining = ts.dropWhile(_ != Print(empty))
     assertEquals(synchronize(ts), remaining)
-  }
 
-  test("synchronize: until new expression") {
+  test("synchronize: until new expression"):
     // + 1; 2 * 3;
     val ts = List(
       Plus(empty),
@@ -346,9 +323,8 @@ class ParserTest extends munit.CatsEffectSuite with ScalaCheckSuite:
     )
     val remaining = ts.dropWhile(_ != num2)
     assertEquals(synchronize(ts), remaining)
-  }
 
-  test("Val declaration") {
+  test("Val declaration"):
     val ts = List(
       Var(empty),
       avar,
@@ -367,9 +343,8 @@ class ParserTest extends munit.CatsEffectSuite with ScalaCheckSuite:
     val expectedInspector = Inspector().copy(stmts = List(expectedStmt))
 
     assertEquals(_parseStmt(inspector), expectedInspector)
-  }
 
-  test("While: statement ") {
+  test("While: statement "):
     val ts = List(
       While(empty),
       LeftParen(empty),
@@ -425,32 +400,27 @@ class ParserTest extends munit.CatsEffectSuite with ScalaCheckSuite:
 
     assertEquals(_parseStmt(inspector), expectedInspector)
 
-  }
-
-  test("1 + nil") {
+  test("1 + nil"):
     val ts = List(Number("1", empty), Plus(empty), Null(empty))
     val want = Expr.Add(empty, Expr.Literal(empty, 1), Expr.Literal(empty, ()))
     assertEquals(parse(ts), Right(want, Nil))
-  }
 
 end ParserTest
 
 class ParserCheck extends ScalaCheckSuite:
-  property("parse numerics succesfully") {
+  property("parse numerics succesfully"):
     Prop.forAll(numericGen) { expr =>
       parse(expr.flatten) match
         case Left(_)  => false
         case Right(_) => true
     }
-  }
 
-  property("parse logicals succesfully") {
+  property("parse logicals succesfully"):
     Prop.forAll(logicalGen) { expr =>
       parse(expr.flatten) match
         case Left(_)  => false
         case Right(_) => true
     }
-  }
 
   def evaluate(expr: Expr, state: State = State()): IO[LiteralType] =
     for
@@ -459,26 +429,23 @@ class ParserCheck extends ScalaCheckSuite:
       result <- interpreter.evaluate(expr)
     yield result
 
-  test("produce an equal numeric expression") {
+  test("produce an equal numeric expression"):
     forAllF(numericGen) { expr =>
       parse(expr.flatten) match
         case Left(_) => IO(assert(false))
         case Right(parsedExpr, _) =>
-          (evaluate(expr).attempt, evaluate(parsedExpr).attempt).mapN {
+          (evaluate(expr).attempt, evaluate(parsedExpr).attempt).mapN:
             case (Left(e1), Left(e2))                   => assert(e1 == e2)
             case (Right(v1: Double), Right(v2: Double)) => assert(math.abs(v1 - v2) < 0.01)
             case _                                      => assert(false)
-          }
     }
-  }
 
-  test("produce an equal logical expression") {
+  test("produce an equal logical expression"):
     forAllF(logicalGen) { expr =>
       parse(expr.flatten) match
         case Left(_) => IO(assert(false))
         case Right(parsedExpr, _) =>
           (evaluate(expr), evaluate(parsedExpr)).mapN((x, y) => assert(x == y))
     }
-  }
 
 end ParserCheck

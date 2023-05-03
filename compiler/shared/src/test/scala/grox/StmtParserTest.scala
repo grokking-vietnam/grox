@@ -21,7 +21,7 @@ class StmtParserTest extends munit.FunSuite:
   val expr3 = Expr.Literal(empty, 3)
   val span = Span(Location(0, 0, 0), Location(0, 5, 5))
 
-  test("Parse full variable declaration") {
+  test("Parse full variable declaration"):
     val ts = List(
       Var(empty),
       identifierX,
@@ -34,35 +34,31 @@ class StmtParserTest extends munit.FunSuite:
       _parseStmt(Inspector(List.empty, List.empty, ts)),
       Inspector(List.empty, List(want), List.empty),
     )
-  }
 
-  test("Parse variable declaration failed when missing identifier") {
+  test("Parse variable declaration failed when missing identifier"):
     val ts = List(Var(empty))
     val want = Error.ExpectVarIdentifier(ts)
     assertEquals(
       _parseStmt(Inspector(List.empty, List.empty, ts)),
       Inspector(List(want), List.empty, List.empty),
     )
-  }
 
-  test("Parse empty token list") {
+  test("Parse empty token list"):
     val ts = List()
     assertEquals(
       _parseStmt(Inspector(List.empty, List.empty, ts)),
       Inspector(List.empty, List.empty, List.empty),
     )
-  }
 
-  test("Parse variable declaration without initializer") {
+  test("Parse variable declaration without initializer"):
     val ts = List(Var(empty), Identifier("x", empty), Semicolon(empty))
     val want = Stmt.Var(Identifier("x", empty), None)
     assertEquals(
       _parseStmt(Inspector(List.empty, List.empty, ts)),
       Inspector(List.empty, List(want), List.empty),
     )
-  }
 
-  test("Parse full variable declaration with trailing expressions") {
+  test("Parse full variable declaration with trailing expressions"):
     val ts = List(
       Var(empty),
       grox.Token.Identifier("x", empty),
@@ -86,54 +82,48 @@ class StmtParserTest extends munit.FunSuite:
         List.empty,
       ),
     )
-  }
 
-  test("Parse single print Statement") {
+  test("Parse single print Statement"):
     val ts = List(Print(empty), num1, Semicolon(empty))
     val want = List(Stmt.Print(expr1))
     assertEquals(
       _parseStmt(Inspector(List.empty, List.empty, ts)),
       Inspector(List.empty, want, List.empty),
     )
-  }
 
-  test("Test consume Var") {
+  test("Test consume Var"):
     val ts = List(Var(span), identifierX, Semicolon(span))
     val want = Right((Var(span), ts.tail))
     assertEquals(
       consume[Var[Span]](ts),
       want,
     )
-  }
 
-  test("Test consume Var failed") {
+  test("Test consume Var failed"):
     val ts = List(Print(span), identifierX, Semicolon(span))
     val want = Left(Error.UnexpectedToken(ts))
     assertEquals(
       consume[Var[Span]](ts),
       want,
     )
-  }
 
-  test("Parse single print Statement") {
+  test("Parse single print Statement"):
     val ts = List(num1, Semicolon(empty))
     val want = Right(Stmt.Print(expr1), List())
     assertEquals(
       printStmt(ts),
       want,
     )
-  }
 
-  test("assignment statement") {
+  test("assignment statement"):
     val ts = List(avar, Equal(empty), num1, Semicolon(empty))
     val want = Stmt.Assign("a", expr1)
     assertEquals(
       assignment(ts),
       Right(want, Nil),
     )
-  }
 
-  test("Val declaration") {
+  test("Val declaration"):
     val ts = List(
       Var(empty),
       avar,
@@ -158,9 +148,8 @@ class StmtParserTest extends munit.FunSuite:
     )
 
     assertEquals(_parseStmt(inspector), expectedInspector)
-  }
 
-  test("While: statement ") {
+  test("While: statement "):
     // while (true) { var a = 1;  a = a + a; }
     val ts = List(
       While(empty),
@@ -213,9 +202,7 @@ class StmtParserTest extends munit.FunSuite:
 
     assertEquals(_parseStmt(inspector), expectedInspector)
 
-  }
-
-  test("For loop statement") {
+  test("For loop statement"):
     // for (var i = 0; i < 10; i = i + 1) print i;
     val ivar: Identifier[Span] = Identifier("i", empty)
 
@@ -281,4 +268,3 @@ class StmtParserTest extends munit.FunSuite:
     )
 
     assertEquals(_parseStmt(inspector), expectedInspector)
-  }
