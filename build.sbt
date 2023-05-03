@@ -41,11 +41,7 @@ inThisBuild(
         cond = Some("${{ github.ref == 'refs/heads/main' }}"),
       ),
     ),
-
-    // Scalafix
-    scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.5.0",
     semanticdbEnabled := true,
-    semanticdbVersion := scalafixSemanticdb.revision,
   )
 )
 
@@ -56,6 +52,7 @@ val commonSettings = Seq(
   scalacOptions += "-indent",
   scalacOptions += "-Yexplicit-nulls",
   scalacOptions += "-explain",
+  scalacOptions += "-Wunused:all",
   libraryDependencies ++= Seq(
     Dependencies.catsCore.value,
     Dependencies.scribe.value,
@@ -128,12 +125,7 @@ lazy val root = project
 addCommandAlias("build", "buildJs")
 addCommandAlias("buildJs", ";root/fullLinkJS")
 addCommandAlias("testAll", "all test")
-addCommandAlias("prepare", "fix; fmt")
-addCommandAlias("fix", "all compile:scalafix test:scalafix")
-addCommandAlias(
-  "fixCheck",
-  "; compile:scalafix --check ; test:scalafix --check",
-)
+addCommandAlias("prepare", "fmt")
 addCommandAlias("fmt", "all root/scalafmtSbt root/scalafmtAll")
 addCommandAlias("fmtCheck", "all root/scalafmtSbtCheck root/scalafmtCheckAll")
-addCommandAlias("check", "fixCheck; fmtCheck")
+addCommandAlias("check", "fmtCheck")
