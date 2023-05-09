@@ -24,9 +24,17 @@ package kantan.parsers
   *   - the token that cause the failure, as a string.
   *   - a list of the values that were expected.
   */
-final case class Message[Token](offset: Int, pos: Position, input: Message.Input[Token], expected: List[String]):
-  def expecting(label: String): Message[Token]             = copy(expected = List(label))
-  def mergeExpected(other: Message[Token]): Message[Token] = copy(expected = expected ++ other.expected)
+final case class Message[Token](
+  offset: Int,
+  pos: Position,
+  input: Message.Input[Token],
+  expected: List[String],
+):
+  def expecting(label: String): Message[Token] = copy(expected = List(label))
+
+  def mergeExpected(other: Message[Token]): Message[Token] = copy(expected =
+    expected ++ other.expected
+  )
 
 object Message:
   // - Input that triggered the message --------------------------------------------------------------------------------
@@ -39,7 +47,8 @@ object Message:
       *
       * At the time of writing, this can only occur in two scenarios:
       *   - the parser failed without parsing input which... not sure this is an actual possibility.
-      *   - the failure wasn't triggered by an unexpected token, but by filtering out successful parses.
+      *   - the failure wasn't triggered by an unexpected token, but by filtering out successful
+      *     parses.
       */
     final case object None extends Input[Nothing]
 
@@ -54,7 +63,12 @@ object Message:
   def empty[Token]: Message[Token] = Message(0, Position.zero, Input.None, List.empty)
 
   def apply[Token: SourceMap](state: State[Token], expected: List[String]): Message[Token] =
-    if(state.isEOF) Message(state.offset, state.pos, Input.Eof, expected)
+    if (state.isEOF) Message(state.offset, state.pos, Input.Eof, expected)
     else
       val token = state.input(state.offset)
-      Message(state.offset, SourceMap[Token].startsAt(token, state.pos), Input.Token(token), expected)
+      Message(
+        state.offset,
+        SourceMap[Token].startsAt(token, state.pos),
+        Input.Token(token),
+        expected,
+      )
