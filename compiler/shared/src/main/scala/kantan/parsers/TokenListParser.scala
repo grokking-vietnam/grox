@@ -18,9 +18,9 @@ package kantan.parsers
 
 import scala.annotation.tailrec
 
-private class TokenListParser[Token: SourceMap](expected: IndexedSeq[Token]) extends Parser[Token, IndexedSeq[Token]] {
+private class TokenListParser[Token: SourceMap](expected: IndexedSeq[Token]) extends Parser[Token, IndexedSeq[Token]]:
 
-  protected def run(state: State[Token]): Result[Token, IndexedSeq[Token]] = {
+  protected def run(state: State[Token]): Result[Token, IndexedSeq[Token]] =
     val left  = expected.iterator
     val right = state.input.iterator.drop(state.offset)
 
@@ -29,22 +29,17 @@ private class TokenListParser[Token: SourceMap](expected: IndexedSeq[Token]) ext
 
     @tailrec
     def loop(offset: Int, pos: Position): Result[Token, IndexedSeq[Token]] =
-      if(left.hasNext) {
-        if(right.hasNext) {
+      if(left.hasNext)
+        if(right.hasNext)
           val leftToken  = left.next()
           val rightToken = right.next()
 
           if(leftToken == rightToken) loop(offset + 1, SourceMap[Token].endsAt(rightToken, pos))
           else error(offset, pos, Message.Input.Token(rightToken))
-        }
         else error(offset, pos, Message.Input.Eof)
-      }
-      else {
+      else
         val newState = state.copy(offset = offset, pos = pos)
         val parsed   = Parsed(expected, state.startsAt(state.input(state.offset)), newState.pos)
         Result.Ok(true, parsed, newState, Message.empty)
-      }
 
     loop(state.offset, state.pos)
-  }
-}

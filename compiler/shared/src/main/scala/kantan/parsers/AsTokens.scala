@@ -24,11 +24,10 @@ package kantan.parsers
   *
   * Strings, for example, can be turned into an array of characters at very little cost.
   */
-trait AsTokens[Source, Token] {
+trait AsTokens[Source, Token]:
   def asTokens(source: Source): IndexedSeq[Token]
-}
 
-object AsTokens {
+object AsTokens:
   def apply[Source, Token](implicit at: AsTokens[Source, Token]): AsTokens[Source, Token] = at
 
   /** Strings tokenize to arrays of characters. */
@@ -38,4 +37,3 @@ object AsTokens {
   implicit def indexedSeq[Token]: AsTokens[IndexedSeq[Token], Token] = source => source
 
   implicit def seq[Col[X] <: Seq[X], Token]: AsTokens[Col[Token], Token] = source => source.toIndexedSeq
-}

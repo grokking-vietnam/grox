@@ -31,7 +31,7 @@ package kantan.parsers
   * `6` and `7` individually, and accumulate them in a list.
   */
 private class TokenParser[Token: SourceMap](parse: State[Token] => Result[Token, Token], pred: Token => Boolean)
-    extends Parser[Token, Token] {
+    extends Parser[Token, Token]:
 
   // - Parser methods --------------------------------------------------------------------------------------------------
   // -------------------------------------------------------------------------------------------------------------------
@@ -44,13 +44,12 @@ private class TokenParser[Token: SourceMap](parse: State[Token] => Result[Token,
   // -------------------------------------------------------------------------------------------------------------------
   def rep(allowEmpty: Boolean): Parser[Token, List[Token]] = state => {
     val start = state.offset
-    val stop = {
+    val stop =
       val index = state.input.indexWhere(token => !pred(token), start)
       if(index < 0) state.input.length
       else index
-    }
 
-    if(start < stop) {
+    if(start < stop)
       val value    = state.input.slice(start, stop).toList
       val newState = state.consumeRep(value)
 
@@ -61,7 +60,6 @@ private class TokenParser[Token: SourceMap](parse: State[Token] => Result[Token,
       val parsed = Parsed(value, state.startsAt(state.input(start)), newState.pos)
 
       Result.Ok(true, parsed, newState, Message.empty)
-    }
     else if(allowEmpty) Result.Ok(false, Parsed(List.empty, state.pos, state.pos), state, Message.empty)
     else Result.Error(false, Message(state, List.empty))
   }
@@ -69,9 +67,8 @@ private class TokenParser[Token: SourceMap](parse: State[Token] => Result[Token,
   override def rep = rep(false)
 
   override def rep0 = rep(true)
-}
 
-private[parsers] object TokenParser {
+private[parsers] object TokenParser:
   // - Basic parser ----------------------------------------------------------------------------------------------------
   // -------------------------------------------------------------------------------------------------------------------
 
@@ -91,4 +88,3 @@ private[parsers] object TokenParser {
       },
     pred
   )
-}

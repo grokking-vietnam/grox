@@ -28,21 +28,18 @@ package kantan.parsers
   * be able to provide good error messages for combinators such as [[Parser.filter]] where we might turn a success into
   * a failure after the fact.
   */
-sealed trait Result[Token, +A] {
-  def recoverWith[AA >: A](f: Result.Error[Token] => Result[Token, AA]): Result[Token, AA] = this match {
+sealed trait Result[Token, +A]:
+  def recoverWith[AA >: A](f: Result.Error[Token] => Result[Token, AA]): Result[Token, AA] = this match
     case ok: Result.Ok[Token, A]      => ok
     case failure: Result.Error[Token] => f(failure)
-  }
 
-  def toEither: Either[Message[Token], A] = this match {
+  def toEither: Either[Message[Token], A] = this match
     case Result.Ok(_, parsed, _, _) => Right(parsed.value)
     case Result.Error(_, msg)       => Left(msg)
-  }
 
-  def setStart(pos: Position): Result[Token, A] = this match {
+  def setStart(pos: Position): Result[Token, A] = this match
     case ok: Result.Ok[Token, A] => ok.copy(value = ok.value.copy(start = pos))
     case other                   => other
-  }
 
 // - Common properties -----------------------------------------------------------------------------------------------
 // -------------------------------------------------------------------------------------------------------------------
@@ -55,34 +52,28 @@ sealed trait Result[Token, +A] {
 
 // - Mapping ---------------------------------------------------------------------------------------------------------
 // -------------------------------------------------------------------------------------------------------------------
-  def mapMessage(f: Message[Token] => Message[Token]): Result[Token, A] = this match {
+  def mapMessage(f: Message[Token] => Message[Token]): Result[Token, A] = this match
     case ok: Result.Ok[Token, A]    => ok.copy(message = f(message))
     case error: Result.Error[Token] => error.copy(message = f(message))
-  }
 
-  def map[B](f: A => B): Result[Token, B] = this match {
+  def map[B](f: A => B): Result[Token, B] = this match
     case ok: Result.Ok[Token, A] => ok.copy(value = ok.value.map(f))
     case e: Result.Error[Token]  => e
-  }
 
 // - Backtrack handling ----------------------------------------------------------------------------------------------
 // -------------------------------------------------------------------------------------------------------------------
   /** Marks this result as consuming. */
-  def consume: Result[Token, A] = this match {
+  def consume: Result[Token, A] = this match
     case ok: Result.Ok[Token, A]  => ok.copy(consumed = true)
     case err: Result.Error[Token] => err.copy(consumed = true)
-  }
 
   /** Marks this result as non-consuming. */
-  def empty: Result[Token, A] = this match {
+  def empty: Result[Token, A] = this match
     case ok: Result.Ok[Token, A]  => ok.copy(consumed = false)
     case err: Result.Error[Token] => err.copy(consumed = false)
-  }
 
-}
 
-object Result {
+object Result:
   final case class Ok[Token, A](consumed: Boolean, value: Parsed[A], state: State[Token], message: Message[Token])
       extends Result[Token, A]
   final case class Error[Token](consumed: Boolean, message: Message[Token]) extends Result[Token, Nothing]
-}

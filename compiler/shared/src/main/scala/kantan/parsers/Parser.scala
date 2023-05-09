@@ -27,7 +27,7 @@ package kantan.parsers
   * An important thing to realise is that parsers are non-backtracking by default. See the [[|]] documentation for
   * detailed information on the consequences of this design choice.
   */
-trait Parser[Token, +A] {
+trait Parser[Token, +A]:
 
   // - Main methods ----------------------------------------------------------------------------------------------------
   // -------------------------------------------------------------------------------------------------------------------
@@ -64,11 +64,10 @@ trait Parser[Token, +A] {
     * result - `char('9')` would not even be attempted.
     */
   def filter(f: A => Boolean): Parser[Token, A] = state =>
-    run(state) match {
+    run(state) match
       case Result.Ok(_, parsed, _, msg) if !f(parsed.value) =>
         Result.Error(false, msg.copy(input = Message.Input.None))
       case other => other
-    }
 
   def withFilter(f: A => Boolean): Parser[Token, A] = filter(f)
 
@@ -90,18 +89,16 @@ trait Parser[Token, +A] {
     * would not even be attempted.
     */
   def collect[B](f: PartialFunction[A, B]): Parser[Token, B] = state =>
-    run(state) match {
+    run(state) match
       case Result.Ok(consumed, parsed, state, msg) =>
-        f.lift(parsed.value) match {
+        f.lift(parsed.value) match
           case Some(b) => Result.Ok(consumed, parsed.copy(value = b), state, msg)
           case None =>
             Result.Error(
               false,
               msg.copy(input = Message.Input.None, pos = parsed.start)
             )
-        }
       case error: Result.Error[Token] => error
-    }
 
   /** Fails when this parser succeeds, and succeeds when it fails.
     *
@@ -115,10 +112,10 @@ trait Parser[Token, +A] {
     *   - `2` would be consumed and confirmed to not be `1`.
     *   - the parser would then fail, because there is no digit to read.
     */
-  def unary_! : Parser[Token, Unit] = {
+  def unary_! : Parser[Token, Unit] =
     def negate(expected: List[String]) = expected.map(label => s"not $label")
     state =>
-      void.run(state) match {
+      void.run(state) match
         case Result.Ok(_, parsed, _, msg) =>
           Result.Error(
             false,
@@ -130,8 +127,6 @@ trait Parser[Token, +A] {
 
         case Result.Error(_, message) =>
           Result.Ok(false, Parsed((), state.pos, state.pos), state, message)
-      }
-  }
 
   @inline def !~(p2: Parser[Token, Any]): Parser[Token, A]    = notFollowedBy(p2)
   def notFollowedBy(p2: Parser[Token, Any]): Parser[Token, A] = this <* !p2
@@ -145,20 +140,18 @@ trait Parser[Token, +A] {
   def void: Parser[Token, Unit] = map(_ => ())
 
   def withPosition: Parser[Token, Parsed[A]] = state =>
-    run(state) match {
+    run(state) match
       case Result.Ok(consumed, parsed, state, msg) => Result.Ok(consumed, parsed.map(_ => parsed), state, msg)
       case failure: Result.Error[Token]            => failure
-    }
 
   // - Combining parsers -----------------------------------------------------------------------------------------------
   // -------------------------------------------------------------------------------------------------------------------
   def flatMap[B](f: A => Parser[Token, B]): Parser[Token, B] =
     state =>
-      run(state) match {
+      run(state) match
         case Result.Ok(true, parsed, rest, _)  => f(parsed.value).run(rest).consume.setStart(parsed.start)
         case Result.Ok(false, parsed, rest, _) => f(parsed.value).run(rest).setStart(parsed.start)
         case error: Result.Error[Token]        => error
-      }
 
   /** Attempts either this parser or the specified one.
     *
@@ -254,11 +247,10 @@ trait Parser[Token, +A] {
 
   def repSep0[Sep](sep: Parser[Token, Sep]): Parser[Token, List[A]] =
     this.repSep(sep) | Parser.pure(List.empty)
-}
 // - Base parsers ------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------
 
-object Parser {
+object Parser:
   // - Common operations -----------------------------------------------------------------------------------------------
   // -------------------------------------------------------------------------------------------------------------------
   def pure[Token, A](value: A): Parser[Token, A] = state =>
@@ -284,25 +276,23 @@ object Parser {
 
   def oneOf[Token, A](head: Parser[Token, A], tail: Parser[Token, A]*): Parser[Token, A] = tail.foldLeft(head)(_ | _)
 
-  def sequence[Token, A](parsers: List[Parser[Token, A]]): Parser[Token, List[A]] = parsers match {
+  def sequence[Token, A](parsers: List[Parser[Token, A]]): Parser[Token, List[A]] = parsers match
     case head :: tail =>
       for {
         h <- head
         t <- sequence(tail)
       } yield h :: t
     case Nil => pure(Nil)
-  }
 
   // - Char parsers ----------------------------------------------------------------------------------------------------
   // -------------------------------------------------------------------------------------------------------------------
   def char(c: Char): Parser[Char, Char]            = satisfy[Char](_ == c).label(c.toString)
   def char(f: Char => Boolean): Parser[Char, Char] = satisfy(f)
   def charIn(cs: Char*): Parser[Char, Char]        = charIn(cs)
-  def charIn(cs: Iterable[Char]): Parser[Char, Char] = {
+  def charIn(cs: Iterable[Char]): Parser[Char, Char] =
     val chars = cs.toSet
 
     satisfy(chars.contains)
-  }
 
   private val letters = ('a' to 'z') ++ ('A' to 'Z')
   private val digits  = '0' to '9'
@@ -319,4 +309,3 @@ object Parser {
     (charIn(letters :+ '_') ~ charIn(letters ++ digits :+ '_').rep0).map { case (head, tail) =>
       (head +: tail).mkString
     }
-}
