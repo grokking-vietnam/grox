@@ -24,17 +24,16 @@ package kantan.parsers
   *   - the token that cause the failure, as a string.
   *   - a list of the values that were expected.
   */
-final case class Message[Token](offset: Int, pos: Position, input: Message.Input[Token], expected: List[String]) {
+final case class Message[Token](offset: Int, pos: Position, input: Message.Input[Token], expected: List[String]):
   def expecting(label: String): Message[Token]             = copy(expected = List(label))
   def mergeExpected(other: Message[Token]): Message[Token] = copy(expected = expected ++ other.expected)
-}
 
-object Message {
+object Message:
   // - Input that triggered the message --------------------------------------------------------------------------------
   // -------------------------------------------------------------------------------------------------------------------
   sealed trait Input[+A] extends Product with Serializable
 
-  object Input {
+  object Input:
 
     /** No known input was consumed.
       *
@@ -49,7 +48,6 @@ object Message {
 
     /** Token from the input stream. */
     final case class Token[A](value: A) extends Input[A]
-  }
 
   // - Construction ----------------------------------------------------------------------------------------------------
   // -------------------------------------------------------------------------------------------------------------------
@@ -57,8 +55,6 @@ object Message {
 
   def apply[Token: SourceMap](state: State[Token], expected: List[String]): Message[Token] =
     if(state.isEOF) Message(state.offset, state.pos, Input.Eof, expected)
-    else {
+    else
       val token = state.input(state.offset)
       Message(state.offset, SourceMap[Token].startsAt(token, state.pos), Input.Token(token), expected)
-    }
-}
