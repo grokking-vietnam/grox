@@ -18,9 +18,9 @@ package kantan.parsers
 
 /** Type class that describes the capacity to tokenize something.
   *
-  * A tokenized value is an indexed sequence (ideally an array). This allows the parser to navigate input not by
-  * consuming it bit by bit and constructing tons of intermediate representations, but as a pointer in something
-  * array-ish.
+  * A tokenized value is an indexed sequence (ideally an array). This allows the parser to navigate
+  * input not by consuming it bit by bit and constructing tons of intermediate representations, but
+  * as a pointer in something array-ish.
   *
   * Strings, for example, can be turned into an array of characters at very little cost.
   */
@@ -28,7 +28,10 @@ trait AsTokens[Source, Token]:
   def asTokens(source: Source): IndexedSeq[Token]
 
 object AsTokens:
-  def apply[Source, Token](implicit at: AsTokens[Source, Token]): AsTokens[Source, Token] = at
+
+  def apply[Source, Token](
+    implicit at: AsTokens[Source, Token]
+  ): AsTokens[Source, Token] = at
 
   /** Strings tokenize to arrays of characters. */
   implicit val string: AsTokens[String, Char] = source => source.toArray.toIndexedSeq
@@ -36,4 +39,5 @@ object AsTokens:
   /** Indexed sequences are already tokenized. */
   implicit def indexedSeq[Token]: AsTokens[IndexedSeq[Token], Token] = source => source
 
-  implicit def seq[Col[X] <: Seq[X], Token]: AsTokens[Col[Token], Token] = source => source.toIndexedSeq
+  implicit def seq[Col[X] <: Seq[X], Token]: AsTokens[Col[Token], Token] =
+    source => source.toIndexedSeq

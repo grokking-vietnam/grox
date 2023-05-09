@@ -3,6 +3,7 @@ package grox
 import cats.Functor
 
 case class Location(val line: Int, val col: Int, val offset: Int)
+
 case class Span(start: Location, end: Location)
 
 object Span:

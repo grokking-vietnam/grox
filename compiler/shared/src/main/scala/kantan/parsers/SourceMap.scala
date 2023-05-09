@@ -27,8 +27,8 @@ package kantan.parsers
   *   - ends at the beginning of the following line if the character is a line break.
   *   - ends at the next column otherwise.
   *
-  * One might imagine more complex scenarios, however. Typically, when splitting tokenization and parsing, you'll end up
-  * working with tokens that know their position in the original source code.
+  * One might imagine more complex scenarios, however. Typically, when splitting tokenization and
+  * parsing, you'll end up working with tokens that know their position in the original source code.
   */
 trait SourceMap[Token]:
   def endsAt(token: Token, current: Position): Position
@@ -38,11 +38,17 @@ trait SourceMap[Token]:
 // ---------------------------------------------------------------------------------------------------------------------
 object SourceMap:
 
-  def apply[Token](implicit sm: SourceMap[Token]): SourceMap[Token] = sm
+  def apply[Token](
+    implicit sm: SourceMap[Token]
+  ): SourceMap[Token] = sm
 
-  implicit val char: SourceMap[Char] = new SourceMap[Char]:
-    def endsAt(token: Char, current: Position) =
-      if(token == '\n') current.nextLine
-      else current.nextColumn
+  implicit val char: SourceMap[Char] =
+    new SourceMap[Char]:
 
-    def startsAt(token: Char, current: Position) = current
+      def endsAt(token: Char, current: Position) =
+        if (token == '\n')
+          current.nextLine
+        else
+          current.nextColumn
+
+      def startsAt(token: Char, current: Position) = current
