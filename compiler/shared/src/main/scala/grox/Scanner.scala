@@ -75,52 +75,49 @@ object Scanner:
       .string
       .map(Number(_, ()))
 
-  val allTokens: List[P[Token[Unit]]] =
-    keywordsParser ++ List(
-      LeftParen(()).operator,
-      RightParen(()).operator,
-      LeftBrace(()).operator,
-      RightBrace(()).operator,
-      Comma(()).operator,
-      Dot(()).operator,
-      Minus(()).operator,
-      Plus(()).operator,
-      Semicolon(()).operator,
-      Star(()).operator,
-      bangEqualOrBang,
-      equalEqualOrEqual,
-      greaterEqualOrGreater,
-      lessEqualOrLess,
-      commentOrSlash,
-      identifier,
-      str,
-      number,
-    )
+  val allTokens: List[P[Token[Unit]]] = keywordsParser ++ List(
+    LeftParen(()).operator,
+    RightParen(()).operator,
+    LeftBrace(()).operator,
+    RightBrace(()).operator,
+    Comma(()).operator,
+    Dot(()).operator,
+    Minus(()).operator,
+    Plus(()).operator,
+    Semicolon(()).operator,
+    Star(()).operator,
+    bangEqualOrBang,
+    equalEqualOrEqual,
+    greaterEqualOrGreater,
+    lessEqualOrLess,
+    commentOrSlash,
+    identifier,
+    str,
+    number,
+  )
 
   val token: P[Token[Span]] = P.oneOf(allTokens).span.surroundedBy(whitespaces)
 
   val parser = token.rep.map(_.toList)
 
-  def parse(str: String): Either[Error, List[Token[Span]]] =
-    parser.parse(str) match
-      case Right("", ls) => Right(ls)
-      case Right(rest, ls) =>
-        val idx = str.indexOf(rest)
-        val lm = LocationMap(str)
-        Left(Error.PartialParse(ls, idx, lm))
-      case Left(err) =>
-        val idx = err.failedAtOffset
-        val lm = LocationMap(str)
-        Left(Error.ParseFailure(idx, lm))
+  def parse(str: String): Either[Error, List[Token[Span]]] = parser.parse(str) match
+    case Right("", ls) => Right(ls)
+    case Right(rest, ls) =>
+      val idx = str.indexOf(rest)
+      val lm = LocationMap(str)
+      Left(Error.PartialParse(ls, idx, lm))
+    case Left(err) =>
+      val idx = err.failedAtOffset
+      val lm = LocationMap(str)
+      Left(Error.ParseFailure(idx, lm))
 
   enum Error extends NoStackTrace:
     case PartialParse[A](got: A, position: Int, locations: LocationMap) extends Error
     case ParseFailure(position: Int, locations: LocationMap) extends Error
 
-    override def toString: String =
-      this match
-        case PartialParse(_, pos, _) => s"PartialParse at $pos"
-        case ParseFailure(pos, _)    => s"ParseFailure at $pos"
+    override def toString: String = this match
+      case PartialParse(_, pos, _) => s"PartialParse at $pos"
+      case ParseFailure(pos, _)    => s"ParseFailure at $pos"
 
   extension (t: Token[Unit])
     def operator = P.string(t.lexeme).as(t)
