@@ -30,10 +30,9 @@ object ExprGen:
   type Factor = Expr.Multiply | Expr.Divide
   type Equality = Expr.Equal | Expr.NotEqual
 
-  def group[T: Typeable](expr: Expr): Expr =
-    expr match
-      case _: T => Expr.Grouping(expr)
-      case _    => expr
+  def group[T: Typeable](expr: Expr): Expr = expr match
+    case _: T => Expr.Grouping(expr)
+    case _    => expr
 
   def binaryGen(operator: BinOperator)(operand: => Gen[Expr]): Gen[Expr] =
     for
@@ -64,10 +63,9 @@ object ExprGen:
     val gRight = group[Term | Factor](right)
     Expr.Divide(empty, gLeft, gRight)
 
-  def negateOperator(left: Expr): Expr =
-    left match
-      case _: Expr.Literal => Expr.Negate(empty, left)
-      case _               => Expr.Negate(empty, Expr.Grouping(left))
+  def negateOperator(left: Expr): Expr = left match
+    case _: Expr.Literal => Expr.Negate(empty, left)
+    case _               => Expr.Negate(empty, Expr.Grouping(left))
 
   val addGen = treeGen(addOperator.curried, numericGen)
   val subtractGen = treeGen(subtractOperator.curried, numericGen)
@@ -80,10 +78,8 @@ object ExprGen:
   )
 
   val numericGen: Gen[Expr] = Gen.sized(size =>
-    if (size == 0)
-      Gen.choose(0, 10).map(Expr.Literal(empty, _))
-    else
-      Gen.oneOf(addGen, subtractGen, multiplyGen, divideGen, negateGen)
+    if (size == 0) Gen.choose(0, 10).map(Expr.Literal(empty, _))
+    else Gen.oneOf(addGen, subtractGen, multiplyGen, divideGen, negateGen)
   )
 
   def equalOperator(left: Expr, right: Expr): Expr =
@@ -96,10 +92,9 @@ object ExprGen:
     val gRight = group[Equality](right)
     Expr.NotEqual(empty, gLeft, gRight)
 
-  def notOperator(left: Expr): Expr =
-    left match
-      case _: Expr.Literal => Expr.Not(empty, left)
-      case _               => Expr.Not(empty, Expr.Grouping(left))
+  def notOperator(left: Expr): Expr = left match
+    case _: Expr.Literal => Expr.Not(empty, left)
+    case _               => Expr.Not(empty, Expr.Grouping(left))
 
   val equalityGen: Gen[Expr] = Gen.oneOf(
     treeGen(equalOperator.curried, numericGen),
@@ -121,8 +116,6 @@ object ExprGen:
   )
 
   val logicalGen: Gen[Expr] = Gen.sized(size =>
-    if (size == 0)
-      Gen.oneOf(Expr.Literal(empty, true), Expr.Literal(empty, false))
-    else
-      Gen.oneOf(equalityGen, comparisonGen, notGen)
+    if (size == 0) Gen.oneOf(Expr.Literal(empty, true), Expr.Literal(empty, false))
+    else Gen.oneOf(equalityGen, comparisonGen, notGen)
   )

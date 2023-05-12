@@ -43,6 +43,7 @@ class InterpreterTest extends CatsEffectSuite with ScalaCheckEffectSuite:
       evaluate(Expr.Multiply(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
         .map(x => assert(x == n1 * n2))
     }
+
   test("division"):
     forAllF { (n1: Double, n2: Double) =>
       if n2 != 0 then
@@ -62,6 +63,7 @@ class InterpreterTest extends CatsEffectSuite with ScalaCheckEffectSuite:
       evaluate(Expr.GreaterEqual(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
         .map(x => assert(x == n1 >= n2))
     }
+
   test("less"):
     forAllF { (n1: Double, n2: Double) =>
       evaluate(Expr.Less(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
@@ -73,11 +75,13 @@ class InterpreterTest extends CatsEffectSuite with ScalaCheckEffectSuite:
       evaluate(Expr.LessEqual(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
         .map(x => assert(x == n1 <= n2))
     }
+
   test("equal"):
     forAllF { (n1: Double, n2: Double) =>
       evaluate(Expr.Equal(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))
         .map(x => assert(x == (n1 == n2)))
     }
+
   test("not equal"):
     forAllF { (n1: Double, n2: Double) =>
       evaluate(Expr.NotEqual(empty, Expr.Literal(empty, n1), Expr.Literal(empty, n2)))

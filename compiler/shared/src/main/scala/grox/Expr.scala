@@ -9,11 +9,10 @@ object LiteralType:
 
   extension (value: LiteralType)
 
-    def isTruthy: Boolean =
-      value match
-        case _: Unit    => false
-        case v: Boolean => v
-        case _          => true
+    def isTruthy: Boolean = value match
+      case _: Unit    => false
+      case v: Boolean => v
+      case _          => true
 
 enum Expr:
 
@@ -49,51 +48,48 @@ enum Expr:
 
 object Expr:
 
-  def show(expr: Expr): String =
-    expr match
-      case Add(_, left, right) =>
-        s"${formatNestedExpr(left, show(left))} + ${formatNestedExpr(right, show(right))}"
-      case Subtract(_, left, right) =>
-        s"${formatNestedExpr(left, show(left))} - ${formatNestedExpr(right, show(right))}"
-      case Multiply(_, left, right) =>
-        s"${formatNestedExpr(left, show(left))} × ${formatNestedExpr(right, show(right))}"
-      case Divide(_, left, right) =>
-        s"${formatNestedExpr(left, show(left))} ÷ ${formatNestedExpr(right, show(right))}"
+  def show(expr: Expr): String = expr match
+    case Add(_, left, right) =>
+      s"${formatNestedExpr(left, show(left))} + ${formatNestedExpr(right, show(right))}"
+    case Subtract(_, left, right) =>
+      s"${formatNestedExpr(left, show(left))} - ${formatNestedExpr(right, show(right))}"
+    case Multiply(_, left, right) =>
+      s"${formatNestedExpr(left, show(left))} × ${formatNestedExpr(right, show(right))}"
+    case Divide(_, left, right) =>
+      s"${formatNestedExpr(left, show(left))} ÷ ${formatNestedExpr(right, show(right))}"
 
-      case Negate(_, expr) => s"-${formatNestedExpr(expr, show(expr))}"
-      case Not(_, expr)    => s"!${formatNestedExpr(expr, show(expr))}"
+    case Negate(_, expr) => s"-${formatNestedExpr(expr, show(expr))}"
+    case Not(_, expr)    => s"!${formatNestedExpr(expr, show(expr))}"
 
-      case Greater(_, left, right) =>
-        s"${formatNestedExpr(left, show(left))} > ${formatNestedExpr(right, show(right))}"
-      case GreaterEqual(_, left, right) =>
-        s"${formatNestedExpr(left, show(left))} ≥ ${formatNestedExpr(right, show(right))}"
-      case Less(_, left, right) =>
-        s"${formatNestedExpr(left, show(left))} < ${formatNestedExpr(right, show(right))}"
-      case LessEqual(_, left, right) =>
-        s"${formatNestedExpr(left, show(left))} ≤ ${formatNestedExpr(right, show(right))}"
-      case Equal(_, left, right) =>
-        s"${formatNestedExpr(left, show(left))} == ${formatNestedExpr(right, show(right))}"
-      case NotEqual(_, left, right) =>
-        s"${formatNestedExpr(left, show(left))} ≠ ${formatNestedExpr(right, show(right))}"
+    case Greater(_, left, right) =>
+      s"${formatNestedExpr(left, show(left))} > ${formatNestedExpr(right, show(right))}"
+    case GreaterEqual(_, left, right) =>
+      s"${formatNestedExpr(left, show(left))} ≥ ${formatNestedExpr(right, show(right))}"
+    case Less(_, left, right) =>
+      s"${formatNestedExpr(left, show(left))} < ${formatNestedExpr(right, show(right))}"
+    case LessEqual(_, left, right) =>
+      s"${formatNestedExpr(left, show(left))} ≤ ${formatNestedExpr(right, show(right))}"
+    case Equal(_, left, right) =>
+      s"${formatNestedExpr(left, show(left))} == ${formatNestedExpr(right, show(right))}"
+    case NotEqual(_, left, right) =>
+      s"${formatNestedExpr(left, show(left))} ≠ ${formatNestedExpr(right, show(right))}"
 
-      case Grouping(expr) => s"${formatNestedExpr(expr, show(expr))})"
+    case Grouping(expr) => s"${formatNestedExpr(expr, show(expr))})"
 
-      case Literal(_, value) =>
-        value match
-          case _: Unit => "nil"
-          case v       => v.toString
+    case Literal(_, value) => value match
+        case _: Unit => "nil"
+        case v       => v.toString
 
-      case And(_, left, right) =>
-        s"${formatNestedExpr(left, show(left))} and ${formatNestedExpr(right, show(right))}"
+    case And(_, left, right) =>
+      s"${formatNestedExpr(left, show(left))} and ${formatNestedExpr(right, show(right))}"
 
-      case Or(_, left, right) =>
-        s"${formatNestedExpr(left, show(left))} or ${formatNestedExpr(right, show(right))}"
+    case Or(_, left, right) =>
+      s"${formatNestedExpr(left, show(left))} or ${formatNestedExpr(right, show(right))}"
 
-      case Variable(_, name) => name
+    case Variable(_, name) => name
 
-  private def formatNestedExpr(expr: Expr, exprShow: String): String =
-    expr match
-      case Literal(_, _) => exprShow
-      case _             => s"($exprShow)"
+  private def formatNestedExpr(expr: Expr, exprShow: String): String = expr match
+    case Literal(_, _) => exprShow
+    case _             => s"($exprShow)"
 
   given Show[Expr] = Show.show(Expr.show)

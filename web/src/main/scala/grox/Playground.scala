@@ -15,38 +15,34 @@ object Playground extends TyrianApp[Msg, Model]:
 
   def init(flags: Map[String, String]): (Model, Cmd[IO, Msg]) = (Model("", ""), Cmd.None)
 
-  def eval(source: String)(f: Executor[IO] => IO[String]): Cmd[IO, Msg] =
-    Cmd.Run(
-      Executor
-        .module[IO]
-        .use(f)
-    )(Msg.Result.apply)
+  def eval(source: String)(f: Executor[IO] => IO[String]): Cmd[IO, Msg] = Cmd.Run(
+    Executor
+      .module[IO]
+      .use(f)
+  )(Msg.Result.apply)
 
-  def scan(source: String): Cmd[IO, Msg] =
-    eval(source)(exec =>
-      exec
-        .scan(source)
-        .map(tokens => tokens.mkString("\n"))
-        .handleError(err => s"Error: ${err.toString}")
-    )
+  def scan(source: String): Cmd[IO, Msg] = eval(source)(exec =>
+    exec
+      .scan(source)
+      .map(tokens => tokens.mkString("\n"))
+      .handleError(err => s"Error: ${err.toString}")
+  )
 
-  def parse(source: String): Cmd[IO, Msg] =
-    eval(source)(exec =>
-      exec
-        .parse(source)
-        .map(_.toString)
-        .handleError(err => s"Error: ${err.toString}")
-    )
+  def parse(source: String): Cmd[IO, Msg] = eval(source)(exec =>
+    exec
+      .parse(source)
+      .map(_.toString)
+      .handleError(err => s"Error: ${err.toString}")
+  )
 
-  def run(source: String): Cmd[IO, Msg] =
-    eval(source)(exec =>
-      exec
-        .execute(source)
-        .compile
-        .toList
-        .map(_.mkString("\n"))
-        .handleError(err => s"Error: ${err.toString}")
-    )
+  def run(source: String): Cmd[IO, Msg] = eval(source)(exec =>
+    exec
+      .execute(source)
+      .compile
+      .toList
+      .map(_.mkString("\n"))
+      .handleError(err => s"Error: ${err.toString}")
+  )
 
   def view(model: Model): Html[Msg] = div(
     input(

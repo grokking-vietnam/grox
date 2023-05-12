@@ -408,6 +408,7 @@ class ParserTest extends munit.CatsEffectSuite with ScalaCheckSuite:
 end ParserTest
 
 class ParserCheck extends ScalaCheckSuite:
+
   property("parse numerics succesfully"):
     Prop.forAll(numericGen) { expr =>
       parse(expr.flatten) match
@@ -433,8 +434,7 @@ class ParserCheck extends ScalaCheckSuite:
     forAllF(numericGen) { expr =>
       parse(expr.flatten) match
         case Left(_) => IO(assert(false))
-        case Right(parsedExpr, _) =>
-          (evaluate(expr).attempt, evaluate(parsedExpr).attempt).mapN:
+        case Right(parsedExpr, _) => (evaluate(expr).attempt, evaluate(parsedExpr).attempt).mapN:
             case (Left(e1), Left(e2))                   => assert(e1 == e2)
             case (Right(v1: Double), Right(v2: Double)) => assert(math.abs(v1 - v2) < 0.01)
             case _                                      => assert(false)
