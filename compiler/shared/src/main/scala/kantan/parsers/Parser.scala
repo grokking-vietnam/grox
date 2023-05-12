@@ -70,12 +70,11 @@ trait Parser[Token, +A]:
     * is perfectly valid input for it. [[digit]] would succeed and consume the `9`, then [[filter]]
     * would fail the parser with a consuming result - `char('9')` would not even be attempted.
     */
-  def filter(f: A => Boolean): Parser[Token, A] =
-    state =>
-      run(state) match
-        case Result.Ok(_, parsed, _, msg) if !f(parsed.value) =>
-          Result.Error(false, msg.copy(input = Message.Input.None))
-        case other => other
+  def filter(f: A => Boolean): Parser[Token, A] = state =>
+    run(state) match
+      case Result.Ok(_, parsed, _, msg) if !f(parsed.value) =>
+        Result.Error(false, msg.copy(input = Message.Input.None))
+      case other => other
 
   def withFilter(f: A => Boolean): Parser[Token, A] = filter(f)
 
@@ -97,18 +96,15 @@ trait Parser[Token, +A]:
     * input: [[digit]] would succeed and consume the `9`, then [[collect]] would fail the parser
     * with a consuming result - `char('9')` would not even be attempted.
     */
-  def collect[B](f: PartialFunction[A, B]): Parser[Token, B] =
-    state =>
-      run(state) match
-        case Result.Ok(consumed, parsed, state, msg) =>
-          f.lift(parsed.value) match
-            case Some(b) => Result.Ok(consumed, parsed.copy(value = b), state, msg)
-            case None =>
-              Result.Error(
-                false,
-                msg.copy(input = Message.Input.None, pos = parsed.start),
-              )
-        case error: Result.Error[Token] => error
+  def collect[B](f: PartialFunction[A, B]): Parser[Token, B] = state =>
+    run(state) match
+      case Result.Ok(consumed, parsed, state, msg) => f.lift(parsed.value) match
+          case Some(b) => Result.Ok(consumed, parsed.copy(value = b), state, msg)
+          case None => Result.Error(
+              false,
+              msg.copy(input = Message.Input.None, pos = parsed.start),
+            )
+      case error: Result.Error[Token] => error
 
   /** Fails when this parser succeeds, and succeeds when it fails.
     *
@@ -126,8 +122,7 @@ trait Parser[Token, +A]:
     def negate(expected: List[String]) = expected.map(label => s"not $label")
     state =>
       void.run(state) match
-        case Result.Ok(_, parsed, _, msg) =>
-          Result.Error(
+        case Result.Ok(_, parsed, _, msg) => Result.Error(
             false,
             msg.copy(
               input = Message.Input.None,
@@ -149,22 +144,20 @@ trait Parser[Token, +A]:
 
   def void: Parser[Token, Unit] = map(_ => ())
 
-  def withPosition: Parser[Token, Parsed[A]] =
-    state =>
-      run(state) match
-        case Result.Ok(consumed, parsed, state, msg) =>
-          Result.Ok(consumed, parsed.map(_ => parsed), state, msg)
-        case failure: Result.Error[Token] => failure
+  def withPosition: Parser[Token, Parsed[A]] = state =>
+    run(state) match
+      case Result.Ok(consumed, parsed, state, msg) =>
+        Result.Ok(consumed, parsed.map(_ => parsed), state, msg)
+      case failure: Result.Error[Token] => failure
 
   // - Combining parsers -----------------------------------------------------------------------------------------------
   // -------------------------------------------------------------------------------------------------------------------
-  def flatMap[B](f: A => Parser[Token, B]): Parser[Token, B] =
-    state =>
-      run(state) match
-        case Result.Ok(true, parsed, rest, _) =>
-          f(parsed.value).run(rest).consume.setStart(parsed.start)
-        case Result.Ok(false, parsed, rest, _) => f(parsed.value).run(rest).setStart(parsed.start)
-        case error: Result.Error[Token]        => error
+  def flatMap[B](f: A => Parser[Token, B]): Parser[Token, B] = state =>
+    run(state) match
+      case Result.Ok(true, parsed, rest, _) =>
+        f(parsed.value).run(rest).consume.setStart(parsed.start)
+      case Result.Ok(false, parsed, rest, _) => f(parsed.value).run(rest).setStart(parsed.start)
+      case error: Result.Error[Token]        => error
 
   /** Attempts either this parser or the specified one.
     *
@@ -203,43 +196,35 @@ trait Parser[Token, +A]:
     * This will succeed: non-consuming successes will still result in the alternative parser being
     * attempted, to try and find the first result that actually consumes data.
     */
-  def |[AA >: A](p2: => Parser[Token, AA]): Parser[Token, AA] =
-    state =>
-      run(state).recoverWith { error1 =>
-        if (error1.consumed)
-          error1
-        else
-          p2.run(state).recoverWith { error2 =>
-            if (error2.consumed)
-              error2
-            else
-              error2.mapMessage(_.mergeExpected(error1.message))
+  def |[AA >: A](p2: => Parser[Token, AA]): Parser[Token, AA] = state =>
+    run(state).recoverWith { error1 =>
+      if (error1.consumed) error1
+      else p2.run(state).recoverWith { error2 =>
+        if (error2.consumed) error2
+        else error2.mapMessage(_.mergeExpected(error1.message))
 
-          }
       }
+    }
 
   def orElse[AA >: A](p2: => Parser[Token, AA]): Parser[Token, AA] = this | p2
 
   def eitherOr[B](p2: Parser[Token, B]): Parser[Token, Either[B, A]] =
     map(Right.apply) | p2.map(Left.apply)
 
-  def ~[B](p2: => Parser[Token, B]): Parser[Token, (A, B)] =
-    for {
-      a <- this
-      b <- p2
-    } yield (a, b)
+  def ~[B](p2: => Parser[Token, B]): Parser[Token, (A, B)] = for {
+    a <- this
+    b <- p2
+  } yield (a, b)
 
-  def *>[B](p2: => Parser[Token, B]): Parser[Token, B] =
-    for {
-      _ <- this
-      b <- p2
-    } yield b
+  def *>[B](p2: => Parser[Token, B]): Parser[Token, B] = for {
+    _ <- this
+    b <- p2
+  } yield b
 
-  def <*[B](p2: => Parser[Token, B]): Parser[Token, A] =
-    for {
-      a <- this
-      _ <- p2
-    } yield a
+  def <*[B](p2: => Parser[Token, B]): Parser[Token, A] = for {
+    a <- this
+    _ <- p2
+  } yield a
 
   // - Misc. -----------------------------------------------------------------------------------------------------------
   // -------------------------------------------------------------------------------------------------------------------
@@ -258,11 +243,10 @@ trait Parser[Token, +A]:
 
   def rep0: Parser[Token, List[A]] = this.rep | Parser.pure(List.empty)
 
-  def rep: Parser[Token, List[A]] =
-    for {
-      head <- this
-      tail <- this.rep0
-    } yield head +: tail
+  def rep: Parser[Token, List[A]] = for {
+    head <- this
+    tail <- this.rep0
+  } yield head +: tail
 
   def repSep[Sep](sep: Parser[Token, Sep]): Parser[Token, List[A]] = (this ~ (sep *> this).rep0)
     .map { case (head, tail) => head :: tail }
@@ -278,12 +262,11 @@ object Parser:
   def pure[Token, A](value: A): Parser[Token, A] =
     state => Result.Ok(false, Parsed(value, state.pos, state.pos), state, Message.empty)
 
-  def ap[Token, A, B](ff: Parser[Token, A => B]): Parser[Token, A] => Parser[Token, B] =
-    fa =>
-      for {
-        a <- fa
-        f <- ff
-      } yield f(a)
+  def ap[Token, A, B](ff: Parser[Token, A => B]): Parser[Token, A] => Parser[Token, B] = fa =>
+    for {
+      a <- fa
+      f <- ff
+    } yield f(a)
 
   // - Base parsers ----------------------------------------------------------------------------------------------------
   // -------------------------------------------------------------------------------------------------------------------
@@ -292,24 +275,19 @@ object Parser:
 
   def satisfy[Token: SourceMap](f: Token => Boolean): Parser[Token, Token] = TokenParser(f)
 
-  def end[Token: SourceMap]: Parser[Token, Unit] =
-    state =>
-      if (state.isEOF)
-        Result.Ok(false, Parsed((), state.pos, state.pos), state, Message.empty)
-      else
-        Result.Error(false, Message(state, List("EOF")))
+  def end[Token: SourceMap]: Parser[Token, Unit] = state =>
+    if (state.isEOF) Result.Ok(false, Parsed((), state.pos, state.pos), state, Message.empty)
+    else Result.Error(false, Message(state, List("EOF")))
 
   def oneOf[Token, A](head: Parser[Token, A], tail: Parser[Token, A]*): Parser[Token, A] =
     tail.foldLeft(head)(_ | _)
 
-  def sequence[Token, A](parsers: List[Parser[Token, A]]): Parser[Token, List[A]] =
-    parsers match
-      case head :: tail =>
-        for {
-          h <- head
-          t <- sequence(tail)
-        } yield h :: t
-      case Nil => pure(Nil)
+  def sequence[Token, A](parsers: List[Parser[Token, A]]): Parser[Token, List[A]] = parsers match
+    case head :: tail => for {
+        h <- head
+        t <- sequence(tail)
+      } yield h :: t
+    case Nil => pure(Nil)
 
   // - Char parsers ----------------------------------------------------------------------------------------------------
   // -------------------------------------------------------------------------------------------------------------------
@@ -337,3 +315,11 @@ object Parser:
     (charIn(letters :+ '_') ~ charIn(letters ++ digits :+ '_').rep0).map { case (head, tail) =>
       (head +: tail).mkString
     }
+
+  // combinators
+
+  extension [T, A](a: Parser[T, A])
+    inline infix def <**>[B](b: => Parser[T, A => B]): Parser[T, B] = (a ~ b).map((x, f) => f(x))
+
+  extension [T, A, B](a: Parser[T, A => B])
+    inline infix def <*>(b: => Parser[T, A]): Parser[T, B] = (a ~ b).map((f, x) => f(x))

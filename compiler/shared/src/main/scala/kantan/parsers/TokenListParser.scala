@@ -37,10 +37,8 @@ private class TokenListParser[Token: SourceMap](expected: IndexedSeq[Token])
           val leftToken = left.next()
           val rightToken = right.next()
 
-          if (leftToken == rightToken)
-            loop(offset + 1, SourceMap[Token].endsAt(rightToken, pos))
-          else
-            error(offset, pos, Message.Input.Token(rightToken))
+          if (leftToken == rightToken) loop(offset + 1, SourceMap[Token].endsAt(rightToken, pos))
+          else error(offset, pos, Message.Input.Token(rightToken))
         else error(offset, pos, Message.Input.Eof)
       else
         val newState = state.copy(offset = offset, pos = pos)

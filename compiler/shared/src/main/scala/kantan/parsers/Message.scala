@@ -32,9 +32,8 @@ final case class Message[Token](
 ):
   def expecting(label: String): Message[Token] = copy(expected = List(label))
 
-  def mergeExpected(other: Message[Token]): Message[Token] = copy(expected =
-    expected ++ other.expected
-  )
+  def mergeExpected(other: Message[Token]): Message[Token] =
+    copy(expected = expected ++ other.expected)
 
 object Message:
   // - Input that triggered the message --------------------------------------------------------------------------------

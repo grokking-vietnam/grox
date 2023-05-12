@@ -35,15 +35,13 @@ sealed trait Result[Token, +A]:
       case ok: Result.Ok[Token, A]      => ok
       case failure: Result.Error[Token] => f(failure)
 
-  def toEither: Either[Message[Token], A] =
-    this match
-      case Result.Ok(_, parsed, _, _) => Right(parsed.value)
-      case Result.Error(_, msg)       => Left(msg)
+  def toEither: Either[Message[Token], A] = this match
+    case Result.Ok(_, parsed, _, _) => Right(parsed.value)
+    case Result.Error(_, msg)       => Left(msg)
 
-  def setStart(pos: Position): Result[Token, A] =
-    this match
-      case ok: Result.Ok[Token, A] => ok.copy(value = ok.value.copy(start = pos))
-      case other                   => other
+  def setStart(pos: Position): Result[Token, A] = this match
+    case ok: Result.Ok[Token, A] => ok.copy(value = ok.value.copy(start = pos))
+    case other                   => other
 
 // - Common properties -----------------------------------------------------------------------------------------------
 // -------------------------------------------------------------------------------------------------------------------
@@ -56,29 +54,25 @@ sealed trait Result[Token, +A]:
 
 // - Mapping ---------------------------------------------------------------------------------------------------------
 // -------------------------------------------------------------------------------------------------------------------
-  def mapMessage(f: Message[Token] => Message[Token]): Result[Token, A] =
-    this match
-      case ok: Result.Ok[Token, A]    => ok.copy(message = f(message))
-      case error: Result.Error[Token] => error.copy(message = f(message))
+  def mapMessage(f: Message[Token] => Message[Token]): Result[Token, A] = this match
+    case ok: Result.Ok[Token, A]    => ok.copy(message = f(message))
+    case error: Result.Error[Token] => error.copy(message = f(message))
 
-  def map[B](f: A => B): Result[Token, B] =
-    this match
-      case ok: Result.Ok[Token, A] => ok.copy(value = ok.value.map(f))
-      case e: Result.Error[Token]  => e
+  def map[B](f: A => B): Result[Token, B] = this match
+    case ok: Result.Ok[Token, A] => ok.copy(value = ok.value.map(f))
+    case e: Result.Error[Token]  => e
 
 // - Backtrack handling ----------------------------------------------------------------------------------------------
 // -------------------------------------------------------------------------------------------------------------------
   /** Marks this result as consuming. */
-  def consume: Result[Token, A] =
-    this match
-      case ok: Result.Ok[Token, A]  => ok.copy(consumed = true)
-      case err: Result.Error[Token] => err.copy(consumed = true)
+  def consume: Result[Token, A] = this match
+    case ok: Result.Ok[Token, A]  => ok.copy(consumed = true)
+    case err: Result.Error[Token] => err.copy(consumed = true)
 
   /** Marks this result as non-consuming. */
-  def empty: Result[Token, A] =
-    this match
-      case ok: Result.Ok[Token, A]  => ok.copy(consumed = false)
-      case err: Result.Error[Token] => err.copy(consumed = false)
+  def empty: Result[Token, A] = this match
+    case ok: Result.Ok[Token, A]  => ok.copy(consumed = false)
+    case err: Result.Error[Token] => err.copy(consumed = false)
 
 object Result:
 
