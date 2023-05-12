@@ -42,13 +42,10 @@ object SourceMap:
     implicit sm: SourceMap[Token]
   ): SourceMap[Token] = sm
 
-  implicit val char: SourceMap[Char] =
-    new SourceMap[Char]:
+  implicit val char: SourceMap[Char] = new SourceMap[Char]:
 
-      def endsAt(token: Char, current: Position) =
-        if (token == '\n')
-          current.nextLine
-        else
-          current.nextColumn
+    def endsAt(token: Char, current: Position) =
+      if (token == '\n') current.nextLine
+      else current.nextColumn
 
-      def startsAt(token: Char, current: Position) = current
+    def startsAt(token: Char, current: Position) = current

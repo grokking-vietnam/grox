@@ -17,26 +17,21 @@ object ExprParser:
   // case class Error(message: Message[Token[Span]]) extends NoStackTrace
   case class Error(z: Int) extends NoStackTrace
 
-  def instance[F[_]: MonadThrow]: ExprParser[F] =
-    new:
-      def parse(tokens: List[Token[Span]]): F[Expr] = ExprParser.parse(expr)(tokens).liftTo[F]
+  def instance[F[_]: MonadThrow]: ExprParser[F] = new:
+    def parse(tokens: List[Token[Span]]): F[Expr] = ExprParser.parse(expr)(tokens).liftTo[F]
 
   extension (l: Location) def position: Position = Position(l.line, l.col)
 
-  given SourceMap[Token[Span]] =
-    new:
-      override def endsAt(token: Token[Span], current: Position) = token.tag.end.position
-      override def startsAt(token: Token[Span], current: Position) = token.tag.start.position
+  given SourceMap[Token[Span]] = new:
+    override def endsAt(token: Token[Span], current: Position) = token.tag.end.position
+    override def startsAt(token: Token[Span], current: Position) = token.tag.start.position
 
-  def parse[A](p: TokenParser[A])(tokens: List[Token[Span]]): Either[Error, A] = p
+  def parse[A](p: Parser[A])(tokens: List[Token[Span]]): Either[Error, A] = p
     .parse(tokens)
     .toEither
-    .leftMap(x =>
-      println(x)
-      Error(0)
-    )
+    .leftMap(x => Error(0))
 
-  type TokenParser[A] = P[Token[Span], A]
+  type Parser[A] = P[Token[Span], A]
 
   type BinaryOp = Expr => Expr => Expr
   type UnaryOp = Expr => Expr
@@ -87,9 +82,6 @@ object ExprParser:
   val greaterEqualOp = token.collect:
     case GreaterEqual(tag) => Expr.GreaterEqual.apply.curried(tag)
 
-  // val bangOp = token.collect:
-  //   case Bang(tag) => tag
-
   val groupStart = token.collect:
     case LeftParen(tag) => tag
 
@@ -100,30 +92,26 @@ object ExprParser:
     case Minus(tag) => Expr.Negate.apply.curried(tag)
     case Bang(tag)  => Expr.Not.apply.curried(tag)
 
-  def binary1(u: Expr => Expr)(op: TokenParser[BinaryOp])(expr: TokenParser[Expr])
-    : TokenParser[Expr] =
-    for
-      l <- expr
-      of <- op.?
-      x <-
-        of match
-          case None    => P.pure(u(l))
-          case Some(f) => binary1(f(u(l)))(op)(expr)
-    yield x
+  def binary(op: Parser[BinaryOp]): Parser[Expr] => Parser[Expr] =
+    lazy val loop: (Expr => Expr) => Parser[BinaryOp] => Parser[Expr] => Parser[Expr] =
+      // format: off
+      u => op => expr =>
+        for
+          lhs <- expr.map(u)
+          of <- op.?
+          x <- of.fold(P.pure(lhs))(f => loop(f(lhs))(op)(expr))
+        yield x
 
-  def binary(op: TokenParser[BinaryOp])(expr: TokenParser[Expr]): TokenParser[Expr] =
-    binary1(identity)(op)(expr).backtrack | expr
-    // ((expr ~ op ~ (binary(op)(expr) | expr)) map { case ((l, f), r) => f(l)(r) }).backtrack | expr
+    loop(identity)(op)
 
-  def group = or.between(groupStart, groupEnd).map(Expr.Grouping.apply)
-  def primary = group | literal
-  def unary: TokenParser[Expr] =
-    (unaryOp ~ (unary | primary)).map((f, r) => f(r)).backtrack | primary
-  def factor = binary(timesOp | divOp)(unary)
-  def term = binary(plusOp | minusOp)(factor)
-  def comparison = binary(lessOp | lessEqualOp | greaterOp | greaterEqualOp)(term)
-  def equality = binary(equalEqualOp | notEqualOp)(comparison)
-  def and = binary(andOp)(equality)
-  def or = binary(orOp)(and)
+  lazy val group = or.between(groupStart, groupEnd).map(Expr.Grouping.apply)
+  lazy val primary = group | literal
+  lazy val unary: Parser[Expr] = (unaryOp <*> unary).backtrack | primary
+  lazy val factor = binary(timesOp | divOp)(unary)
+  lazy val term = binary(plusOp | minusOp)(factor)
+  lazy val comparison = binary(lessOp | lessEqualOp | greaterOp | greaterEqualOp)(term)
+  lazy val equality = binary(equalEqualOp | notEqualOp)(comparison)
+  lazy val and = binary(andOp)(equality)
+  lazy val or = binary(orOp)(and)
 
-  def expr: TokenParser[Expr] = or <* P.end
+  lazy val expr: Parser[Expr] = or <* P.end
