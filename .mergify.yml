@@ -41,7 +41,6 @@ pull_request_rules:
       - check-success~=Build and Test*
       - "#files=1"
       - files=project/Dependencies.scala
-      - approved-reviews-by>=0
     actions:
       merge:
         method: rebase
