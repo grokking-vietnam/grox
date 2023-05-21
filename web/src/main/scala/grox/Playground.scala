@@ -2,9 +2,7 @@ package grox
 
 import scala.scalajs.js.annotation.*
 
-import cats.Functor
 import cats.effect.IO
-import cats.syntax.all.*
 
 import scribe.cats.*
 import tyrian.Html.*
@@ -12,6 +10,8 @@ import tyrian.*
 
 @JSExportTopLevel("TyrianApp")
 object Playground extends TyrianApp[Msg, Model]:
+
+  override def router: Location => Msg = Routing.none(Msg.NoOp)
 
   def init(flags: Map[String, String]): (Model, Cmd[IO, Msg]) = (Model("", ""), Cmd.None)
 
@@ -71,6 +71,7 @@ object Playground extends TyrianApp[Msg, Model]:
     case Msg.Scan        => (model, scan(model.input))
     case Msg.Parse       => (model, parse(model.input))
     case Msg.Run         => (model, run(model.input))
+    case Msg.NoOp        => (model, Cmd.None)
 
   def subscriptions(model: Model): Sub[IO, Msg] = Sub.None
 
@@ -82,3 +83,4 @@ enum Msg:
   case Scan
   case Parse
   case Run
+  case NoOp
