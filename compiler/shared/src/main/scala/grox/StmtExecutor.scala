@@ -70,5 +70,3 @@ object StmtExecutor:
           _ => executePull(stmts),
           (_, _) => Pull.eval(env.endBlock()),
         )
-
-      case Function(name, params, body) => ???

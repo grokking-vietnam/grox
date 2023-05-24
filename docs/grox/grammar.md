@@ -37,11 +37,15 @@ grouping     -> "(" expression ")"
 
 ## Statements
 ```
+program        → declaration* EOF ;
+
+declaration    → varDecl
+               | statement ;
+
 statement      -> exprStmt
                | forStmt
                | ifStmt
                | printStmt
-               | returnStmt
                | whileStmt
                | assignStmt
                | block ;
@@ -56,20 +60,9 @@ forStmt        -> "for" "(" ( varDecl | exprStmt | ";" )
 ifStmt         -> "if" "(" expression ")" statement
                  ( "else" statement )? ;
 printStmt      -> "print" expression ";" ;
-returnStmt     -> "return" expression? ";" ;
 whileStmt      -> "while" "(" expression ")" statement ;
 
-block          -> "{" declaration* "}" ;
-declaration    -> classDecl
-               | funDecl
-               | varDecl
-               | statement ;
-classDecl      -> "class" IDENTIFIER ( "<" IDENTIFIER )?
-                 "{" function* "}" ;
-funDecl        -> "fun" function ;
+block          -> "{" statement* "}" ;
 varDecl        -> "var" IDENTIFIER ( "=" expression )? ";" ;
 
-function       -> IDENTIFIER "(" parameters? ")" block ;
-parameters     -> IDENTIFIER ( "," IDENTIFIER )* ;
-arguments      -> expression ( "," expression )* ;
 ```
