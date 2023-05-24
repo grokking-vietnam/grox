@@ -14,6 +14,7 @@ object ExprParser:
 
   def instance[F[_]: MonadThrow]: ExprParser[F] = new:
     def parse(tokens: List[Token[Span]]): F[Expr] = run(expr)(tokens).liftTo[F]
+
   type BinaryOp = Expr => Expr => Expr
   type UnaryOp = Expr => Expr
 

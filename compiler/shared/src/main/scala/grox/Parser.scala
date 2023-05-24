@@ -8,8 +8,6 @@ import cats.*
 import cats.implicits.*
 import cats.instances.*
 
-import grox.Parser.ExprParser
-
 trait Parser[F[_]]:
   def parse(tokens: List[Token[Span]]): F[List[Stmt]]
   def parseExpr(tokens: List[Token[Span]]): F[Expr]
