@@ -1,6 +1,5 @@
 package grox
 
-import munit.FunSuite
 import kantan.parsers.Message
 
 import TokenParser.*

@@ -62,12 +62,6 @@ object ExprParser:
   val greaterEqualOp = token.collect:
     case GreaterEqual(tag) => Expr.GreaterEqual.apply.curried(tag)
 
-  val groupStart = token.collect:
-    case LeftParen(tag) => tag
-
-  val groupEnd = token.collect:
-    case RightParen(tag) => tag
-
   val unaryOp = token.collect:
     case Minus(tag) => Expr.Negate.apply.curried(tag)
     case Bang(tag)  => Expr.Not.apply.curried(tag)
