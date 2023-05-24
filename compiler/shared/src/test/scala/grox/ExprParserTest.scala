@@ -1,11 +1,10 @@
 package grox
 
-import cats.syntax.all.*
-
 import munit.FunSuite
 
 import Token.*
 import Span.*
+import kantan.parsers.Message
 
 class ExprParserTest extends munit.FunSuite:
 
@@ -30,7 +29,7 @@ class ExprParserTest extends munit.FunSuite:
   val parse = ExprParser.parse(ExprParser.expr)
 
   test("empty"):
-    assertEquals(parse(Nil), Left(ExprParser.Error(0)))
+    assertEquals(parse(Nil), Left(ExprParser.Error(Message.emptyWithEof)))
 
   test("primary number"):
     val ts = List(Number("42", empty))
@@ -224,7 +223,6 @@ class ExprParserTest extends munit.FunSuite:
         Expr.Literal(empty, true),
       ),
     )
-    val rmn = List(num1, EqualEqual(empty), num2)
     assertEquals(parse(ts), Right(want))
 
   test("grouping"):
@@ -247,8 +245,6 @@ class ExprParserTest extends munit.FunSuite:
         ),
       ),
     )
-    val rmn = List(num1, EqualEqual(empty), num2)
-    println(parse(ts))
     assertEquals(parse(ts), Right(want))
 
   test("combination"):
@@ -291,8 +287,6 @@ class ExprParserTest extends munit.FunSuite:
         ),
       ),
     )
-    val rmn = List(num1, EqualEqual(empty), num2)
-
     assertEquals(parse(ts), Right(want))
 
   test("AND OR logic"):
@@ -348,7 +342,7 @@ class ExprParserTest extends munit.FunSuite:
       Minus(empty),
       RightParen(empty),
     )
-    assertEquals(parse(ts), Left(ExprParser.Error(0)))
+    assertEquals(parse(ts), Left(ExprParser.Error(Message.empty)))
 
   test("error: expect closing paren"):
     // 1 + 2 / (3 - 4  true false
@@ -364,7 +358,7 @@ class ExprParserTest extends munit.FunSuite:
       True(empty),
       False(empty),
     )
-    assertEquals(parse(ts), Left(ExprParser.Error(0)))
+    assertEquals(parse(ts), Left(ExprParser.Error(Message.empty)))
 
   test("1 + nil"):
     val ts = List(Number("1", empty), Plus(empty), Null(empty))

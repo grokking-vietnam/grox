@@ -60,6 +60,7 @@ object Message:
   // - Construction ----------------------------------------------------------------------------------------------------
   // -------------------------------------------------------------------------------------------------------------------
   def empty[Token]: Message[Token] = Message(0, Position.zero, Input.None, List.empty)
+  def emptyWithEof[Token]: Message[Token] = Message(0, Position.zero, Input.Eof, List.empty)
 
   def apply[Token: SourceMap](state: State[Token], expected: List[String]): Message[Token] =
     if (state.isEOF) Message(state.offset, state.pos, Input.Eof, expected)

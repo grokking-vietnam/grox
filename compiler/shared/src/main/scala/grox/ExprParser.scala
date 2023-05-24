@@ -4,9 +4,8 @@ import scala.util.control.NoStackTrace
 
 import cats.*
 import cats.syntax.all.*
-import cats.instances.*
 
-import kantan.parsers.{Message, Parser as P, Position, Result, SourceMap}
+import kantan.parsers.{Message, Parser as P, Position, SourceMap}
 
 trait ExprParser[F[_]]:
   def parse(tokens: List[Token[Span]]): F[Expr]
@@ -14,8 +13,7 @@ trait ExprParser[F[_]]:
 object ExprParser:
   import Token.*
 
-  // case class Error(message: Message[Token[Span]]) extends NoStackTrace
-  case class Error(z: Int) extends NoStackTrace
+  case class Error(message: Message[Token[Span]]) extends NoStackTrace
 
   def instance[F[_]: MonadThrow]: ExprParser[F] = new:
     def parse(tokens: List[Token[Span]]): F[Expr] = ExprParser.parse(expr)(tokens).liftTo[F]
@@ -29,7 +27,7 @@ object ExprParser:
   def parse[A](p: Parser[A])(tokens: List[Token[Span]]): Either[Error, A] = p
     .parse(tokens)
     .toEither
-    .leftMap(x => Error(0))
+    .leftMap(Error(_))
 
   type Parser[A] = P[Token[Span], A]
 
