@@ -1,40 +1,21 @@
 package grox
 
-import scala.util.control.NoStackTrace
-
 import cats.*
 import cats.syntax.all.*
 
-import kantan.parsers.{Message, Parser as P, Position, SourceMap}
+import kantan.parsers.Parser as P
 
 trait ExprParser[F[_]]:
   def parse(tokens: List[Token[Span]]): F[Expr]
 
 object ExprParser:
   import Token.*
-
-  case class Error(message: Message[Token[Span]]) extends NoStackTrace
+  import TokenParser.{given, *}
 
   def instance[F[_]: MonadThrow]: ExprParser[F] = new:
-    def parse(tokens: List[Token[Span]]): F[Expr] = ExprParser.parse(expr)(tokens).liftTo[F]
-
-  extension (l: Location) def position: Position = Position(l.line, l.col)
-
-  given SourceMap[Token[Span]] = new:
-    override def endsAt(token: Token[Span], current: Position) = token.tag.end.position
-    override def startsAt(token: Token[Span], current: Position) = token.tag.start.position
-
-  def parse[A](p: Parser[A])(tokens: List[Token[Span]]): Either[Error, A] = p
-    .parse(tokens)
-    .toEither
-    .leftMap(Error(_))
-
-  type Parser[A] = P[Token[Span], A]
-
+    def parse(tokens: List[Token[Span]]): F[Expr] = run(expr)(tokens).liftTo[F]
   type BinaryOp = Expr => Expr => Expr
   type UnaryOp = Expr => Expr
-
-  val token = P.token[Token[Span]]
 
   val literal = token.collect:
     case Number(l, tag)        => Expr.Literal(tag, l.toDouble)

@@ -1,10 +1,11 @@
 package grox
 
 import munit.FunSuite
+import kantan.parsers.Message
 
+import TokenParser.*
 import Token.*
 import Span.*
-import kantan.parsers.Message
 
 class ExprParserTest extends munit.FunSuite:
 
@@ -26,10 +27,10 @@ class ExprParserTest extends munit.FunSuite:
 
   val expr42 = Expr.Literal(empty, 42)
 
-  val parse = ExprParser.parse(ExprParser.expr)
+  val parse = run(ExprParser.expr)
 
   test("empty"):
-    assertEquals(parse(Nil), Left(ExprParser.Error(Message.emptyWithEof)))
+    assertEquals(parse(Nil), Left(Error(Message.emptyWithEof)))
 
   test("primary number"):
     val ts = List(Number("42", empty))
@@ -342,7 +343,7 @@ class ExprParserTest extends munit.FunSuite:
       Minus(empty),
       RightParen(empty),
     )
-    assertEquals(parse(ts), Left(ExprParser.Error(Message.empty)))
+    assertEquals(parse(ts), Left(Error(Message.empty)))
 
   test("error: expect closing paren"):
     // 1 + 2 / (3 - 4  true false
@@ -358,7 +359,7 @@ class ExprParserTest extends munit.FunSuite:
       True(empty),
       False(empty),
     )
-    assertEquals(parse(ts), Left(ExprParser.Error(Message.empty)))
+    assertEquals(parse(ts), Left(Error(Message.empty)))
 
   test("1 + nil"):
     val ts = List(Number("1", empty), Plus(empty), Null(empty))
