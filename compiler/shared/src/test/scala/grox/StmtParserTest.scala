@@ -15,11 +15,33 @@ class StmtParserTest extends munit.FunSuite:
   val num1 = Number("1", empty)
   val num2 = Number("2", empty)
   val num3 = Number("3", empty)
+  val num42 = Number("42", empty)
 
   val expr1 = Expr.Literal(empty, 1)
   val expr2 = Expr.Literal(empty, 2)
   val expr3 = Expr.Literal(empty, 3)
+  val expr42 = Expr.Literal(empty, 42)
   val span = Span(Location(0, 0, 0), Location(0, 5, 5))
+
+  test("Val declaration"):
+    val ts = List(
+      Var(empty),
+      avar,
+      Equal(empty),
+      num42,
+      Semicolon(empty),
+    )
+
+    val expectedStmt = Stmt.Var(
+      avar,
+      Some(expr42),
+    )
+
+    val inspector = Inspector().copy(tokens = ts)
+
+    val expectedInspector = Inspector().copy(stmts = List(expectedStmt))
+
+    assertEquals(_parseStmt(inspector), expectedInspector)
 
   test("Parse full variable declaration"):
     val ts = List(
@@ -265,6 +287,62 @@ class StmtParserTest extends munit.FunSuite:
 
     val expectedInspector = Inspector().copy(
       stmts = List(expectedStmts)
+    )
+
+    assertEquals(_parseStmt(inspector), expectedInspector)
+
+  test("While: statement "):
+    val ts = List(
+      While(empty),
+      LeftParen(empty),
+      True(empty),
+      RightParen(empty),
+      LeftBrace(empty),
+
+      // val a = 42
+      Var(empty),
+      avar,
+      Equal(empty),
+      num42,
+      Semicolon(empty),
+      // a = a + a
+      avar,
+      Equal(empty),
+      avar,
+      Plus(empty),
+      avar,
+      Semicolon(empty),
+      RightBrace(empty),
+    )
+
+    val expectedStmt = Stmt.While(
+      Expr.Literal(empty, true),
+      Stmt.Block(
+        List(
+          Stmt.Var(
+            avar,
+            Some(expr42),
+          ),
+          Stmt.Assign(
+            "a",
+            Expr.Add(
+              empty,
+              Expr.Variable(empty, "a"),
+              Expr.Variable(empty, "a"),
+            ),
+          ),
+        )
+      ),
+    )
+
+    val inspector: Inspector = Inspector(
+      List.empty[Error],
+      List.empty[Stmt],
+      tokens = ts,
+    )
+    val expectedInspector = inspector.copy(
+      stmts = List(expectedStmt),
+      tokens = Nil,
     )
 
     assertEquals(_parseStmt(inspector), expectedInspector)
