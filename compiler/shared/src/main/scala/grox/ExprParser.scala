@@ -1,19 +1,10 @@
 package grox
 
-import cats.*
-import cats.syntax.all.*
-
 import kantan.parsers.Parser as P
-
-trait ExprParser[F[_]]:
-  def parse(tokens: List[Token[Span]]): F[Expr]
 
 object ExprParser:
   import Token.*
-  import TokenParser.{given, *}
-
-  def instance[F[_]: MonadThrow]: ExprParser[F] = new:
-    def parse(tokens: List[Token[Span]]): F[Expr] = run(expr)(tokens).liftTo[F]
+  import TokenParser.*
 
   type BinaryOp = Expr => Expr => Expr
   type UnaryOp = Expr => Expr
