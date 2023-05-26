@@ -97,11 +97,12 @@ class InterpreterTest extends CatsEffectSuite with ScalaCheckEffectSuite:
   test("complex expression -4*(10+15/5*4-2*2)"):
     val env = State(Map("x" -> 10.0), None)
 
+    val parse = TokenParser.run(ExprParser.expr)
     def eval(str: String) = Scanner
       .parse(str)
-      .flatMap(Parser.parse(_))
+      .flatMap(parse(_))
       .liftTo[IO]
-      .flatMap(x => evaluate(x._1, env))
+      .flatMap(evaluate(_, env))
 
     val expr = eval("-4*(10+15/5*4-2*2)")
     val division = eval("-4*(10+3*4-2*2)")

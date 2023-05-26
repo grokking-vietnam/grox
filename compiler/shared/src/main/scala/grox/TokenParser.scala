@@ -18,13 +18,14 @@ object TokenParser:
     override def endsAt(token: Token[Span], current: Position) = token.tag.end.position
     override def startsAt(token: Token[Span], current: Position) = token.tag.start.position
 
-  def run[A](p: Parser[A])(tokens: List[Token[Span]]) = p.parse(tokens).toEither.leftMap(Error(_))
+  def run[A](p: TP[A])(tokens: List[Token[Span]]) = p.parse(tokens).toEither.leftMap(Error(_))
 
-  type Parser[A] = P[Token[Span], A]
+  type TP[A] = P[Token[Span], A]
 
   val token = P.token[Token[Span]]
 
   val groupStart = token.collect:
     case LeftParen(tag) => tag
+
   val groupEnd = token.collect:
     case RightParen(tag) => tag
