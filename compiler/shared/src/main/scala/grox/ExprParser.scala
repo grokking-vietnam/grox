@@ -66,8 +66,8 @@ object ExprParser:
     case Minus(tag) => Expr.Negate.apply.curried(tag)
     case Bang(tag)  => Expr.Not.apply.curried(tag)
 
-  def binary(op: Parser[BinaryOp]): Parser[Expr] => Parser[Expr] =
-    lazy val loop: (Expr => Expr) => Parser[BinaryOp] => Parser[Expr] => Parser[Expr] =
+  def binary(op: TP[BinaryOp]): TP[Expr] => TP[Expr] =
+    lazy val loop: (Expr => Expr) => TP[BinaryOp] => TP[Expr] => TP[Expr] =
       // format: off
       u => op => expr =>
         for
@@ -80,7 +80,7 @@ object ExprParser:
 
   lazy val group = or.between(groupStart, groupEnd).map(Expr.Grouping.apply)
   lazy val primary = group | literal
-  lazy val unary: Parser[Expr] = (unaryOp <*> unary).backtrack | primary
+  lazy val unary: TP[Expr] = (unaryOp <*> unary).backtrack | primary
   lazy val factor = binary(timesOp | divOp)(unary)
   lazy val term = binary(plusOp | minusOp)(factor)
   lazy val comparison = binary(lessOp | lessEqualOp | greaterOp | greaterEqualOp)(term)
@@ -88,4 +88,4 @@ object ExprParser:
   lazy val and = binary(andOp)(equality)
   lazy val or = binary(orOp)(and)
 
-  lazy val expr: Parser[Expr] = or <* P.end
+  lazy val expr: TP[Expr] = or
