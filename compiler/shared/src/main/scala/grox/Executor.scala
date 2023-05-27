@@ -3,9 +3,9 @@ package grox
 import cats.effect.implicits.*
 import cats.effect.kernel.{Resource, Sync}
 import cats.syntax.all.*
-import cats.{Applicative, MonadThrow}
+import cats.MonadThrow
 
-import fs2.{Pull, Stream}
+import fs2.Stream
 import scribe.Scribe
 
 trait Executor[F[_]]:

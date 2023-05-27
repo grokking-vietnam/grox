@@ -41,7 +41,6 @@ inThisBuild(
         cond = Some("${{ github.ref == 'refs/heads/main' }}"),
       ),
     ),
-    semanticdbEnabled := true,
   )
 )
 

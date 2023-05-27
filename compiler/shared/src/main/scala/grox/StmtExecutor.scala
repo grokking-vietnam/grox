@@ -1,6 +1,5 @@
 package grox
 
-import cats.effect.kernel.Ref
 import cats.syntax.all.*
 import cats.{Monad, MonadThrow}
 
