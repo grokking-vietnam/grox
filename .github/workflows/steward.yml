@@ -23,7 +23,7 @@ jobs:
         uses: scala-steward-org/scala-steward-action@v2
         with:
           github-token: ${{ steps.generate-token.outputs.token }}
-          author-email: 207615+Grokking-Steward[bot]@users.noreply.github.com
+          author-email: 106864841+Grokking-Steward[bot]@users.noreply.github.com
           author-name: Grokking-Steward[bot]
           github-app-id: 207615
           github-app-key: ${{ secrets.STEWARD_SECRET }}
