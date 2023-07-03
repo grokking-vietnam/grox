@@ -16,6 +16,8 @@
 
 package kantan.parsers
 
+import scala.annotation.nowarn
+
 /** Result of a parsing operation.
   *
   * This is essentially a very specialised version of `Either` (and can, in fact, be turned into one
@@ -30,6 +32,7 @@ package kantan.parsers
   */
 sealed trait Result[Token, +A]:
 
+  @nowarn
   def recoverWith[AA >: A](f: Result.Error[Token] => Result[Token, AA]): Result[Token, AA] =
     this match
       case ok: Result.Ok[Token, A]      => ok
@@ -39,6 +42,7 @@ sealed trait Result[Token, +A]:
     case Result.Ok(_, parsed, _, _) => Right(parsed.value)
     case Result.Error(_, msg)       => Left(msg)
 
+  @nowarn
   def setStart(pos: Position): Result[Token, A] = this match
     case ok: Result.Ok[Token, A] => ok.copy(value = ok.value.copy(start = pos))
     case other                   => other
@@ -54,10 +58,12 @@ sealed trait Result[Token, +A]:
 
 // - Mapping ---------------------------------------------------------------------------------------------------------
 // -------------------------------------------------------------------------------------------------------------------
+  @nowarn
   def mapMessage(f: Message[Token] => Message[Token]): Result[Token, A] = this match
     case ok: Result.Ok[Token, A]    => ok.copy(message = f(message))
     case error: Result.Error[Token] => error.copy(message = f(message))
 
+  @nowarn
   def map[B](f: A => B): Result[Token, B] = this match
     case ok: Result.Ok[Token, A] => ok.copy(value = ok.value.map(f))
     case e: Result.Error[Token]  => e
@@ -65,11 +71,13 @@ sealed trait Result[Token, +A]:
 // - Backtrack handling ----------------------------------------------------------------------------------------------
 // -------------------------------------------------------------------------------------------------------------------
   /** Marks this result as consuming. */
+  @nowarn
   def consume: Result[Token, A] = this match
     case ok: Result.Ok[Token, A]  => ok.copy(consumed = true)
     case err: Result.Error[Token] => err.copy(consumed = true)
 
   /** Marks this result as non-consuming. */
+  @nowarn
   def empty: Result[Token, A] = this match
     case ok: Result.Ok[Token, A]  => ok.copy(consumed = false)
     case err: Result.Error[Token] => err.copy(consumed = false)
