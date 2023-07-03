@@ -67,9 +67,12 @@ val commonSettings = Seq(
 )
 
 val commonJsSettings = Seq(
-  scalacOptions += "-scalajs",
-  scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule)),
+  scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule))
 )
+
+val kantan = crossProject(JSPlatform, JVMPlatform)
+  .settings(scalacOptions -= "-Xfatal-warnings", scalacOptions += "-Wconf:all")
+  .jsSettings(commonJsSettings)
 
 val compiler = crossProject(JSPlatform, JVMPlatform)
   .settings(
@@ -78,6 +81,7 @@ val compiler = crossProject(JSPlatform, JVMPlatform)
       Dependencies.catsParse.value
     ),
   )
+  .dependsOn(kantan)
   .jsSettings(commonJsSettings)
 
 val cli = crossProject(JSPlatform, JVMPlatform)
@@ -118,7 +122,7 @@ lazy val docs = project // new documentation project
 lazy val root = project
   .in(file("."))
   .settings(publish := {}, publish / skip := true)
-  .aggregate(compiler.js, compiler.jvm, cli.js, cli.jvm, web)
+  .aggregate(compiler.js, compiler.jvm, cli.js, cli.jvm, web, kantan.js, kantan.jvm)
 
 // Commands
 addCommandAlias("build", "buildJs")

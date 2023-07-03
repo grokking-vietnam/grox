@@ -49,10 +49,10 @@ object Message:
       *   - the failure wasn't triggered by an unexpected token, but by filtering out successful
       *     parses.
       */
-    final case object None extends Input[Nothing]
+    case object None extends Input[Nothing]
 
     /** We reached the end of the file. */
-    final case object Eof extends Input[Nothing]
+    case object Eof extends Input[Nothing]
 
     /** Token from the input stream. */
     final case class Token[A](value: A) extends Input[A]
