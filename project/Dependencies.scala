@@ -7,7 +7,7 @@ object Dependencies {
   val fs2Version = "3.8.0"
   val scribeVersion = "3.11.9"
 
-  val catsCore = Def.setting("org.typelevel" %%% "cats-core" % "2.9.0")
+  val catsCore = Def.setting("org.typelevel" %%% "cats-core" % "2.10.0")
   val catsEffect = Def.setting("org.typelevel" %%% "cats-effect" % "3.5.1")
   val catsParse = Def.setting("org.typelevel" %%% "cats-parse" % "0.3.10")
 
