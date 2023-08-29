@@ -57,14 +57,14 @@ object Parser:
   lazy val printStmt = (print *> expr <* semicolon).map(Stmt.Print(_))
 
   lazy val varStmt = `var` *> identifier ~ (equal *> expr).? <* semicolon map:
-    case (name, init) => Stmt.Var(name, init)
+  case (name, init) => Stmt.Var(name, init)
 
   lazy val ifStmt = (`if` *> expr.between(blockStart, blockEnd)
     ~ stmt ~ (`else` *> stmt).? <* semicolon).map:
     case ((cond, thenBranch), elseBranch) => Stmt.If(cond, thenBranch, elseBranch)
 
   lazy val assignExpr = (identifier <* equal) ~ expr map:
-    case (name, value) => Stmt.Assign(name.lexeme, value)
+  case (name, value) => Stmt.Assign(name.lexeme, value)
 
   lazy val assignStmt = assignExpr <* semicolon
 
@@ -76,7 +76,7 @@ object Parser:
       Stmt.Block(List(init, Stmt.While(whileCond, whileBody)))
 
   lazy val whileStmt = (`while` *> expr.between(groupStart, groupEnd)) ~ stmt map:
-    case (cond, body) => Stmt.While(cond, body)
+  case (cond, body) => Stmt.While(cond, body)
 
   lazy val stmt: TP[Stmt] = P.oneOf(
     whileStmt,
