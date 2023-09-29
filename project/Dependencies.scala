@@ -4,11 +4,11 @@ import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 object Dependencies {
 
   val declineVersion = "2.4.1"
-  val fs2Version = "3.9.1"
+  val fs2Version = "3.9.2"
   val scribeVersion = "3.12.1"
 
   val catsCore = Def.setting("org.typelevel" %%% "cats-core" % "2.10.0")
-  val catsEffect = Def.setting("org.typelevel" %%% "cats-effect" % "3.5.1")
+  val catsEffect = Def.setting("org.typelevel" %%% "cats-effect" % "3.5.2")
   val catsParse = Def.setting("org.typelevel" %%% "cats-parse" % "0.3.10")
 
   val fs2 = Def.setting("co.fs2" %%% "fs2-core" % fs2Version)
@@ -20,7 +20,7 @@ object Dependencies {
   val scribe = Def.setting("com.outr" %%% "scribe" % scribeVersion)
   val scribeCats = Def.setting("com.outr" %%% "scribe-cats" % scribeVersion)
 
-  val tyrian = Def.setting("io.indigoengine" %%% "tyrian-io" % "0.7.1")
+  val tyrian = Def.setting("io.indigoengine" %%% "tyrian-io" % "0.8.0")
 
   val munit = Def.setting("org.scalameta" %%% "munit" % "0.7.29" % Test)
   val munitCatsEffect = Def.setting("org.typelevel" %%% "munit-cats-effect-3" % "1.0.7" % Test)
