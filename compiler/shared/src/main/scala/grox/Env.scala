@@ -1,8 +1,11 @@
 package grox
 
+import scala.util.control.NoStackTrace
 import cats.MonadThrow
 import cats.effect.kernel.Ref
 import cats.syntax.all.*
+
+case class EnvError(msg: String) extends NoStackTrace
 
 trait Env[F[_]]:
   def define(name: String, value: LiteralType): F[Unit]
@@ -20,9 +23,12 @@ object Env:
       def define(name: String, value: LiteralType): F[Unit] = ref.update(s => s.define(name, value))
       def assign(name: String, value: LiteralType): F[Unit] =
         for
-          s <- ref.get
+          (s, set) <- ref.access
           ss <- s.assign(name, value).liftTo[F]
-          _ <- ref.set(ss)
+          success <- set(ss)
+          _ <-
+            if success then MonadThrow[F].unit
+            else MonadThrow[F].raiseError(EnvError(s"Cannot update program state."))
         yield ()
       def get(name: String): F[LiteralType] = ref.get.map(_.get(name).liftTo[F]).flatten
       def state: F[State] = ref.get
