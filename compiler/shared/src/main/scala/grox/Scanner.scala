@@ -3,8 +3,7 @@ package grox
 import scala.util.control.NoStackTrace
 
 import cats.*
-import cats.data.NonEmptyList
-import cats.parse.{Caret, LocationMap, Numbers as N, Parser as P, Parser0 as P0, Rfc5234 as R}
+import cats.parse.{LocationMap, Numbers as N, Parser as P, Parser0 as P0, Rfc5234 as R}
 import cats.syntax.all.*
 
 import Token.*
