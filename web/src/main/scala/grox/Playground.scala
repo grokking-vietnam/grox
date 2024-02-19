@@ -9,7 +9,7 @@ import tyrian.Html.*
 import tyrian.*
 
 @JSExportTopLevel("TyrianApp")
-object Playground extends TyrianApp[Msg, Model]:
+object Playground extends TyrianIOApp[Msg, Model]:
 
   override def router: Location => Msg = Routing.none(Msg.NoOp)
 
