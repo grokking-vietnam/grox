@@ -40,7 +40,7 @@ object Interpreter:
       case v: Double => Right(-v)
       case _         => Left(RuntimeError.MustBeNumbers(tag))
 
-    def `unary_!` : EvaluationResult = Right(!value.isTruthy)
+    def `unary_!`: EvaluationResult = Right(!value.isTruthy)
 
   def evaluateBinary[F[_]: MonadThrow](
     env: State
@@ -107,7 +107,7 @@ object Interpreter:
     case Expr.Literal(_, value)   => value.pure[F]
     case Expr.Grouping(e)         => evaluateWithState(env)(e)
     case Expr.Negate(tag, e)      => evaluateWithState(env)(e).flatMap(x => x.negate(tag).liftTo[F])
-    case Expr.Not(_, e)           => evaluateWithState(env)(e).flatMap(x => (!x).liftTo[F])
+    case Expr.Not(_, e)           => evaluateWithState(env)(e).flatMap(x => !x.liftTo[F])
     case Expr.Add(tag, l, r)      => evaluateBinary(env)(add(tag))(l, r)
     case Expr.Subtract(tag, l, r) => evaluateBinary(env)(subtract(tag))(l, r)
     case Expr.Multiply(tag, l, r) => evaluateBinary(env)(multiply(tag))(l, r)

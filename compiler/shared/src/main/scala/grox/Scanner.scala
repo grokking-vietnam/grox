@@ -45,7 +45,7 @@ object Scanner:
   val blockComment: P[Token[Unit]] =
     val start = P.string("/*")
     val end = P.string("*/")
-    val notStartOrEnd: P[Char] = (!(start | end)).with1 *> P.anyChar
+    val notStartOrEnd: P[Char] = !(start | end).with1 *> P.anyChar
     P.recursive[Block[Unit]] { recurse =>
       (start *>
         (notStartOrEnd | recurse).rep0
@@ -122,7 +122,7 @@ object Scanner:
     def operator = P.string(t.lexeme).as(t)
 
     // A keyword should be followed by a non-alphanumberic character.
-    def keyword = (P.string(t.lexeme).as(t) <* (!alphaNumeric).peek).backtrack
+    def keyword = (P.string(t.lexeme).as(t) <* !alphaNumeric.peek).backtrack
 
   extension (p: P[Token[Unit]])
     def span = (location.with1 ~ p ~ location).map { case ((s, t), e) => t.as(Span(s, e)) }
