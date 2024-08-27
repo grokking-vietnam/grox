@@ -4,7 +4,7 @@ import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 object Dependencies {
 
   val declineVersion = "2.4.1"
-  val fs2Version = "3.10.2"
+  val fs2Version = "3.11.0"
   val scribeVersion = "3.15.0"
 
   val catsCore = Def.setting("org.typelevel" %%% "cats-core" % "2.12.0")
