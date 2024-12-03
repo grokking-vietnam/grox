@@ -22,7 +22,7 @@ object Dependencies {
 
   val tyrian = Def.setting("io.indigoengine" %%% "tyrian-io" % "0.11.0")
 
-  val munit = Def.setting("org.scalameta" %%% "munit" % "1.0.2" % Test)
+  val munit = Def.setting("org.scalameta" %%% "munit" % "1.0.3" % Test)
   val munitCatsEffect = Def.setting("org.typelevel" %%% "munit-cats-effect" % "2.0.0" % Test)
   val scalaCheck = Def.setting("org.scalacheck" %%% "scalacheck" % "1.16.0" % Test)
   val munitScalaCheck = Def.setting("org.scalameta" %%% "munit-scalacheck" % "1.0.0" % Test)
