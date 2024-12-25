@@ -10,7 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     name: Steward
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: sbt/setup-sbt@v1
 
       - name: Generate token
         id: generate-token
