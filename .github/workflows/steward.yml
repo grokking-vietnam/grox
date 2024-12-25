@@ -20,7 +20,7 @@ jobs:
           private_key: ${{ secrets.STEWARD_SECRET }}
 
       - name: Install sbt
-      - uses: sbt/setup-sbt@v1
+        uses: sbt/setup-sbt@v1
       
       - name: Launch Scala Steward
         uses: scala-steward-org/scala-steward-action@v2
