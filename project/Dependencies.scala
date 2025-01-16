@@ -20,7 +20,7 @@ object Dependencies {
   val scribe = Def.setting("com.outr" %%% "scribe" % scribeVersion)
   val scribeCats = Def.setting("com.outr" %%% "scribe-cats" % scribeVersion)
 
-  val tyrian = Def.setting("io.indigoengine" %%% "tyrian-io" % "0.11.0")
+  val tyrian = Def.setting("io.indigoengine" %%% "tyrian-io" % "0.12.0")
 
   val munit = Def.setting("org.scalameta" %%% "munit" % "1.0.4" % Test)
   val munitCatsEffect = Def.setting("org.typelevel" %%% "munit-cats-effect" % "2.0.0" % Test)
