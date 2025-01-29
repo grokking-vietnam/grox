@@ -19,7 +19,7 @@ package grox
 
 import scala.reflect.Typeable
 
-import org.scalacheck.{Arbitrary, Gen, Prop}
+import org.scalacheck.Gen
 
 import Span.*
 
