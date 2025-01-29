@@ -9,7 +9,7 @@ object Dependencies {
 
   val catsCore = Def.setting("org.typelevel" %%% "cats-core" % "2.13.0")
   val catsEffect = Def.setting("org.typelevel" %%% "cats-effect" % "3.5.7")
-  val catsParse = Def.setting("org.typelevel" %%% "cats-parse" % "1.0.0")
+  val catsParse = Def.setting("org.typelevel" %%% "cats-parse" % "1.1.0")
 
   val fs2 = Def.setting("co.fs2" %%% "fs2-core" % fs2Version)
   val fs2IO = Def.setting("co.fs2" %%% "fs2-io" % fs2Version)
