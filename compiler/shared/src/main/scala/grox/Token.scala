@@ -106,7 +106,7 @@ object Token:
     LessEqual(()),
   )
 
-  given Functor[Token] with
+  given Functor[Token]:
 
     def map[A, B](token: Token[A])(f: A => B): Token[B] = token match
       case Identifier(l, a) => Identifier(l, f(a))

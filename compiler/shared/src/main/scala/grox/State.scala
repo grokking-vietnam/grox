@@ -7,7 +7,7 @@ import cats.implicits.catsSyntaxEither
 object State:
   def apply(): State = State(Map.empty[String, LiteralType], enclosing = None)
 
-enum StateError(msg: String) extends NoStackTrace:
+enum StateError(val msg: String) extends NoStackTrace:
   case UndefinedVariableError(variable: String)
     extends StateError(s"Undefined variable: '$variable'.")
 

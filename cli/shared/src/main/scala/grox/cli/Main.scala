@@ -32,7 +32,7 @@ object Main
     case CLI.Command.Evaluate(file) => reader.read(file).map(Command.Evaluate(_))
     case CLI.Command.Run(file)      => reader.read(file).map(Command.Execute(_))
 
-  def eval[F[_]: Functor: Console: Concurrent](exec: Executor[F]): Command => F[String] =
+  def eval[F[_]: {Console, Concurrent}](exec: Executor[F]): Command => F[String] =
     case Command.Scan(str)     => exec.scan(str).map(tokens => tokens.mkString("\n"))
     case Command.Parse(str)    => exec.parse(str).map(_.show)
     case Command.Evaluate(str) => exec.evaluate(str).map(_.toString)
@@ -46,7 +46,7 @@ object Main
     .parse
     .map(config =>
       val level = if config.debug then Level.Debug else Level.Error
-      Logger.root.clearHandlers().withHandler(minimumLevel = Some(level)).replace()
+      val _ = Logger.root.clearHandlers().withHandler(minimumLevel = Some(level)).replace()
       Executor
         .module[IO]
         .use(exec =>

@@ -22,13 +22,15 @@ object Interpreter:
         result <- evaluateWithState(state)(expr)
       yield result
 
-  enum RuntimeError(location: Span, msg: String) extends NoStackTrace:
+  enum RuntimeError(val location: Span, val msg: String) extends NoStackTrace:
     override def toString = msg
-    case MustBeNumbers(location: Span) extends RuntimeError(location, "Operands must be numbers.")
-    case MustBeNumbersOrStrings(location: Span)
+    case MustBeNumbers(override val location: Span)
+      extends RuntimeError(location, "Operands must be numbers.")
+    case MustBeNumbersOrStrings(override val location: Span)
       extends RuntimeError(location, "Operands must be two numbers or two strings")
-    case DivisionByZero(location: Span) extends RuntimeError(location, "Division by zerro")
-    case VariableNotFound(location: Span, name: String)
+    case DivisionByZero(override val location: Span)
+      extends RuntimeError(location, "Division by zerro")
+    case VariableNotFound(override val location: Span, name: String)
       extends RuntimeError(location, "Variable not found")
 
   type EvaluationResult = Either[RuntimeError, LiteralType]
