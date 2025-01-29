@@ -31,3 +31,4 @@ extension (e: Expr)
     case Expr.Literal(tag, true)      => List(True(tag))
     case Expr.Literal(tag, false)     => List(False(tag))
     case Expr.Literal(tag, ())        => List(Null(tag))
+    case _                            => List.empty
