@@ -1,3 +1,5 @@
+import org.typelevel.scalacoptions.ScalacOptions
+
 inThisBuild(
   Seq(
     scalaVersion := "3.6.2",
@@ -45,13 +47,16 @@ inThisBuild(
 )
 
 val commonSettings = Seq(
-  scalacOptions -= "-Xfatal-warnings",
-  scalacOptions += "-source:future",
-  scalacOptions += "-rewrite",
-  scalacOptions += "-indent",
-  scalacOptions += "-Yexplicit-nulls",
-  scalacOptions += "-explain",
-  scalacOptions += "-Wunused:all",
+  tpolecatScalacOptions ++= Set(
+    ScalacOptions.sourceFuture,
+    ScalacOptions.other("-rewrite"),
+    ScalacOptions.other("-indent"),
+    ScalacOptions.explain,
+    ScalacOptions.release("21"),
+    ScalacOptions.other(
+      "-Wsafe-init"
+    ), // fix in: https://github.com/typelevel/scalac-options/pull/136
+  ),
   libraryDependencies ++= Seq(
     Dependencies.catsCore.value,
     Dependencies.scribe.value,
