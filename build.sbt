@@ -53,9 +53,6 @@ val commonSettings = Seq(
     ScalacOptions.other("-indent"),
     ScalacOptions.explain,
     ScalacOptions.release("21"),
-    ScalacOptions.other(
-      "-Wsafe-init"
-    ), // fix in: https://github.com/typelevel/scalac-options/pull/136
   ),
   libraryDependencies ++= Seq(
     Dependencies.catsCore.value,
@@ -76,7 +73,6 @@ val commonJsSettings = Seq(
 )
 
 val kantan = crossProject(JSPlatform, JVMPlatform)
-  .settings(scalacOptions -= "-Xfatal-warnings", scalacOptions += "-Wconf:all")
   .jsSettings(commonJsSettings)
 
 val compiler = crossProject(JSPlatform, JVMPlatform)

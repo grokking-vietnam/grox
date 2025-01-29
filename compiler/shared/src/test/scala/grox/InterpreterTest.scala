@@ -112,12 +112,12 @@ class InterpreterTest extends CatsEffectSuite with ScalaCheckEffectSuite:
     val divisionWithX = eval("-4*(x+3*4-2*2)")
 
     (expr, division).mapN((x, y) => assert(x == y)) >>
-    (division, multiplication).mapN((x, y) => assert(x == y)) >>
-    (multiplication, addition).mapN((x, y) => assert(x == y)) >>
-    (addition, subtraction).mapN((x, y) => assert(x == y)) >>
-    (subtraction, answer).mapN((x, y) => assert(x == y)) >>
-    (exprWithX, answer).mapN((x, y) => assert(x == y)) >>
-    (divisionWithX, answer).mapN((x, y) => assert(x == y))
+      (division, multiplication).mapN((x, y) => assert(x == y)) >>
+      (multiplication, addition).mapN((x, y) => assert(x == y)) >>
+      (addition, subtraction).mapN((x, y) => assert(x == y)) >>
+      (subtraction, answer).mapN((x, y) => assert(x == y)) >>
+      (exprWithX, answer).mapN((x, y) => assert(x == y)) >>
+      (divisionWithX, answer).mapN((x, y) => assert(x == y))
 
   test("division by zero error"):
     evaluate(Expr.Divide(empty, Expr.Literal(empty, 1), Expr.Literal(empty, 0)))
@@ -127,14 +127,14 @@ class InterpreterTest extends CatsEffectSuite with ScalaCheckEffectSuite:
   test("logical or"):
     evaluate(Expr.Or(empty, Expr.Literal(empty, true), Expr.Literal(empty, false)))
       .map(x => assert(x == true)) >>
-    evaluate(Expr.Or(empty, Expr.Literal(empty, false), Expr.Literal(empty, false)))
-      .map(x => assert(x == false))
+      evaluate(Expr.Or(empty, Expr.Literal(empty, false), Expr.Literal(empty, false)))
+        .map(x => assert(x == false))
 
   test("logical and"):
     evaluate(Expr.And(empty, Expr.Literal(empty, true), Expr.Literal(empty, false)))
       .map(x => assert(x == false)) >>
-    evaluate(Expr.And(empty, Expr.Literal(empty, false), Expr.Literal(empty, false)))
-      .map(x => assert(x == false))
+      evaluate(Expr.And(empty, Expr.Literal(empty, false), Expr.Literal(empty, false)))
+        .map(x => assert(x == false))
 
   test("must be numbers or strings runtime error"):
     evaluate(Expr.Add(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string")))
@@ -153,21 +153,21 @@ class InterpreterTest extends CatsEffectSuite with ScalaCheckEffectSuite:
     evaluate(Expr.Subtract(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string")))
       .attempt
       .map(x => assert(x == Left(RuntimeError.MustBeNumbers(empty)))) >>
-    evaluate(Expr.Divide(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string")))
-      .attempt
-      .map(x => assert(x == Left(RuntimeError.MustBeNumbers(empty)))) >>
-    evaluate(Expr.Multiply(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string")))
-      .attempt
-      .map(x => assert(x == Left(RuntimeError.MustBeNumbers(empty)))) >>
-    evaluate(Expr.Greater(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string")))
-      .attempt
-      .map(x => assert(x == Left(RuntimeError.MustBeNumbers(empty)))) >>
-    evaluate(Expr.GreaterEqual(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string")))
-      .attempt
-      .map(x => assert(x == Left(RuntimeError.MustBeNumbers(empty)))) >>
-    evaluate(Expr.Less(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string")))
-      .attempt
-      .map(x => assert(x == Left(RuntimeError.MustBeNumbers(empty)))) >>
-    evaluate(Expr.LessEqual(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string")))
-      .attempt
-      .map(x => assert(x == Left(RuntimeError.MustBeNumbers(empty))))
+      evaluate(Expr.Divide(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string")))
+        .attempt
+        .map(x => assert(x == Left(RuntimeError.MustBeNumbers(empty)))) >>
+      evaluate(Expr.Multiply(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string")))
+        .attempt
+        .map(x => assert(x == Left(RuntimeError.MustBeNumbers(empty)))) >>
+      evaluate(Expr.Greater(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string")))
+        .attempt
+        .map(x => assert(x == Left(RuntimeError.MustBeNumbers(empty)))) >>
+      evaluate(Expr.GreaterEqual(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string")))
+        .attempt
+        .map(x => assert(x == Left(RuntimeError.MustBeNumbers(empty)))) >>
+      evaluate(Expr.Less(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string")))
+        .attempt
+        .map(x => assert(x == Left(RuntimeError.MustBeNumbers(empty)))) >>
+      evaluate(Expr.LessEqual(empty, Expr.Literal(empty, 1), Expr.Literal(empty, "string")))
+        .attempt
+        .map(x => assert(x == Left(RuntimeError.MustBeNumbers(empty))))
