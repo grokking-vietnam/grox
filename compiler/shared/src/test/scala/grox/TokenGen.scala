@@ -1,6 +1,6 @@
 package grox
 
-import org.scalacheck.{Arbitrary, Gen, Prop}
+import org.scalacheck.Gen
 
 import Token.*
 

@@ -1,12 +1,5 @@
 package grox
 
-import cats.*
-import cats.implicits.*
-import cats.parse.Caret
-
-import munit.CatsEffectSuite
-import org.scalacheck.{Arbitrary, Gen}
-
 import Token.*
 
 class ScannerTest extends munit.FunSuite:

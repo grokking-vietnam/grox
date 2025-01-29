@@ -1,7 +1,7 @@
 package grox
 
 import cats.*
-import cats.implicits.*
+import cats.syntax.all.*
 
 import munit.ScalaCheckSuite
 import org.scalacheck.Prop
