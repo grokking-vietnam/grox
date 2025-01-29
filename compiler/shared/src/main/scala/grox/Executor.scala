@@ -16,7 +16,7 @@ trait Executor[F[_]]:
 
 object Executor:
 
-  def instance[F[_]: MonadThrow: Scribe](
+  def instance[F[_]: {MonadThrow, Scribe}](
     using scanner: Scanner[F],
     parser: Parser[F],
     interpreter: Interpreter[F],
@@ -48,7 +48,7 @@ object Executor:
         yield stmts
       Stream.eval(stmts).flatMap(xs => executor.execute(xs))
 
-  def module[F[_]: MonadThrow: Sync: Scribe]: Resource[F, Executor[F]] =
+  def module[F[_]: {Sync, Scribe}]: Resource[F, Executor[F]] =
     given Scanner[F] = Scanner.instance[F]
     given Parser[F] = Parser.instance[F]
     for

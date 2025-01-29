@@ -10,7 +10,7 @@ trait FileReader[F[_]]:
 
 object FileReader:
 
-  def instance[F[_]: Files: Concurrent]: FileReader[F] = path =>
+  def instance[F[_]: {Files, Concurrent}]: FileReader[F] = path =>
     Files[F]
       .readAll(fs2.io.file.Path(path))
       .through(fs2.text.utf8.decode[F])
