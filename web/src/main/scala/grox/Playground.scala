@@ -15,27 +15,27 @@ object Playground extends TyrianIOApp[Msg, Model]:
 
   def init(flags: Map[String, String]): (Model, Cmd[IO, Msg]) = (Model("", ""), Cmd.None)
 
-  def eval(source: String)(f: Executor[IO] => IO[String]): Cmd[IO, Msg] = Cmd.Run(
+  def eval(f: Executor[IO] => IO[String]): Cmd[IO, Msg] = Cmd.Run(
     Executor
       .module[IO]
       .use(f)
   )(Msg.Result.apply)
 
-  def scan(source: String): Cmd[IO, Msg] = eval(source)(exec =>
+  def scan(source: String): Cmd[IO, Msg] = eval(exec =>
     exec
       .scan(source)
       .map(tokens => tokens.mkString("\n"))
       .handleError(err => s"Error: ${err.toString}")
   )
 
-  def parse(source: String): Cmd[IO, Msg] = eval(source)(exec =>
+  def parse(source: String): Cmd[IO, Msg] = eval(exec =>
     exec
       .parse(source)
       .map(_.toString)
       .handleError(err => s"Error: ${err.toString}")
   )
 
-  def run(source: String): Cmd[IO, Msg] = eval(source)(exec =>
+  def run(source: String): Cmd[IO, Msg] = eval(exec =>
     exec
       .execute(source)
       .compile
