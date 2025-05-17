@@ -63,8 +63,6 @@ enum Token[+T](val lexeme: String, val tag: T):
 
 object Token:
 
-  import Token.*
-
   val keywords = List(
     And(()),
     Class(()),
