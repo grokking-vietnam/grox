@@ -27,7 +27,7 @@ class ExprParserCheck extends munit.CatsEffectSuite with munit.ScalaCheckSuite:
         case Right(_) => true
     }
 
-  def evaluate(expr: Expr, state: State = State()): IO[LiteralType] =
+  def evaluate(expr: Expr): IO[LiteralType] =
     for
       given Env[IO] <- Env.instance[IO](State())
       interpreter = Interpreter.instance[IO]
