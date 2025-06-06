@@ -15,9 +15,9 @@ inThisBuild(
       WorkflowStep.Sbt(List("check"), name = Some("Check Formatting")),
       WorkflowStep.Sbt(List("docs/mdoc"), name = Some("Check docs formatting")),
       WorkflowStep.Use(
-        UseRef.Public("actions", "setup-node", "v2"),
+        UseRef.Public("actions", "setup-node", "v4"),
         params = Map(
-          "node-version" -> "16.x",
+          "node-version" -> "latest",
           "cache" -> "yarn",
           "cache-dependency-path" -> "website/yarn.lock",
         ),
@@ -32,7 +32,7 @@ inThisBuild(
         name = Some("Check build website"),
       ),
       WorkflowStep.Use(
-        UseRef.Public("peaceiris", "actions-gh-pages", "v3"),
+        UseRef.Public("peaceiris", "actions-gh-pages", "v4"),
         params = Map(
           "github_token" -> "${{ secrets.GITHUB_TOKEN }}",
           "publish_dir" -> "./website/build",
