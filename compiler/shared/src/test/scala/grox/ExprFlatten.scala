@@ -3,11 +3,9 @@ package grox
 import Token.*
 import Span.*
 
-extension (e: Expr)
+extension (expr: Expr)
 
-  def binary(operator: Token[Span], l: Expr, r: Expr) = l.flatten ::: List(operator) ::: r.flatten
-
-  def flatten: List[Token[Span]] = e match
+  def flatten: List[Token[Span]] = expr match
     case Expr.Add(tag, l, r)      => binary(Plus(tag), l, r)
     case Expr.Subtract(tag, l, r) => binary(Minus(tag), l, r)
     case Expr.Multiply(tag, l, r) => binary(Star(tag), l, r)
@@ -32,3 +30,5 @@ extension (e: Expr)
     case Expr.Literal(tag, false)     => List(False(tag))
     case Expr.Literal(tag, ())        => List(Null(tag))
     case _                            => List.empty
+
+def binary(operator: Token[Span], l: Expr, r: Expr) = l.flatten ::: List(operator) ::: r.flatten
