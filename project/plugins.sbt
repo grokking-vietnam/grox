@@ -1,5 +1,5 @@
 addSbtPlugin("org.typelevel" % "sbt-tpolecat" % "0.5.2")
-addSbtPlugin("com.github.sbt" % "sbt-github-actions" % "0.28.0")
+addSbtPlugin("com.github.sbt" % "sbt-github-actions" % "0.29.0")
 addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.6")
 addSbtPlugin("org.scalameta" % "sbt-mdoc" % "2.8.0")
 addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.20.1")
