@@ -100,7 +100,7 @@ trait Parser[Token, +A]:
     run(state) match
       case Result.Ok(consumed, parsed, state, msg) => f.lift(parsed.value) match
           case Some(b) => Result.Ok(consumed, parsed.copy(value = b), state, msg)
-          case None => Result.Error(
+          case None    => Result.Error(
               false,
               msg.copy(input = Message.Input.None, pos = parsed.start),
             )
