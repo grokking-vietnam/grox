@@ -3,7 +3,7 @@ import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 
 object Dependencies {
 
-  val declineVersion = "2.6.0"
+  val declineVersion = "2.6.1"
   val fs2Version = "3.13.0"
   val scribeVersion = "3.18.0"
 
