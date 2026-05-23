@@ -37,7 +37,7 @@ class ExprParserCheck extends munit.CatsEffectSuite with munit.ScalaCheckSuite:
   test("produce an equal numeric expression"):
     forAllF(numericGen) { expr =>
       parse(expr.flatten) match
-        case Left(_) => IO(assert(false))
+        case Left(_)           => IO(assert(false))
         case Right(parsedExpr) => (evaluate(expr).attempt, evaluate(parsedExpr).attempt).mapN:
             case (Left(e1), Left(e2))                   => assert(e1 == e2)
             case (Right(v1: Double), Right(v2: Double)) => assert(math.abs(v1 - v2) < 0.01)
@@ -47,7 +47,7 @@ class ExprParserCheck extends munit.CatsEffectSuite with munit.ScalaCheckSuite:
   test("produce an equal logical expression"):
     forAllF(logicalGen) { expr =>
       parse(expr.flatten) match
-        case Left(_) => IO(assert(false))
+        case Left(_)           => IO(assert(false))
         case Right(parsedExpr) =>
           (evaluate(expr), evaluate(parsedExpr)).mapN((x, y) => assert(x == y))
     }

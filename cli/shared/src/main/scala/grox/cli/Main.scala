@@ -36,7 +36,7 @@ object Main
     case Command.Scan(str)     => exec.scan(str).map(tokens => tokens.mkString("\n"))
     case Command.Parse(str)    => exec.parse(str).map(_.show)
     case Command.Evaluate(str) => exec.evaluate(str).map(_.toString)
-    case Command.Execute(str) =>
+    case Command.Execute(str)  =>
       exec.execute(str).evalMap(Console[F].println).compile.drain.as("Done")
 
   given FileReader[IO] = FileReader.instance[IO]
