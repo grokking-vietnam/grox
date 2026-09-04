@@ -2,7 +2,7 @@ import org.typelevel.scalacoptions.ScalacOptions
 
 inThisBuild(
   Seq(
-    scalaVersion := "3.8.4",
+    scalaVersion := "3.9.0",
     versionScheme := Some("early-semver"),
 
     // Github Workflow
