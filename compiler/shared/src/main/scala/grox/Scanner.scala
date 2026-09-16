@@ -100,7 +100,7 @@ object Scanner:
   val parser = token.rep.map(_.toList)
 
   def parse(str: String): Either[Error, List[Token[Span]]] = parser.parse(str) match
-    case Right("", ls) => Right(ls)
+    case Right("", ls)   => Right(ls)
     case Right(rest, ls) =>
       val idx = str.indexOf(rest)
       val lm = LocationMap(str)
